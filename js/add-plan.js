@@ -24,9 +24,6 @@ function initializeForm() {
 
 // 设置事件监听器
 function setupEventListeners() {
-    // 表单提交
-    document.getElementById('planForm').addEventListener('submit', handleFormSubmit);
-    
     // 重复类型选择
     document.querySelectorAll('.recurrence-option').forEach(option => {
         option.addEventListener('click', handleRecurrenceSelect);
@@ -48,8 +45,8 @@ function setupEventListeners() {
 function setDefaultDates() {
     const today = new Date();
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 30); // 默认结束日期为30天后
-    
+    tomorrow.setDate(tomorrow.getDate() + 30);
+
     // 设置日期输入框的默认值
     document.getElementById('startDate').value = formatDate(today);
     document.getElementById('dailyStartDate').value = formatDate(today);
@@ -64,8 +61,8 @@ function setDefaultDates() {
 function setDefaultDateRanges() {
     const today = new Date();
     const endDate = new Date(today);
-    endDate.setMonth(endDate.getMonth() + 1); // 默认结束日期为1个月后
-    
+    endDate.setMonth(endDate.getMonth() + 1);
+
     document.getElementById('dailyEndDate').value = formatDate(endDate);
     document.getElementById('weeklyEndDate').value = formatDate(endDate);
     document.getElementById('monthlyEndDate').value = formatDate(endDate);
@@ -83,7 +80,9 @@ function formatDate(date) {
 function updateCharCount() {
     const textarea = document.getElementById('planContent');
     const count = document.getElementById('contentCount');
-    count.textContent = textarea.value.length;
+    if (count && textarea) {
+        count.textContent = textarea.value.length;
+    }
 }
 
 // 处理重复类型选择
@@ -113,9 +112,6 @@ function setRecurrenceType(type) {
     if (detailSection) {
         detailSection.classList.add('active');
     }
-    
-    // 更新表单数据
-    document.querySelector('input[name="recurrenceType"]').value = type;
 }
 
 // 处理星期选择
@@ -127,6 +123,7 @@ function handleWeekdaySelect(event) {
 // 处理表单提交
 function handleFormSubmit(event) {
     event.preventDefault();
+    console.log('表单提交被触发');
     
     // 验证表单
     if (!validateForm()) {
@@ -183,40 +180,6 @@ function validateForm() {
         return false;
     }
     
-    // 验证日期范围
-    if (!validateDateRanges(recurrenceType)) {
-        return false;
-    }
-    
-    return true;
-}
-
-// 验证日期范围
-function validateDateRanges(recurrenceType) {
-    let startDate, endDate;
-    
-    switch (recurrenceType) {
-        case 'daily':
-            startDate = new Date(document.getElementById('dailyStartDate').value);
-            endDate = new Date(document.getElementById('dailyEndDate').value);
-            break;
-        case 'weekly':
-            startDate = new Date(document.getElementById('weeklyStartDate').value);
-            endDate = new Date(document.getElementById('weeklyEndDate').value);
-            break;
-        case 'monthly':
-            startDate = new Date(document.getElementById('monthlyStartDate').value);
-            endDate = new Date(document.getElementById('monthlyEndDate').value);
-            break;
-        default:
-            return true;
-    }
-    
-    if (endDate < startDate) {
-        alert('结束日期不能早于开始日期');
-        return false;
-    }
-    
     return true;
 }
 
@@ -231,7 +194,6 @@ function collectFormData() {
         recurrenceType: recurrenceType,
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
-        customPoints: document.getElementById('customPoints').checked,
         startDate: document.getElementById('startDate').value
     };
     
@@ -300,7 +262,8 @@ function createTask(formData, date) {
         time: duration,
         timeOfDay: getTimeOfDay(startTime),
         note: formData.content,
-        recurrence: formData.recurrenceType !== 'once' ? formData.recurrenceType : null
+        recurrence: formData.recurrenceType !== 'once' ? formData.recurrenceType : null,
+        completed: false
     };
 }
 
@@ -392,12 +355,11 @@ function saveTasks(tasks) {
     const existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
     
     // 生成新任务的ID
-    const maxId = existingTasks.length > 0 ? Math.max(...existingTasks.map(t => t.id)) : 0;
+    const maxId = existingTasks.length > 0 ? Math.max(...existingTasks.map(t => t.id || 0)) : 0;
     
     // 为新任务添加ID
     tasks.forEach((task, index) => {
         task.id = maxId + index + 1;
-        task.completed = false;
     });
     
     // 合并任务
@@ -405,69 +367,12 @@ function saveTasks(tasks) {
     
     // 保存到本地存储
     localStorage.setItem('studyTasks', JSON.stringify(allTasks));
+    console.log('保存了', tasks.length, '个任务到本地存储');
 }
 
 // 显示成功消息
 function showSuccessMessage(taskCount) {
-    const message = document.createElement('div');
-    message.className = 'success-message';
-    message.innerHTML = `
-        <div class="success-content">
-            <i class="fas fa-check-circle"></i>
-            <h3>计划添加成功！</h3>
-            <p>已创建 ${taskCount} 个学习计划</p>
-            <p>正在跳转回主页...</p>
-        </div>
-    `;
-    
-    // 添加样式
-    const style = document.createElement('style');
-    style.textContent = `
-        .success-message {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .success-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            animation: successScale 0.5s;
-        }
-        
-        .success-content i {
-            font-size: 4rem;
-            color: #2ed573;
-            margin-bottom: 15px;
-        }
-        
-        .success-content h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .success-content p {
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        @keyframes successScale {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(message);
+    alert(`计划添加成功！已创建 ${taskCount} 个学习计划\n2秒后跳转回主页`);
 }
 
 // 处理取消操作
