@@ -1,74 +1,45 @@
-// 添加计划页面逻辑
+// 简化调试版本 - 添加计划页面
+console.log('add-plan.js 已加载');
+
+// 全局变量
+let currentRecurrenceType = 'once';
+
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化表单
-    initializeForm();
-    
-    // 设置事件监听器
-    setupEventListeners();
+    console.log('DOM已加载');
+    initializePage();
+});
+
+function initializePage() {
+    console.log('初始化页面');
     
     // 设置默认日期
     setDefaultDates();
-});
-
-// 初始化表单
-function initializeForm() {
-    // 设置字符计数
-    updateCharCount();
+    
+    // 绑定事件
+    bindEvents();
     
     // 设置默认重复类型
     setRecurrenceType('once');
-    
-    // 设置默认日期范围
-    setDefaultDateRanges();
 }
 
-// 设置事件监听器
-function setupEventListeners() {
-    // 重复类型选择
-    document.querySelectorAll('.recurrence-option').forEach(option => {
-        option.addEventListener('click', handleRecurrenceSelect);
-    });
-    
-    // 字符计数
-    document.getElementById('planContent').addEventListener('input', updateCharCount);
-    
-    // 星期选择
-    document.querySelectorAll('.weekday-option').forEach(option => {
-        option.addEventListener('click', handleWeekdaySelect);
-    });
-    
-    // 取消按钮
-    document.getElementById('cancelBtn').addEventListener('click', handleCancel);
-}
-
-// 设置默认日期
 function setDefaultDates() {
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 30);
-
-    // 设置日期输入框的默认值
-    document.getElementById('startDate').value = formatDate(today);
-    document.getElementById('dailyStartDate').value = formatDate(today);
-    document.getElementById('dailyEndDate').value = formatDate(tomorrow);
-    document.getElementById('weeklyStartDate').value = formatDate(today);
-    document.getElementById('weeklyEndDate').value = formatDate(tomorrow);
-    document.getElementById('monthlyStartDate').value = formatDate(today);
-    document.getElementById('monthlyEndDate').value = formatDate(tomorrow);
+    const formattedDate = formatDate(today);
+    
+    // 设置所有日期输入框
+    const dateInputs = [
+        'startDate', 'dailyStartDate', 'dailyEndDate', 
+        'weeklyStartDate', 'weeklyEndDate', 'monthlyStartDate', 'monthlyEndDate'
+    ];
+    
+    dateInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.value = formattedDate;
+        }
+    });
 }
 
-// 设置默认日期范围
-function setDefaultDateRanges() {
-    const today = new Date();
-    const endDate = new Date(today);
-    endDate.setMonth(endDate.getMonth() + 1);
-
-    document.getElementById('dailyEndDate').value = formatDate(endDate);
-    document.getElementById('weeklyEndDate').value = formatDate(endDate);
-    document.getElementById('monthlyEndDate').value = formatDate(endDate);
-}
-
-// 格式化日期为 YYYY-MM-DD
 function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -76,308 +47,252 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// 更新字符计数
-function updateCharCount() {
-    const textarea = document.getElementById('planContent');
-    const count = document.getElementById('contentCount');
-    if (count && textarea) {
-        count.textContent = textarea.value.length;
+function bindEvents() {
+    console.log('绑定事件');
+    
+    // 重复类型选择
+    const recurrenceOptions = document.querySelectorAll('.recurrence-option');
+    recurrenceOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const type = this.getAttribute('data-value');
+            console.log('选择了重复类型:', type);
+            setRecurrenceType(type);
+        });
+    });
+    
+    // 星期选择
+    const weekdayOptions = document.querySelectorAll('.weekday-option');
+    weekdayOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            console.log('星期选择状态变化');
+        });
+    });
+    
+    // 取消按钮
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('确定要取消吗？')) {
+                window.location.href = 'index.html';
+            }
+        });
+    }
+    
+    // 保存按钮
+    const saveBtn = document.querySelector('.btn-save');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', handleFormSubmit);
+    }
+    
+    // 字符计数
+    const planContent = document.getElementById('planContent');
+    if (planContent) {
+        planContent.addEventListener('input', updateCharCount);
     }
 }
 
-// 处理重复类型选择
-function handleRecurrenceSelect(event) {
-    const option = event.currentTarget;
-    const type = option.getAttribute('data-value');
+function setRecurrenceType(type) {
+    console.log('设置重复类型:', type);
+    currentRecurrenceType = type;
     
-    // 更新选中状态
+    // 更新UI选中状态
     document.querySelectorAll('.recurrence-option').forEach(opt => {
         opt.classList.remove('selected');
     });
-    option.classList.add('selected');
     
-    // 设置重复类型
-    setRecurrenceType(type);
-}
-
-// 设置重复类型
-function setRecurrenceType(type) {
-    // 隐藏所有详情区域
+    const selectedOption = document.querySelector(`.recurrence-option[data-value="${type}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // 显示对应的详情区域
     document.querySelectorAll('.detail-section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // 显示对应的详情区域
     const detailSection = document.querySelector(`.${type}-details`);
     if (detailSection) {
         detailSection.classList.add('active');
     }
 }
 
-// 处理星期选择
-function handleWeekdaySelect(event) {
-    const option = event.currentTarget;
-    option.classList.toggle('selected');
+function updateCharCount() {
+    const textarea = document.getElementById('planContent');
+    const count = document.getElementById('contentCount');
+    if (textarea && count) {
+        count.textContent = textarea.value.length;
+    }
 }
 
-// 处理表单提交
 function handleFormSubmit(event) {
-    event.preventDefault();
-    console.log('表单提交被触发');
+    if (event) {
+        event.preventDefault();
+    }
     
-    // 验证表单
+    console.log('开始处理表单提交');
+    
     if (!validateForm()) {
         return;
     }
     
-    // 收集表单数据
     const formData = collectFormData();
+    console.log('收集的表单数据:', formData);
     
-    // 生成任务
-    const generatedTasks = generateTasks(formData);
+    const tasks = generateTasks(formData);
+    console.log('生成的任务:', tasks);
     
-    // 保存任务
-    saveTasks(generatedTasks);
+    saveTasks(tasks);
     
-    // 显示成功消息
-    showSuccessMessage(generatedTasks.length);
+    alert(`成功创建 ${tasks.length} 个学习计划！`);
     
-    // 延迟跳转回主页
+    // 跳转回主页
     setTimeout(() => {
         window.location.href = 'index.html';
-    }, 2000);
+    }, 1000);
 }
 
-// 验证表单
 function validateForm() {
-    const planName = document.getElementById('planName').value.trim();
-    const category = document.getElementById('categorySelect').value;
-    const recurrenceType = document.querySelector('.recurrence-option.selected')?.getAttribute('data-value');
+    const planName = document.getElementById('planName')?.value.trim();
+    const category = document.getElementById('categorySelect')?.value;
     
-    // 验证计划名称
     if (!planName) {
         alert('请填写计划名称');
-        document.getElementById('planName').focus();
         return false;
     }
     
-    if (planName.length < 1 || planName.length > 20) {
-        alert('计划名称长度应在1-20字之间');
-        document.getElementById('planName').focus();
-        return false;
-    }
-    
-    // 验证类别
     if (!category) {
-        alert('请选择类别');
-        document.getElementById('categorySelect').focus();
-        return false;
-    }
-    
-    // 验证重复类型
-    if (!recurrenceType) {
-        alert('请选择重复类型');
+        alert('请选择科目');
         return false;
     }
     
     return true;
 }
 
-// 收集表单数据
 function collectFormData() {
-    const recurrenceType = document.querySelector('.recurrence-option.selected').getAttribute('data-value');
-    
-    const formData = {
+    return {
         name: document.getElementById('planName').value.trim(),
         subject: document.getElementById('categorySelect').value,
         content: document.getElementById('planContent').value.trim(),
-        recurrenceType: recurrenceType,
-        startTime: document.getElementById('startTime').value,
-        endTime: document.getElementById('endTime').value,
+        recurrenceType: currentRecurrenceType,
+        startTime: document.getElementById('startTime').value || '19:00',
+        endTime: document.getElementById('endTime').value || '20:30',
         startDate: document.getElementById('startDate').value
     };
-    
-    // 根据重复类型添加额外数据
-    switch (recurrenceType) {
-        case 'daily':
-            formData.dailyStartDate = document.getElementById('dailyStartDate').value;
-            formData.dailyEndDate = document.getElementById('dailyEndDate').value;
-            break;
-        case 'weekly':
-            formData.weeklyStartDate = document.getElementById('weeklyStartDate').value;
-            formData.weeklyEndDate = document.getElementById('weeklyEndDate').value;
-            formData.selectedWeekdays = Array.from(document.querySelectorAll('.weekday-option.selected'))
-                .map(opt => parseInt(opt.getAttribute('data-day')));
-            break;
-        case 'monthly':
-            formData.monthlyStartDate = document.getElementById('monthlyStartDate').value;
-            formData.monthlyEndDate = document.getElementById('monthlyEndDate').value;
-            break;
-    }
-    
-    return formData;
 }
 
-// 生成任务
 function generateTasks(formData) {
     const tasks = [];
     
     switch (formData.recurrenceType) {
         case 'once':
-            // 单次任务
-            tasks.push(createTask(formData, formData.startDate));
+            tasks.push(createSingleTask(formData));
             break;
-            
         case 'daily':
-            // 每日重复任务
-            tasks.push(...generateDailyTasks(formData));
+            tasks.push(...createDailyTasks(formData));
             break;
-            
         case 'weekly':
-            // 每周重复任务
-            tasks.push(...generateWeeklyTasks(formData));
+            tasks.push(...createWeeklyTasks(formData));
             break;
-            
         case 'monthly':
-            // 每月重复任务
-            tasks.push(...generateMonthlyTasks(formData));
+            tasks.push(...createMonthlyTasks(formData));
             break;
     }
     
     return tasks;
 }
 
-// 创建单个任务
-function createTask(formData, date) {
-    const startTime = formData.startTime || '19:00';
-    const endTime = formData.endTime || '20:30';
-    const duration = calculateDuration(startTime, endTime);
-    
+function createSingleTask(formData) {
     return {
         name: formData.name,
         subject: formData.subject,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        time: duration,
-        timeOfDay: getTimeOfDay(startTime),
+        date: formData.startDate,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        time: 60, // 默认60分钟
         note: formData.content,
-        recurrence: formData.recurrenceType !== 'once' ? formData.recurrenceType : null,
-        completed: false
+        completed: false,
+        recurrence: null
     };
 }
 
-// 生成每日重复任务
-function generateDailyTasks(formData) {
+function createDailyTasks(formData) {
+    // 简化版本：只创建3天的任务用于测试
     const tasks = [];
-    const startDate = new Date(formData.dailyStartDate);
-    const endDate = new Date(formData.dailyEndDate);
+    const startDate = new Date(formData.startDate);
     
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        tasks.push(createTask(formData, formatDate(currentDate)));
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return tasks;
-}
-
-// 生成每周重复任务
-function generateWeeklyTasks(formData) {
-    const tasks = [];
-    const startDate = new Date(formData.weeklyStartDate);
-    const endDate = new Date(formData.weeklyEndDate);
-    const selectedWeekdays = formData.selectedWeekdays || [];
-    
-    if (selectedWeekdays.length === 0) {
-        alert('请选择至少一个重复日期');
-        return tasks;
-    }
-    
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        const dayOfWeek = currentDate.getDay();
+    for (let i = 0; i < 3; i++) {
+        const taskDate = new Date(startDate);
+        taskDate.setDate(startDate.getDate() + i);
         
-        if (selectedWeekdays.includes(dayOfWeek)) {
-            tasks.push(createTask(formData, formatDate(currentDate)));
-        }
-        
-        currentDate.setDate(currentDate.getDate() + 1);
+        tasks.push({
+            ...createSingleTask(formData),
+            date: formatDate(taskDate)
+        });
     }
     
     return tasks;
 }
 
-// 生成每月重复任务
-function generateMonthlyTasks(formData) {
+function createWeeklyTasks(formData) {
     const tasks = [];
-    const startDate = new Date(formData.monthlyStartDate);
-    const endDate = new Date(formData.monthlyEndDate);
+    const startDate = new Date(formData.startDate);
     
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        tasks.push(createTask(formData, formatDate(currentDate)));
-        currentDate.setMonth(currentDate.getMonth() + 1);
+    // 简化版本：创建2周的任务
+    for (let i = 0; i < 2; i++) {
+        const taskDate = new Date(startDate);
+        taskDate.setDate(startDate.getDate() + (i * 7));
+        
+        tasks.push({
+            ...createSingleTask(formData),
+            date: formatDate(taskDate)
+        });
     }
     
     return tasks;
 }
 
-// 计算时间持续时间（分钟）
-function calculateDuration(startTime, endTime) {
-    if (!startTime || !endTime) return 30;
+function createMonthlyTasks(formData) {
+    const tasks = [];
+    const startDate = new Date(formData.startDate);
     
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    const diff = (end - start) / (1000 * 60);
+    // 简化版本：创建2个月的任务
+    for (let i = 0; i < 2; i++) {
+        const taskDate = new Date(startDate);
+        taskDate.setMonth(startDate.getMonth() + i);
+        
+        tasks.push({
+            ...createSingleTask(formData),
+            date: formatDate(taskDate)
+        });
+    }
     
-    return diff > 0 ? diff : 30;
+    return tasks;
 }
 
-// 根据时间获取时间段
-function getTimeOfDay(time) {
-    if (!time) return '未设置';
-    
-    const hour = parseInt(time.split(':')[0]);
-    if (hour < 9) return '早上';
-    if (hour < 12) return '上午';
-    if (hour < 14) return '中午';
-    if (hour < 18) return '下午';
-    return '晚上';
-}
-
-// 保存任务到本地存储
 function saveTasks(tasks) {
     // 获取现有任务
-    const existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+    let existingTasks = [];
+    try {
+        const saved = localStorage.getItem('studyTasks');
+        if (saved) {
+            existingTasks = JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('读取本地存储失败:', e);
+    }
     
-    // 生成新任务的ID
-    const maxId = existingTasks.length > 0 ? Math.max(...existingTasks.map(t => t.id || 0)) : 0;
+    // 为新任务生成ID
+    const maxId = existingTasks.length > 0 ? 
+        Math.max(...existingTasks.map(t => t.id || 0)) : 0;
     
-    // 为新任务添加ID
     tasks.forEach((task, index) => {
         task.id = maxId + index + 1;
     });
     
-    // 合并任务
+    // 合并并保存
     const allTasks = [...existingTasks, ...tasks];
-    
-    // 保存到本地存储
     localStorage.setItem('studyTasks', JSON.stringify(allTasks));
-    console.log('保存了', tasks.length, '个任务到本地存储');
-}
-
-// 显示成功消息
-function showSuccessMessage(taskCount) {
-    alert(`计划添加成功！已创建 ${taskCount} 个学习计划\n2秒后跳转回主页`);
-}
-
-// 处理取消操作
-function handleCancel() {
-    if (confirm('确定要取消添加计划吗？所有输入的内容将会丢失。')) {
-        window.location.href = 'index.html';
-    }
+    
+    console.log('保存了', tasks.length, '个任务，总共', allTasks.length, '个任务');
 }
