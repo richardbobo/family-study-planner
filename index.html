@@ -335,79 +335,82 @@
             font-size: 0.9rem;
         }
         
-        /* 添加计划模态框 */
-        .modal {
+        /* 添加计划页面样式 */
+        .add-plan-page {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background-color: white;
+            background: white;
             border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
             padding: 30px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
         }
         
-        .modal-header {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
             padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
         }
         
-        .modal-title {
-            font-size: 1.5rem;
+        .page-title {
+            font-size: 1.8rem;
             color: #4a69bd;
         }
         
-        .close-btn {
-            background: none;
+        .back-btn {
+            background: #777;
+            color: white;
             border: none;
-            font-size: 1.5rem;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            color: #777;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .form-section {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
         }
         
         .section-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 15px;
-            color: #4a69bd;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .section-subtitle {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #666;
+            font-weight: normal;
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .form-label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
-            color: #555;
+            color: #333;
+        }
+        
+        .required::after {
+            content: "*";
+            color: #ff4757;
+            margin-left: 4px;
         }
         
         .form-input, .form-select, .form-textarea {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
@@ -417,11 +420,91 @@
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             border-color: #4a69bd;
             outline: none;
+            box-shadow: 0 0 0 2px rgba(74, 105, 189, 0.2);
         }
         
         .form-textarea {
-            min-height: 80px;
+            min-height: 100px;
             resize: vertical;
+        }
+        
+        .char-limit {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        .date-display {
+            font-size: 1.1rem;
+            color: #4a69bd;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .date-description {
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .category-tag {
+            background: #e0e7ff;
+            color: #4a69bd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .category-tag.selected {
+            background: #4a69bd;
+            color: white;
+        }
+        
+        .category-tag:hover {
+            transform: translateY(-2px);
+        }
+        
+        .add-category {
+            background: #f0f0f0;
+            color: #777;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .recurrence-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .recurrence-option {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .recurrence-option.selected {
+            border-color: #4a69bd;
+            background: #e3f2fd;
         }
         
         .time-inputs {
@@ -439,45 +522,57 @@
             color: #777;
         }
         
+        .time-note {
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-bottom: 15px;
         }
         
         .checkbox-label {
             margin-bottom: 0;
+            font-weight: bold;
         }
         
-        .points-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+        .points-description {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
             margin-top: 10px;
         }
         
-        .point-option {
-            background: #f0f7ff;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
+        .points-list {
+            list-style: none;
+            margin-top: 10px;
         }
         
-        .point-option.selected {
-            border-color: #4a69bd;
-            background: #e3f2fd;
+        .points-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
         }
         
-        .modal-actions {
+        .points-list li::before {
+            content: "•";
+            color: #4a69bd;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .form-actions {
             display: flex;
             justify-content: flex-end;
             gap: 15px;
-            margin-top: 25px;
-            border-top: 1px solid #eee;
+            margin-top: 30px;
             padding-top: 20px;
+            border-top: 1px solid #eee;
         }
         
         .btn-cancel {
@@ -519,8 +614,8 @@
                 display: none;
             }
             
-            .points-options {
-                grid-template-columns: 1fr;
+            .recurrence-options {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
         
@@ -536,203 +631,219 @@
             .day-card:nth-child(n+5) {
                 display: none;
             }
+            
+            .recurrence-options {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
-            <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
-        </header>
-        
-        <!-- 统计卡片区域 -->
-        <div class="stats-section">
-            <div class="stat-card">
-                <i class="fas fa-check-circle" style="color: #2ed573; font-size: 1.5rem;"></i>
-                <div class="stat-number" id="completedTasks">0</div>
-                <div>已完成任务</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-clock" style="color: #ff9f43; font-size: 1.5rem;"></i>
-                <div class="stat-number" id="totalMinutes">0</div>
-                <div>学习总时长(分钟)</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-fire" style="color: #ff6b6b; font-size: 1.5rem;"></i>
-                <div class="stat-number" id="streakDays">0</div>
-                <div>连续打卡天数</div>
-            </div>
-            <div class="stat-card reward-card">
-                <i class="fas fa-trophy" style="font-size: 1.5rem;"></i>
-                <div class="stat-number" id="rewardPoints">0</div>
-                <div>学习积分</div>
-            </div>
-        </div>
-        
-        <!-- 学习计划栏 -->
-        <div class="planning-section">
-            <div class="planning-card">
-                <h2><i class="fas fa-tasks"></i> 学习计划</h2>
-                <p>在这里查看和管理您的学习计划，合理安排学习时间，提高学习效率。</p>
-                <div style="margin-top: 15px;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="weekProgress" style="width: 0%"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                        <span>0%</span>
-                        <span id="progressPercent">0%</span>
-                        <span>100%</span>
-                    </div>
+        <!-- 主页面 -->
+        <div id="mainPage">
+            <header>
+                <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
+                <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
+            </header>
+            
+            <!-- 统计卡片区域 -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <i class="fas fa-check-circle" style="color: #2ed573; font-size: 1.5rem;"></i>
+                    <div class="stat-number" id="completedTasks">0</div>
+                    <div>已完成任务</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock" style="color: #ff9f43; font-size: 1.5rem;"></i>
+                    <div class="stat-number" id="totalMinutes">0</div>
+                    <div>学习总时长(分钟)</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-fire" style="color: #ff6b6b; font-size: 1.5rem;"></i>
+                    <div class="stat-number" id="streakDays">0</div>
+                    <div>连续打卡天数</div>
+                </div>
+                <div class="stat-card reward-card">
+                    <i class="fas fa-trophy" style="font-size: 1.5rem;"></i>
+                    <div class="stat-number" id="rewardPoints">0</div>
+                    <div>学习积分</div>
                 </div>
             </div>
-            <div class="planning-buttons">
-                <button class="btn btn-warning" id="addPlanBtn">
-                    <i class="fas fa-plus"></i> 添加计划
-                </button>
-                <button class="btn btn-info">
-                    <i class="fas fa-layer-group"></i> 批量添加
-                </button>
-            </div>
-        </div>
-        
-        <!-- 日历区域 -->
-        <div class="calendar-section">
-            <div class="calendar-header">
-                <div class="calendar-nav">
-                    <button id="prevWeekBtn"><i class="fas fa-chevron-left"></i></button>
-                    <button id="todayBtn">今天</button>
-                    <button id="nextWeekBtn"><i class="fas fa-chevron-right"></i></button>
+            
+            <!-- 学习计划栏 -->
+            <div class="planning-section">
+                <div class="planning-card">
+                    <h2><i class="fas fa-tasks"></i> 学习计划</h2>
+                    <p>在这里查看和管理您的学习计划，合理安排学习时间，提高学习效率。</p>
+                    <div style="margin-top: 15px;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="weekProgress" style="width: 0%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <span>0%</span>
+                            <span id="progressPercent">0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="calendar-title" id="calendarTitle">2023年11月 第3周</div>
-            </div>
-            
-            <div class="week-display">
-                <div class="week-number">第45周</div>
-                <div class="week-number">11月</div>
-            </div>
-            
-            <div class="week-days" id="weekDays">
-                <!-- 日期卡片将通过JavaScript动态生成 -->
-            </div>
-        </div>
-        
-        <!-- 学习计划列表 -->
-        <div class="task-list-section">
-            <div class="task-list-header">
-                <h2><i class="fas fa-list"></i> 学习计划列表</h2>
-                <div>
-                    <button class="btn" style="background: #2bcbba;">
-                        <i class="fas fa-filter"></i> 筛选
+                <div class="planning-buttons">
+                    <button class="btn btn-warning" id="addPlanBtn">
+                        <i class="fas fa-plus"></i> 添加计划
+                    </button>
+                    <button class="btn btn-info">
+                        <i class="fas fa-layer-group"></i> 批量添加
                     </button>
                 </div>
             </div>
-            <div class="task-list" id="taskList">
-                <!-- 任务将通过JavaScript动态生成 -->
-            </div>
-        </div>
-        
-        <footer>
-            <p>© 2023 小学生学习计划管理 | 培养良好学习习惯，成就更好的自己！</p>
-        </footer>
-    </div>
-
-    <!-- 添加计划模态框 -->
-    <div class="modal" id="addPlanModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">添加学习计划</h2>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
+            
+            <!-- 日历区域 -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button id="prevWeekBtn"><i class="fas fa-chevron-left"></i></button>
+                        <button id="todayBtn">今天</button>
+                        <button id="nextWeekBtn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-title" id="calendarTitle">2023年11月 第3周</div>
+                </div>
+                
+                <div class="week-display">
+                    <div class="week-number">第45周</div>
+                    <div class="week-number">11月</div>
+                </div>
+                
+                <div class="week-days" id="weekDays">
+                    <!-- 日期卡片将通过JavaScript动态生成 -->
+                </div>
             </div>
             
-            <form id="planForm">
-                <div class="form-section">
-                    <h3 class="section-title">起始日期（可选）</h3>
-                    <div class="form-group">
-                        <input type="date" class="form-input" id="startDate" value="2025-10-29">
+            <!-- 学习计划列表 -->
+            <div class="task-list-section">
+                <div class="task-list-header">
+                    <h2><i class="fas fa-list"></i> 学习计划列表</h2>
+                    <div>
+                        <button class="btn" style="background: #2bcbba;">
+                            <i class="fas fa-filter"></i> 筛选
+                        </button>
                     </div>
-                    <p style="color: #777; font-size: 0.9rem; margin-top: 10px;">
-                        请选择你的活动日程，加入分享、PPT 等相关课程，帮助你在应用过程中，对于更多课程，从应用到操作进行练习。
+                </div>
+                <div class="task-list" id="taskList">
+                    <!-- 任务将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <footer>
+                <p>© 2023 小学生学习计划管理 | 培养良好学习习惯，成就更好的自己！</p>
+            </footer>
+        </div>
+        
+        <!-- 添加计划页面 -->
+        <div class="add-plan-page" id="addPlanPage">
+            <div class="page-header">
+                <h2 class="page-title">添加学习计划</h2>
+                <button class="back-btn" id="backBtn">
+                    <i class="fas fa-arrow-left"></i> 返回主页
+                </button>
+            </div>
+            
+            <div class="form-section">
+                <h3 class="section-title">正在为 <span id="currentDateDisplay">2025-10-29</span> 添加计划</h3>
+                
+                <div class="form-group">
+                    <h4 class="section-subtitle">起始日期（可选）</h4>
+                    <div class="date-display" id="startDateDisplay">2025-10-29</div>
+                    <p class="date-description">
+                        选择计划的起始日期，默认为今天。对于"仅当天"类型，任务将在此日期创建；对于重复类型，从此日期开始生成任务。
                     </p>
+                    <input type="date" class="form-input" id="startDate" value="2025-10-29">
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label required">类别标签</label>
+                    <select class="form-select" id="categorySelect">
+                        <option value="">请选择类别</option>
+                    </select>
+                    <div class="category-tags" id="categoryTags">
+                        <!-- 类别标签将通过JavaScript动态生成 -->
+                    </div>
                 </div>
                 
-                <div class="form-section">
-                    <h3 class="section-title">活动标题</h3>
+                <div class="form-group">
+                    <label class="form-label required">计划名称</label>
+                    <input type="text" class="form-input" id="planName" placeholder="如：每天背10个英语单词">
+                    <div class="char-limit">限制 1-20 字</div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label">计划内容（可选）</label>
+                    <textarea class="form-textarea" id="planContent" placeholder="如：利用晨读时间，结合课本 Unit1 单词表"></textarea>
+                    <div class="char-limit"><span id="contentCount">0</span>/500</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">重复类型</label>
+                    <select class="form-select" id="recurrenceType">
+                        <option value="">请选择重复类型</option>
+                        <option value="once">仅当天</option>
+                        <option value="daily">每天</option>
+                        <option value="weekly">每周</option>
+                        <option value="monthly">每月</option>
+                    </select>
+                    <div class="recurrence-options">
+                        <div class="recurrence-option" data-value="once">仅当天</div>
+                        <div class="recurrence-option" data-value="daily">每天</div>
+                        <div class="recurrence-option" data-value="weekly">每周</div>
+                        <div class="recurrence-option" data-value="monthly">每月</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h4 class="section-subtitle">计划时间（可选）</h4>
+                <div class="time-inputs">
                     <div class="form-group">
-                        <label class="form-label">计划名称</label>
-                        <input type="text" class="form-input" id="planName" placeholder="如：每天打印个英语单词">
-                        <p style="color: #777; font-size: 0.9rem; margin-top: 5px;">预计1:30分</p>
+                        <label class="form-label">开始时间</label>
+                        <input type="time" class="form-input" id="startTime" value="19:00">
                     </div>
-                    
+                    <div class="time-separator">-</div>
                     <div class="form-group">
-                        <label class="form-label">计划内容（可选）</label>
-                        <textarea class="form-textarea" id="planContent" placeholder="如：利用我的时间，在回答本 Unit 中写点"></textarea>
-                        <p style="color: #777; font-size: 0.9rem; margin-top: 5px;">预计6:50分</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">重要类型</label>
-                        <select class="form-select" id="importance">
-                            <option value="">请选择重要类型</option>
-                            <option value="low">低重要性</option>
-                            <option value="medium">中等重要性</option>
-                            <option value="high">高重要性</option>
-                        </select>
+                        <label class="form-label">结束时间</label>
+                        <input type="time" class="form-input" id="endTime" value="20:30">
                     </div>
                 </div>
+                <p class="time-note">默认时间为 19:00 - 20:30，可根据需要调整</p>
+            </div>
+            
+            <div class="form-section">
+                <h4 class="section-subtitle">积分设置（可选）</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="customPoints">
+                    <label class="form-label checkbox-label">启用自定义积分</label>
+                </div>
+                <p class="date-description">
+                    为任务设置固定积分数值，替代系统默认计算规则
+                </p>
                 
-                <div class="form-section">
-                    <h3 class="section-title">计划时间（可选）</h3>
-                    <div class="time-inputs">
-                        <div class="form-group">
-                            <label class="form-label">开始时间</label>
-                            <input type="time" class="form-input" id="startTime" value="18:00">
-                        </div>
-                        <div class="time-separator">-</div>
-                        <div class="form-group">
-                            <label class="form-label">结束时间</label>
-                            <input type="time" class="form-input" id="endTime" value="20:30">
-                        </div>
-                    </div>
-                    <p style="color: #777; font-size: 0.9rem; margin-top: 10px;">
-                        <strong>默认时间为</strong>: 19:03 - 20:30。可根据需要调整
-                    </p>
+                <div class="points-description">
+                    <strong>系统默认规则</strong>
+                    <ul class="points-list">
+                        <li>基础积分：1星</li>
+                        <li>时间奖励：30分钟+1星，60分钟+2星</li>
+                        <li>早起加成：6:00-8:00 ×1.2倍</li>
+                        <li>周末加成：×1.5倍</li>
+                    </ul>
                 </div>
-                
-                <div class="form-section">
-                    <h3 class="section-title">积分设置（可选）</h3>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="customPoints">
-                        <label class="form-label checkbox-label">启用自定义积分</label>
-                    </div>
-                    <p style="color: #777; font-size: 0.9rem; margin-top: 5px;">
-                        为节省资源和实际时间，将积分设置以计算数据
-                    </p>
-                    
-                    <div class="form-group" id="pointsOptions" style="display: none;">
-                        <label class="form-label">系统以选择</label>
-                        <div class="points-options">
-                            <div class="point-option" data-points="12">
-                                系统积分：12
-                            </div>
-                            <div class="point-option" data-points="1012">
-                                系统积分：1000分+12，60分+2/32
-                            </div>
-                            <div class="point-option" data-points="5000">
-                                系统积分：5000-800 +1/32
-                            </div>
-                            <div class="point-option" data-points="15">
-                                系统积分：+15分
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-cancel" id="cancelBtn">取消</button>
-                    <button type="submit" class="btn btn-save">保存计划</button>
-                </div>
-            </form>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" id="cancelBtn">取消</button>
+                <button type="button" class="btn btn-save" id="savePlanBtn">保存计划</button>
+            </div>
         </div>
     </div>
 
@@ -747,6 +858,9 @@
             { id: 6, name: "体育跳绳练习", subject: "体育", date: getDateFromToday(5), time: 20, timeOfDay: "早上", note: "连续跳100下", completed: false }
         ];
         
+        // 科目数据
+        let subjects = ["语文", "数学", "英语", "科学", "美术", "体育"];
+        
         // 初始化统计信息
         let stats = {
             completedTasks: 0,
@@ -757,6 +871,8 @@
         };
         
         // DOM元素
+        const mainPage = document.getElementById('mainPage');
+        const addPlanPage = document.getElementById('addPlanPage');
         const completedTasksEl = document.getElementById('completedTasks');
         const totalMinutesEl = document.getElementById('totalMinutes');
         const streakDaysEl = document.getElementById('streakDays');
@@ -770,15 +886,24 @@
         const nextWeekBtn = document.getElementById('nextWeekBtn');
         const todayBtn = document.getElementById('todayBtn');
         const addPlanBtn = document.getElementById('addPlanBtn');
-        
-        // 模态框相关元素
-        const addPlanModal = document.getElementById('addPlanModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
+        const backBtn = document.getElementById('backBtn');
         const cancelBtn = document.getElementById('cancelBtn');
-        const planForm = document.getElementById('planForm');
+        const savePlanBtn = document.getElementById('savePlanBtn');
+        
+        // 添加计划表单元素
+        const currentDateDisplay = document.getElementById('currentDateDisplay');
+        const startDateDisplay = document.getElementById('startDateDisplay');
+        const startDateInput = document.getElementById('startDate');
+        const categorySelect = document.getElementById('categorySelect');
+        const categoryTags = document.getElementById('categoryTags');
+        const planNameInput = document.getElementById('planName');
+        const planContentInput = document.getElementById('planContent');
+        const contentCount = document.getElementById('contentCount');
+        const recurrenceTypeSelect = document.getElementById('recurrenceType');
+        const recurrenceOptions = document.querySelectorAll('.recurrence-option');
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
         const customPointsCheckbox = document.getElementById('customPoints');
-        const pointsOptions = document.getElementById('pointsOptions');
-        const pointOptions = document.querySelectorAll('.point-option');
         
         // 当前查看的日期
         let currentViewDate = getTodayDate();
@@ -793,6 +918,15 @@
             
             // 渲染任务列表
             renderTaskList();
+            
+            // 初始化科目选择
+            updateCategorySelect();
+            renderCategoryTags();
+            
+            // 设置当前日期显示
+            currentDateDisplay.textContent = formatDateDisplay(currentViewDate);
+            startDateDisplay.textContent = formatDateDisplay(currentViewDate);
+            startDateInput.value = currentViewDate;
             
             // 周导航事件
             prevWeekBtn.addEventListener('click', function() {
@@ -811,48 +945,73 @@
             
             // 添加计划按钮事件
             addPlanBtn.addEventListener('click', function() {
-                addPlanModal.style.display = 'flex';
+                showAddPlanPage();
             });
             
-            // 关闭模态框事件
-            closeModalBtn.addEventListener('click', function() {
-                addPlanModal.style.display = 'none';
+            // 返回主页按钮事件
+            backBtn.addEventListener('click', function() {
+                showMainPage();
             });
             
             cancelBtn.addEventListener('click', function() {
-                addPlanModal.style.display = 'none';
+                showMainPage();
             });
             
-            // 点击模态框外部关闭
-            window.addEventListener('click', function(event) {
-                if (event.target === addPlanModal) {
-                    addPlanModal.style.display = 'none';
-                }
+            // 保存计划按钮事件
+            savePlanBtn.addEventListener('click', function() {
+                savePlan();
             });
             
-            // 自定义积分复选框事件
-            customPointsCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    pointsOptions.style.display = 'block';
-                } else {
-                    pointsOptions.style.display = 'none';
-                }
+            // 起始日期变更事件
+            startDateInput.addEventListener('change', function() {
+                startDateDisplay.textContent = formatDateDisplay(this.value);
             });
             
-            // 积分选项点击事件
-            pointOptions.forEach(option => {
+            // 计划内容字数统计
+            planContentInput.addEventListener('input', function() {
+                contentCount.textContent = this.value.length;
+            });
+            
+            // 重复类型选项点击事件
+            recurrenceOptions.forEach(option => {
                 option.addEventListener('click', function() {
-                    pointOptions.forEach(opt => opt.classList.remove('selected'));
+                    recurrenceOptions.forEach(opt => opt.classList.remove('selected'));
                     this.classList.add('selected');
+                    recurrenceTypeSelect.value = this.getAttribute('data-value');
                 });
             });
             
-            // 表单提交事件
-            planForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                savePlan();
+            // 类别标签点击事件
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('category-tag')) {
+                    const subject = e.target.textContent;
+                    recurrenceOptions.forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    categorySelect.value = subject;
+                }
+                
+                if (e.target.classList.contains('add-category')) {
+                    const newSubject = prompt('请输入新科目名称:');
+                    if (newSubject && !subjects.includes(newSubject)) {
+                        subjects.push(newSubject);
+                        updateCategorySelect();
+                        renderCategoryTags();
+                    }
+                }
             });
         });
+        
+        // 显示添加计划页面
+        function showAddPlanPage() {
+            mainPage.style.display = 'none';
+            addPlanPage.style.display = 'block';
+        }
+        
+        // 显示主页面
+        function showMainPage() {
+            mainPage.style.display = 'block';
+            addPlanPage.style.display = 'none';
+        }
         
         // 获取今天日期字符串 (YYYY-MM-DD)
         function getTodayDate() {
@@ -877,17 +1036,7 @@
         // 格式化日期显示
         function formatDateDisplay(dateStr) {
             const date = new Date(dateStr);
-            const today = new Date();
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            if (dateStr === getTodayDate()) {
-                return "今天";
-            } else if (dateStr === getTomorrowDate()) {
-                return "明天";
-            } else {
-                return `${date.getMonth() + 1}月${date.getDate()}日`;
-            }
+            return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
         }
         
         // 生成周日期卡片
@@ -963,6 +1112,34 @@
             currentViewDate = date.toISOString().split('T')[0];
             generateWeekDays();
             renderTaskList();
+        }
+        
+        // 更新科目选择下拉框
+        function updateCategorySelect() {
+            categorySelect.innerHTML = '<option value="">请选择类别</option>';
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        // 渲染科目标签
+        function renderCategoryTags() {
+            categoryTags.innerHTML = '';
+            subjects.forEach(subject => {
+                const tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.textContent = subject;
+                categoryTags.appendChild(tag);
+            });
+            
+            // 添加自定义科目按钮
+            const addButton = document.createElement('div');
+            addButton.className = 'category-tag add-category';
+            addButton.innerHTML = '<i class="fas fa-plus"></i> 添加';
+            categoryTags.appendChild(addButton);
         }
         
         // 渲染任务列表
@@ -1055,14 +1232,32 @@
         
         // 保存计划
         function savePlan() {
-            const planName = document.getElementById('planName').value;
-            const planContent = document.getElementById('planContent').value;
-            const importance = document.getElementById('importance').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
+            const planName = planNameInput.value.trim();
+            const category = categorySelect.value;
+            const planContent = planContentInput.value.trim();
+            const recurrenceType = recurrenceTypeSelect.value;
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const startDate = startDateInput.value;
             
+            // 表单验证
             if (!planName) {
                 alert('请填写计划名称');
+                return;
+            }
+            
+            if (planName.length < 1 || planName.length > 20) {
+                alert('计划名称长度应在1-20字之间');
+                return;
+            }
+            
+            if (!category) {
+                alert('请选择类别');
+                return;
+            }
+            
+            if (!recurrenceType) {
+                alert('请选择重复类型');
                 return;
             }
             
@@ -1070,13 +1265,13 @@
             const newTask = {
                 id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
                 name: planName,
-                subject: "自定义",
-                date: currentViewDate,
-                time: 30, // 默认30分钟
+                subject: category,
+                date: startDate,
+                time: calculateTimeDuration(startTime, endTime),
                 timeOfDay: getTimeOfDay(startTime),
                 note: planContent,
                 completed: false,
-                importance: importance
+                recurrence: recurrenceType !== 'once' ? recurrenceType : null
             };
             
             tasks.push(newTask);
@@ -1086,20 +1281,38 @@
             generateWeekDays();
             updateStats();
             
-            // 关闭模态框
-            addPlanModal.style.display = 'none';
+            // 返回主页
+            showMainPage();
             
             // 重置表单
-            planForm.reset();
-            document.getElementById('startDate').value = '2025-10-29';
-            document.getElementById('startTime').value = '18:00';
-            document.getElementById('endTime').value = '20:30';
+            planNameInput.value = '';
+            planContentInput.value = '';
+            contentCount.textContent = '0';
+            recurrenceTypeSelect.value = '';
+            recurrenceOptions.forEach(opt => opt.classList.remove('selected'));
+            categorySelect.value = '';
+            document.querySelectorAll('.category-tag').forEach(tag => {
+                tag.classList.remove('selected');
+            });
             
             alert('计划添加成功！');
         }
         
+        // 计算时间持续时间（分钟）
+        function calculateTimeDuration(startTime, endTime) {
+            if (!startTime || !endTime) return 30; // 默认30分钟
+            
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            const diff = (end - start) / (1000 * 60); // 转换为分钟
+            
+            return diff > 0 ? diff : 30; // 如果时间无效，返回默认30分钟
+        }
+        
         // 根据时间获取时间段
         function getTimeOfDay(time) {
+            if (!time) return '未设置';
+            
             const hour = parseInt(time.split(':')[0]);
             if (hour < 9) return '早上';
             if (hour < 12) return '上午';
