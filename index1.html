@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学生学习计划管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* 所有样式保持不变 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f7ff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #6a89cc, #4a69bd);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: #4a69bd;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f7ff;
+            padding-bottom: 10px;
+        }
+        
+        .task-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #6a89cc;
+            outline: none;
+        }
+        
+        .btn {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #3c5aa8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #2ed573;
+        }
+        
+        .btn-success:hover {
+            background: #25c064;
+        }
+        
+        .btn-warning {
+            background: #ff9f43;
+        }
+        
+        .btn-warning:hover {
+            background: #ff8c2a;
+        }
+        
+        .btn-info {
+            background: #2bcbba;
+        }
+        
+        .btn-info:hover {
+            background: #24b4a5;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #4a69bd;
+            transition: transform 0.2s;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .task-info h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .completed {
+            opacity: 0.7;
+            border-left-color: #2ed573;
+        }
+        
+        .completed .task-info h3 {
+            text-decoration: line-through;
+        }
+        
+        .recurring-badge {
+            background: #ff9f43;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a69bd;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #4a69bd;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+        
+        .calendar-day {
+            background: white;
+            border-radius: 8px;
+            padding: 8px 5px;
+            text-align: center;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .calendar-day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calendar-date {
+            font-weight: bold;
+        }
+        
+        .calendar-tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 5px;
+        }
+        
+        .task-indicator {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+        }
+        
+        .task-pending {
+            background: #ff9f43;
+        }
+        
+        .task-completed {
+            background: #2ed573;
+        }
+        
+        .task-recurring-pending {
+            background: #2bcbba;
+        }
+        
+        .task-recurring-completed {
+            background: #2bcbba;
+            opacity: 0.7;
+        }
+        
+        .completed-day {
+            background: #e8f5e9;
+        }
+        
+        .current-day {
+            border: 2px solid #4a69bd;
+            background: #e3f2fd;
+        }
+        
+        .selected-day {
+            border: 2px solid #ff9f43;
+            background: #fff3e0;
+        }
+        
+        .empty {
+            visibility: hidden;
+        }
+        
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .reward-section {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .reward-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .reward-points {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .reward-btn {
+            background: white;
+            color: #f368e0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .reward-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .date-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .date-nav button {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .date-display {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .subject-manager {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .subject-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .subject-input-group input {
+            flex: 1;
+        }
+        
+        .subject-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .subject-tag {
+            background: #e0e7ff;
+            color: #4a69bd;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .subject-tag .delete {
+            cursor: pointer;
+            color: #ff6b6b;
+        }
+        
+        .task-date {
+            font-weight: bold;
+            color: #4a69bd;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .calendar-nav button {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        
+        .calendar-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .recurring-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .recurring-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .recurring-options {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .recurring-options.active {
+            display: flex;
+        }
+        
+        .weekday-selector {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .weekday-btn {
+            background: #e0e0e0;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .weekday-btn.selected {
+            background: #4a69bd;
+            color: white;
+        }
+        
+        .recurring-summary {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
+            <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> 添加学习任务</h2>
+                    <form class="task-form" id="taskForm">
+                        <div class="form-group">
+                            <label for="taskName">任务名称</label>
+                            <input type="text" id="taskName" placeholder="例如：数学作业、英语阅读" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskSubject">科目</label>
+                            <select id="taskSubject" required>
+                                <option value="">请选择科目</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskDate">开始日期</label>
+                                <input type="date" id="taskDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="taskTime">预计用时（分钟）</label>
+                                <input type="number" id="taskTime" min="5" max="120" value="30" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskTimeOfDay">时间段</label>
+                            <select id="taskTimeOfDay" required>
+                                <option value="早上">早上</option>
+                                <option value="上午">上午</option>
+                                <option value="中午">中午</option>
+                                <option value="下午">下午</option>
+                                <option value="晚上">晚上</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskNote">备注（可选）</label>
+                            <textarea id="taskNote" rows="2" placeholder="可以添加一些鼓励的话..."></textarea>
+                        </div>
+                        
+                        <div class="recurring-section">
+                            <div class="recurring-toggle">
+                                <input type="checkbox" id="isRecurring">
+                                <label for="isRecurring">设置为重复任务</label>
+                            </div>
+                            
+                            <div class="recurring-options" id="recurringOptions">
+                                <div class="form-group">
+                                    <label for="recurrenceType">重复类型</label>
+                                    <select id="recurrenceType">
+                                        <option value="daily">每天</option>
+                                        <option value="weekly">每周</option>
+                                        <option value="monthly">每月</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" id="weeklyOptions">
+                                    <label>重复于</label>
+                                    <div class="weekday-selector">
+                                        <button type="button" class="weekday-btn" data-day="0">日</button>
+                                        <button type="button" class="weekday-btn" data-day="1">一</button>
+                                        <button type="button" class="weekday-btn" data-day="2">二</button>
+                                        <button type="button" class="weekday-btn" data-day="3">三</button>
+                                        <button type="button" class="weekday-btn" data-day="4">四</button>
+                                        <button type="button" class="weekday-btn" data-day="5">五</button>
+                                        <button type="button" class="weekday-btn" data-day="6">六</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="endCondition">结束条件</label>
+                                    <select id="endCondition">
+                                        <option value="never">永不结束</option>
+                                        <option value="count">重复次数</option>
+                                        <option value="date">结束日期</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group" id="repeatCountGroup">
+                                        <label for="repeatCount">重复次数</label>
+                                        <input type="number" id="repeatCount" min="1" value="5">
+                                    </div>
+                                    
+                                    <div class="form-group" id="endDateGroup">
+                                        <label for="endDate">结束日期</label>
+                                        <input type="date" id="endDate">
+                                    </div>
+                                </div>
+                                
+                                <div class="recurring-summary" id="recurringSummary"></div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn">
+                            <i class="fas fa-plus"></i> 添加任务
+                        </button>
+                    </form>
+                    
+                    <div class="subject-manager">
+                        <h3><i class="fas fa-cog"></i> 科目管理</h3>
+                        <div class="subject-input-group">
+                            <input type="text" id="newSubject" placeholder="输入新科目名称">
+                            <button type="button" class="btn btn-warning" id="addSubjectBtn">
+                                <i class="fas fa-plus"></i> 添加
+                            </button>
+                        </div>
+                        <div class="subject-list" id="subjectList"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="date-nav">
+                        <button id="prevDayBtn"><i class="fas fa-chevron-left"></i> 前一天</button>
+                        <div class="date-display" id="currentDateDisplay">今天</div>
+                        <button id="nextDayBtn">后一天 <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <h2><i class="fas fa-tasks"></i> 学习任务</h2>
+                    <div id="tasksByDate"></div>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> 学习统计</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-check-circle" style="color: #2ed573; font-size: 1.5rem;"></i>
+                            <div class="stat-number" id="completedTasks">0</div>
+                            <div>已完成任务</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock" style="color: #ff9f43; font-size: 1.5rem;"></i>
+                            <div class="stat-number" id="totalMinutes">0</div>
+                            <div>学习总时长(分钟)</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-fire" style="color: #ff6b6b; font-size: 1.5rem;"></i>
+                            <div class="stat-number" id="streakDays">0</div>
+                            <div>连续打卡天数</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h3>本周完成进度</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="weekProgress" style="width: 0%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>0%</span>
+                            <span id="progressPercent">0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px;">
+                        <div class="calendar-header">
+                            <div class="calendar-nav">
+                                <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
+                                <button id="todayBtn">今天</button>
+                                <button id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div class="calendar-title" id="calendarTitle">2023年11月</div>
+                        </div>
+                        
+                        <div class="weekdays">
+                            <div>日</div>
+                            <div>一</div>
+                            <div>二</div>
+                            <div>三</div>
+                            <div>四</div>
+                            <div>五</div>
+                            <div>六</div>
+                        </div>
+                        <div class="calendar" id="calendar"></div>
+                    </div>
+                </div>
+                
+                <div class="reward-section">
+                    <h2 class="reward-title"><i class="fas fa-trophy"></i> 学习奖励</h2>
+                    <p>完成学习任务，积累学习积分！</p>
+                    <div class="reward-points" id="rewardPoints">0</div>
+                    <p>积分</p>
+                    <button class="reward-btn" id="redeemBtn">兑换奖励</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 小学生学习计划管理 | 培养良好学习习惯，成就更好的自己！</p>
+        </footer>
+    </div>
+
+    <script>
+        // 示例任务数据
+        let tasks = [
+            { id: 1, name: "完成数学练习册第5页", subject: "数学", date: getTodayDate(), time: 30, timeOfDay: "下午", note: "认真计算，仔细检查", completed: true },
+            { id: 2, name: "背诵古诗《静夜思》", subject: "语文", date: getTodayDate(), time: 20, timeOfDay: "早上", note: "理解诗意，熟读成诵", completed: false },
+            { id: 3, name: "英语单词复习", subject: "英语", date: getTodayDate(), time: 15, timeOfDay: "晚上", note: "每天进步一点点", completed: false },
+            { id: 4, name: "科学实验报告", subject: "科学", date: getTomorrowDate(), time: 40, timeOfDay: "下午", note: "记录实验过程和结果", completed: false },
+            { id: 5, name: "美术作品创作", subject: "美术", date: getDateFromToday(3), time: 45, timeOfDay: "下午", note: "发挥想象力", completed: false },
+            { id: 6, name: "体育跳绳练习", subject: "体育", date: getDateFromToday(5), time: 20, timeOfDay: "早上", note: "连续跳100下", completed: false }
+        ];
+        
+        // 科目数据
+        let subjects = ["语文", "数学", "英语", "科学", "美术", "体育"];
+        
+        // 当前查看的日期
+        let currentViewDate = getTodayDate();
+        
+        // 日历当前显示的月份
+        let currentCalendarMonth = new Date().getMonth();
+        let currentCalendarYear = new Date().getFullYear();
+        
+        // 初始化统计信息
+        let stats = {
+            completedTasks: 0,
+            totalMinutes: 0,
+            streakDays: 3,
+            weekProgress: 0,
+            rewardPoints: 25
+        };
+        
+        // DOM元素
+        const taskForm = document.getElementById('taskForm');
+        const taskDateInput = document.getElementById('taskDate');
+        const taskSubjectSelect = document.getElementById('taskSubject');
+        const tasksByDateEl = document.getElementById('tasksByDate');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const totalMinutesEl = document.getElementById('totalMinutes');
+        const streakDaysEl = document.getElementById('streakDays');
+        const weekProgressEl = document.getElementById('weekProgress');
+        const progressPercentEl = document.getElementById('progressPercent');
+        const calendarEl = document.getElementById('calendar');
+        const rewardPointsEl = document.getElementById('rewardPoints');
+        const redeemBtn = document.getElementById('redeemBtn');
+        const currentDateDisplayEl = document.getElementById('currentDateDisplay');
+        const prevDayBtn = document.getElementById('prevDayBtn');
+        const nextDayBtn = document.getElementById('nextDayBtn');
+        const newSubjectInput = document.getElementById('newSubject');
+        const addSubjectBtn = document.getElementById('addSubjectBtn');
+        const subjectListEl = document.getElementById('subjectList');
+        const calendarTitleEl = document.getElementById('calendarTitle');
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const todayBtn = document.getElementById('todayBtn');
+        
+        // 重复任务相关元素
+        const isRecurringCheckbox = document.getElementById('isRecurring');
+        const recurringOptions = document.getElementById('recurringOptions');
+        const recurrenceTypeSelect = document.getElementById('recurrenceType');
+        const weeklyOptions = document.getElementById('weeklyOptions');
+        const endConditionSelect = document.getElementById('endCondition');
+        const repeatCountGroup = document.getElementById('repeatCountGroup');
+        const endDateGroup = document.getElementById('endDateGroup');
+        const repeatCountInput = document.getElementById('repeatCount');
+        const endDateInput = document.getElementById('endDate');
+        const recurringSummary = document.getElementById('recurringSummary');
+        const weekdayButtons = document.querySelectorAll('.weekday-btn');
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置任务日期默认为今天
+            taskDateInput.value = getTodayDate();
+            endDateInput.value = getDateFromToday(30);
+            
+            // 初始化科目选择
+            updateSubjectSelect();
+            renderSubjectTags();
+            
+            // 渲染任务和统计
+            renderTasksByDate();
+            updateStats();
+            generateCalendar();
+            
+            // 表单提交事件
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewTask();
+            });
+            
+            // 兑换奖励按钮事件
+            redeemBtn.addEventListener('click', function() {
+                if(stats.rewardPoints >= 50) {
+                    stats.rewardPoints -= 50;
+                    updateStats();
+                    alert('恭喜你成功兑换奖励！继续保持良好的学习习惯！');
+                } else {
+                    alert('积分不足，需要50积分才能兑换奖励。继续努力吧！');
+                }
+            });
+            
+            // 日期导航事件
+            prevDayBtn.addEventListener('click', function() {
+                navigateDate(-1);
+            });
+            
+            nextDayBtn.addEventListener('click', function() {
+                navigateDate(1);
+            });
+            
+            // 添加科目事件
+            addSubjectBtn.addEventListener('click', function() {
+                addNewSubject();
+            });
+            
+            // 日历导航事件
+            prevMonthBtn.addEventListener('click', function() {
+                navigateCalendarMonth(-1);
+            });
+            
+            nextMonthBtn.addEventListener('click', function() {
+                navigateCalendarMonth(1);
+            });
+            
+            todayBtn.addEventListener('click', function() {
+                currentCalendarMonth = new Date().getMonth();
+                currentCalendarYear = new Date().getFullYear();
+                generateCalendar();
+            });
+            
+            // 重复任务相关事件
+            isRecurringCheckbox.addEventListener('change', function() {
+                if(this.checked) {
+                    recurringOptions.classList.add('active');
+                    updateRecurringSummary();
+                } else {
+                    recurringOptions.classList.remove('active');
+                }
+            });
+            
+            recurrenceTypeSelect.addEventListener('change', function() {
+                if(this.value === 'weekly') {
+                    weeklyOptions.style.display = 'flex';
+                } else {
+                    weeklyOptions.style.display = 'none';
+                }
+                updateRecurringSummary();
+            });
+            
+            endConditionSelect.addEventListener('change', function() {
+                if(this.value === 'count') {
+                    repeatCountGroup.style.display = 'flex';
+                    endDateGroup.style.display = 'none';
+                } else if(this.value === 'date') {
+                    repeatCountGroup.style.display = 'none';
+                    endDateGroup.style.display = 'flex';
+                } else {
+                    repeatCountGroup.style.display = 'none';
+                    endDateGroup.style.display = 'none';
+                }
+                updateRecurringSummary();
+            });
+            
+            repeatCountInput.addEventListener('change', updateRecurringSummary);
+            endDateInput.addEventListener('change', updateRecurringSummary);
+            
+            // 星期选择按钮事件
+            weekdayButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateRecurringSummary();
+                });
+            });
+            
+            // 默认选中周一、三、五
+            document.querySelector('.weekday-btn[data-day="1"]').classList.add('selected');
+            document.querySelector('.weekday-btn[data-day="3"]').classList.add('selected');
+            document.querySelector('.weekday-btn[data-day="5"]').classList.add('selected');
+            
+            // 初始化隐藏重复选项相关字段
+            repeatCountGroup.style.display = 'none';
+            endDateGroup.style.display = 'none';
+            weeklyOptions.style.display = 'none';
+        });
+        
+        // 获取今天日期字符串 (YYYY-MM-DD)
+        function getTodayDate() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+        
+        // 获取明天日期字符串 (YYYY-MM-DD)
+        function getTomorrowDate() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        }
+        
+        // 获取从今天起n天后的日期
+        function getDateFromToday(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 格式化日期显示
+        function formatDateDisplay(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            if (dateStr === getTodayDate()) {
+                return "今天";
+            } else if (dateStr === getTomorrowDate()) {
+                return "明天";
+            } else {
+                return `${date.getMonth() + 1}月${date.getDate()}日`;
+            }
+        }
+        
+        // 更新重复任务摘要
+        function updateRecurringSummary() {
+            if (!isRecurringCheckbox.checked) {
+                recurringSummary.textContent = '';
+                return;
+            }
+            
+            const type = recurrenceTypeSelect.value;
+            const endCondition = endConditionSelect.value;
+            let summary = '';
+            
+            if (type === 'daily') {
+                summary = '每天重复';
+            } else if (type === 'weekly') {
+                const selectedDays = Array.from(weekdayButtons)
+                    .filter(btn => btn.classList.contains('selected'))
+                    .map(btn => btn.textContent)
+                    .join('、');
+                summary = `每周${selectedDays}重复`;
+            } else if (type === 'monthly') {
+                summary = '每月重复';
+            }
+            
+            if (endCondition === 'count') {
+                summary += `，共${repeatCountInput.value}次`;
+            } else if (endCondition === 'date') {
+                const endDate = new Date(endDateInput.value);
+                summary += `，直到${endDate.getMonth() + 1}月${endDate.getDate()}日`;
+            } else {
+                summary += '，永不结束';
+            }
+            
+            recurringSummary.textContent = summary;
+        }
+        
+        // 生成重复任务 - 修复对象引用问题
+        function generateRecurringTasks(baseTask, recurringInfo) {
+            const generatedTasks = [];
+            const startDate = new Date(baseTask.date);
+            let currentDate = new Date(startDate);
+            let count = 0;
+            const maxCount = recurringInfo.endCondition === 'count' ? recurringInfo.endValue : 100;
+            
+            while (count < maxCount) {
+                if (recurringInfo.endCondition === 'date') {
+                    const endDate = new Date(recurringInfo.endValue);
+                    if (currentDate > endDate) break;
+                }
+                
+                if (recurringInfo.type === 'daily') {
+                    if (currentDate > startDate) {
+                        // 深度拷贝整个任务对象，包括recurring对象
+                        const taskCopy = {
+                            ...baseTask,
+                            id: tasks.length + generatedTasks.length + 1,
+                            date: currentDate.toISOString().split('T')[0],
+                            completed: false,
+                            recurring: baseTask.recurring ? {...baseTask.recurring} : null
+                        };
+                        generatedTasks.push(taskCopy);
+                        count++;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                } 
+                else if (recurringInfo.type === 'weekly') {
+                    if (currentDate > startDate && recurringInfo.weekdays.includes(currentDate.getDay())) {
+                        const taskCopy = {
+                            ...baseTask,
+                            id: tasks.length + generatedTasks.length + 1,
+                            date: currentDate.toISOString().split('T')[0],
+                            completed: false,
+                            recurring: baseTask.recurring ? {...baseTask.recurring} : null
+                        };
+                        generatedTasks.push(taskCopy);
+                        count++;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                else if (recurringInfo.type === 'monthly') {
+                    if (currentDate > startDate) {
+                        const taskCopy = {
+                            ...baseTask,
+                            id: tasks.length + generatedTasks.length + 1,
+                            date: currentDate.toISOString().split('T')[0],
+                            completed: false,
+                            recurring: baseTask.recurring ? {...baseTask.recurring} : null
+                        };
+                        generatedTasks.push(taskCopy);
+                        count++;
+                    }
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+                
+                if (count > 365) break;
+            }
+            
+            return generatedTasks;
+        }
+        
+        // 导航到不同日期
+        function navigateDate(days) {
+            const date = new Date(currentViewDate);
+            date.setDate(date.getDate() + days);
+            currentViewDate = date.toISOString().split('T')[0];
+            renderTasksByDate();
+        }
+        
+        // 导航到不同月份
+        function navigateCalendarMonth(months) {
+            currentCalendarMonth += months;
+            if (currentCalendarMonth < 0) {
+                currentCalendarMonth = 11;
+                currentCalendarYear--;
+            } else if (currentCalendarMonth > 11) {
+                currentCalendarMonth = 0;
+                currentCalendarYear++;
+            }
+            generateCalendar();
+        }
+        
+        // 更新科目选择下拉框
+        function updateSubjectSelect() {
+            taskSubjectSelect.innerHTML = '<option value="">请选择科目</option>';
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                taskSubjectSelect.appendChild(option);
+            });
+        }
+        
+        // 渲染科目标签
+        function renderSubjectTags() {
+            subjectListEl.innerHTML = '';
+            subjects.forEach(subject => {
+                const tag = document.createElement('div');
+                tag.className = 'subject-tag';
+                tag.innerHTML = `
+                    ${subject}
+                    <span class="delete" onclick="deleteSubject('${subject}')">
+                        <i class="fas fa-times"></i>
+                    </span>
+                `;
+                subjectListEl.appendChild(tag);
+            });
+        }
+        
+        // 添加新科目
+        function addNewSubject() {
+            const newSubject = newSubjectInput.value.trim();
+            if (newSubject && !subjects.includes(newSubject)) {
+                subjects.push(newSubject);
+                updateSubjectSelect();
+                renderSubjectTags();
+                newSubjectInput.value = '';
+            }
+        }
+        
+        // 删除科目
+        function deleteSubject(subject) {
+            if (confirm(`确定要删除科目"${subject}"吗？`)) {
+                subjects = subjects.filter(s => s !== subject);
+                updateSubjectSelect();
+                renderSubjectTags();
+            }
+        }
+        
+        // 按日期渲染任务
+        function renderTasksByDate() {
+            tasksByDateEl.innerHTML = '';
+            currentDateDisplayEl.textContent = formatDateDisplay(currentViewDate);
+            
+            const dateTasks = tasks.filter(task => task.date === currentViewDate);
+            
+            if (dateTasks.length === 0) {
+                tasksByDateEl.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">今天没有学习任务，添加一些吧！</p>';
+                return;
+            }
+            
+            const completedTasks = dateTasks.filter(task => task.completed);
+            const pendingTasks = dateTasks.filter(task => !task.completed);
+            
+            if (pendingTasks.length > 0) {
+                const pendingSection = document.createElement('div');
+                pendingSection.innerHTML = '<div class="task-date">待完成任务</div>';
+                tasksByDateEl.appendChild(pendingSection);
+                
+                pendingTasks.forEach(task => {
+                    const taskItem = createTaskItem(task);
+                    tasksByDateEl.appendChild(taskItem);
+                });
+            }
+            
+            if (completedTasks.length > 0) {
+                const completedSection = document.createElement('div');
+                completedSection.innerHTML = '<div class="task-date">已完成任务</div>';
+                tasksByDateEl.appendChild(completedSection);
+                
+                completedTasks.forEach(task => {
+                    const taskItem = createTaskItem(task);
+                    tasksByDateEl.appendChild(taskItem);
+                });
+            }
+        }
+        
+        // 创建任务项元素
+        function createTaskItem(task) {
+            const taskItem = document.createElement('div');
+            taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+            
+            let recurringBadge = '';
+            if (task.recurring) {
+                recurringBadge = '<span class="recurring-badge">重复</span>';
+            }
+            
+            taskItem.innerHTML = `
+                <div class="task-info">
+                    <h3>${task.name}${recurringBadge}</h3>
+                    <div class="task-meta">
+                        <span><i class="fas fa-book"></i> ${task.subject}</span>
+                        <span><i class="fas fa-clock"></i> ${task.time}分钟</span>
+                        <span><i class="fas fa-sun"></i> ${task.timeOfDay}</span>
+                    </div>
+                    ${task.note ? `<p>${task.note}</p>` : ''}
+                </div>
+                <div class="task-actions">
+                    <button class="btn ${task.completed ? '' : 'btn-success'}" onclick="toggleTask(${task.id})">
+                        <i class="fas fa-${task.completed ? 'undo' : 'check'}"></i> ${task.completed ? '重做' : '完成'}
+                    </button>
+                    <button class="btn" style="background: #ff6b6b;" onclick="deleteTask(${task.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            return taskItem;
+        }
+        
+        // 添加新任务
+        function addNewTask() {
+            const name = document.getElementById('taskName').value;
+            const subject = document.getElementById('taskSubject').value;
+            const date = document.getElementById('taskDate').value;
+            const time = parseInt(document.getElementById('taskTime').value);
+            const timeOfDay = document.getElementById('taskTimeOfDay').value;
+            const note = document.getElementById('taskNote').value;
+            
+            const baseTask = {
+                id: tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1,
+                name,
+                subject,
+                date,
+                time,
+                timeOfDay,
+                note,
+                completed: false
+            };
+            
+            if (isRecurringCheckbox.checked) {
+                const recurringInfo = {
+                    type: recurrenceTypeSelect.value,
+                    endCondition: endConditionSelect.value
+                };
+                
+                if (recurringInfo.type === 'weekly') {
+                    recurringInfo.weekdays = Array.from(weekdayButtons)
+                        .filter(btn => btn.classList.contains('selected'))
+                        .map(btn => parseInt(btn.getAttribute('data-day')));
+                }
+                
+                if (recurringInfo.endCondition === 'count') {
+                    recurringInfo.endValue = parseInt(repeatCountInput.value);
+                } else if (recurringInfo.endCondition === 'date') {
+                    recurringInfo.endValue = endDateInput.value;
+                }
+                
+                // 为基任务添加独立的recurring对象
+                baseTask.recurring = {...recurringInfo};
+                
+                const recurringTasks = generateRecurringTasks(baseTask, recurringInfo);
+                
+                tasks.push(baseTask);
+                tasks.push(...recurringTasks);
+                
+                alert(`已成功创建${recurringTasks.length + 1}个重复任务！`);
+            } else {
+                tasks.push(baseTask);
+            }
+            
+            if (date === currentViewDate) {
+                renderTasksByDate();
+            }
+            
+            generateCalendar();
+            updateStats();
+            
+            taskForm.reset();
+            document.getElementById('taskDate').value = getTodayDate();
+            document.getElementById('taskTime').value = 30;
+            isRecurringCheckbox.checked = false;
+            recurringOptions.classList.remove('active');
+            endDateInput.value = getDateFromToday(30);
+            repeatCountInput.value = 5;
+        }
+        
+        // 切换任务完成状态
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if(task) {
+                task.completed = !task.completed;
+                renderTasksByDate();
+                generateCalendar();
+                updateStats();
+            }
+        }
+        
+        // 删除任务
+        function deleteTask(id) {
+            if(confirm('确定要删除这个任务吗？')) {
+                const task = tasks.find(t => t.id === id);
+                tasks = tasks.filter(t => t.id !== id);
+                
+                if (task.date === currentViewDate) {
+                    renderTasksByDate();
+                }
+                
+                generateCalendar();
+                updateStats();
+            }
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            const completedTasks = tasks.filter(t => t.completed).length;
+            const totalMinutes = tasks.filter(t => t.completed).reduce((sum, t) => sum + t.time, 0);
+            const weekProgress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+            
+            stats.completedTasks = completedTasks;
+            stats.totalMinutes = totalMinutes;
+            stats.weekProgress = weekProgress;
+            
+            completedTasksEl.textContent = completedTasks;
+            totalMinutesEl.textContent = totalMinutes;
+            streakDaysEl.textContent = stats.streakDays;
+            weekProgressEl.style.width = `${weekProgress}%`;
+            progressPercentEl.textContent = `${weekProgress}%`;
+            rewardPointsEl.textContent = stats.rewardPoints;
+        }
+        
+        // 生成日历
+        function generateCalendar() {
+            calendarEl.innerHTML = '';
+            calendarTitleEl.textContent = `${currentCalendarYear}年${currentCalendarMonth + 1}月`;
+            
+            const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
+            const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            for(let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarEl.appendChild(emptyDay);
+            }
+            
+            for(let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                const dateStr = `${currentCalendarYear}-${String(currentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                const dateElement = document.createElement('div');
+                dateElement.className = 'calendar-date';
+                dateElement.textContent = day;
+                dayElement.appendChild(dateElement);
+                
+                const dayTasks = tasks.filter(task => task.date === dateStr);
+                const completedTasks = dayTasks.filter(task => task.completed);
+                const pendingTasks = dayTasks.filter(task => !task.completed);
+                
+                const recurringTasks = dayTasks.filter(task => task.recurring);
+                const completedRecurringTasks = recurringTasks.filter(task => task.completed);
+                const pendingRecurringTasks = recurringTasks.filter(task => !task.completed);
+                
+                const normalTasks = dayTasks.filter(task => !task.recurring);
+                const completedNormalTasks = normalTasks.filter(task => task.completed);
+                const pendingNormalTasks = normalTasks.filter(task => !task.completed);
+                
+                if (dayTasks.length > 0) {
+                    const tasksContainer = document.createElement('div');
+                    tasksContainer.className = 'calendar-tasks';
+                    
+                    if (pendingNormalTasks.length > 0) {
+                        const pendingIndicator = document.createElement('div');
+                        pendingIndicator.className = 'task-indicator task-pending';
+                        pendingIndicator.textContent = `${pendingNormalTasks.length}待完成`;
+                        tasksContainer.appendChild(pendingIndicator);
+                    }
+                    
+                    if (completedNormalTasks.length > 0) {
+                        const completedIndicator = document.createElement('div');
+                        completedIndicator.className = 'task-indicator task-completed';
+                        completedIndicator.textContent = `${completedNormalTasks.length}已完成`;
+                        tasksContainer.appendChild(completedIndicator);
+                    }
+                    
+                    if (pendingRecurringTasks.length > 0) {
+                        const recurringPendingIndicator = document.createElement('div');
+                        recurringPendingIndicator.className = 'task-indicator task-recurring-pending';
+                        recurringPendingIndicator.textContent = `${pendingRecurringTasks.length}重复`;
+                        tasksContainer.appendChild(recurringPendingIndicator);
+                    }
+                    
+                    if (completedRecurringTasks.length > 0) {
+                        const recurringCompletedIndicator = document.createElement('div');
+                        recurringCompletedIndicator.className = 'task-indicator task-recurring-completed';
+                        recurringCompletedIndicator.textContent = `${completedRecurringTasks.length}已完成`;
+                        tasksContainer.appendChild(recurringCompletedIndicator);
+                    }
+                    
+                    dayElement.appendChild(tasksContainer);
+                }
+                
+                if(dateStr === todayStr) {
+                    dayElement.classList.add('current-day');
+                }
+                
+                if(dateStr === currentViewDate) {
+                    dayElement.classList.add('selected-day');
+                }
+                
+                if(completedTasks.length > 0) {
+                    dayElement.classList.add('completed-day');
+                }
+                
+                dayElement.addEventListener('click', function() {
+                    currentViewDate = dateStr;
+                    renderTasksByDate();
+                    generateCalendar();
+                });
+                
+                calendarEl.appendChild(dayElement);
+            }
+        }
+    </script>
+</body>
+</html>
