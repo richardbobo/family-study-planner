@@ -167,25 +167,7 @@ function bindDayCardEvents() {
     });
 }
 
-// 初始化模态框
-function initializeModal() {
-    const modal = document.getElementById('taskDetailModal');
-    const closeBtn = document.getElementById('closeModal');
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-    }
-    
-    initializeQuickCompleteModal();
-}
+
 
 // 初始化快速完成模态框
 function initializeQuickCompleteModal() {
@@ -543,6 +525,7 @@ function getSelectedDate() {
 
 
 // 打开模态框 - 修复版本
+// 打开模态框 - 修复版本
 function openModal(taskId) {
     console.log('打开任务详情:', taskId);
     const task = tasks.find(t => t.id === taskId);
@@ -551,7 +534,7 @@ function openModal(taskId) {
         return;
     }
     
-    const modal = document.getElementById('taskModal');
+    const modal = document.getElementById('taskModal'); // 使用正确的ID
     const content = document.getElementById('taskDetailContent');
     
     if (!modal) {
@@ -689,13 +672,7 @@ function initializeModal() {
     
     initializeQuickCompleteModal();
 }
-// 关闭模态框
-function closeModal() {
-    const modal = document.getElementById('taskDetailModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
+
 
 // 快速完成任务 - 修复版本
 function quickComplete(taskId) {
