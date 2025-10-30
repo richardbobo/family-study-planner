@@ -88,34 +88,19 @@ function renderWeekView() {
     bindDayCardEvents();
 }
 
+
 // 更新日期显示
 function updateDateDisplay(currentDateElement, weekInfoElement) {
     if (currentDateElement && weekInfoElement) {
-        const monday = new Date(currentWeekStart);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
+        const today = new Date();
         
-        // 格式化日期显示
-        const startYear = monday.getFullYear();
-        const startMonth = monday.getMonth() + 1;
-        const startDay = monday.getDate();
-        const endYear = sunday.getFullYear();
-        const endMonth = sunday.getMonth() + 1;
-        const endDay = sunday.getDate();
+        // 格式化日期显示：显示今天的日期
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
         
-        let dateDisplay;
-        if (startYear === endYear && startMonth === endMonth) {
-            // 同一年同一月：2025年10月27日-31日
-            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endDay}日`;
-        } else if (startYear === endYear) {
-            // 同一年不同月：2025年10月27日-11月2日
-            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endMonth}月${endDay}日`;
-        } else {
-            // 跨年：2025年12月27日-2026年1月2日
-            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endYear}年${endMonth}月${endDay}日`;
-        }
-        
-        const weekNumber = getWeekNumber(monday);
+        const dateDisplay = `${year}年${month}月${day}日`;
+        const weekNumber = getWeekNumber(today);
         
         currentDateElement.textContent = dateDisplay;
         weekInfoElement.textContent = `第${weekNumber}周`;
