@@ -1,4 +1,4 @@
-// 调试版本 - 主页面
+// 修复版本 - 主页面
 console.log('index.js 已加载');
 
 let tasks = [];
@@ -8,6 +8,11 @@ let currentWeekStart = getMonday(new Date());
 document.addEventListener('DOMContentLoaded', function() {
     console.log('主页DOM已加载');
     console.log('=== 开始初始化 ===');
+    
+    // 调试：检查容器是否存在
+    const container = document.getElementById('tasks-container');
+    console.log('任务容器是否存在:', !!container);
+    console.log('任务容器内容:', container ? container.innerHTML : '未找到容器');
     
     loadTasks();
     initializeNavigation();
@@ -130,15 +135,12 @@ function bindDayCardEvents() {
     
     dayCards.forEach(card => {
         card.addEventListener('click', function() {
-            // 移除所有卡片的选中状态
             dayCards.forEach(c => c.classList.remove('active'));
-            // 添加当前卡片的选中状态
             this.classList.add('active');
             
             const selectedDate = this.getAttribute('data-date');
             console.log(`🔄 切换到日期: ${selectedDate}`);
             
-            // 🔥 关键修复：点击日期后重新渲染任务列表
             renderTaskList();
         });
     });
@@ -192,17 +194,30 @@ function loadTasks() {
     console.log(`📊 最终任务数组长度: ${tasks.length}`);
 }
 
-// 渲染任务列表
+// 渲染任务列表 - 修复版本
 function renderTaskList() {
     console.log('🔄 开始渲染任务列表...');
     
+    // 🔥 关键修复：直接使用正确的ID
     const container = document.getElementById('tasks-container');
+    
     if (!container) {
         console.error('❌ 找不到任务容器 #tasks-container');
+        console.log('尝试查找其他可能的容器...');
+        
+        // 调试：查看页面上所有的div
+        const allDivs = document.querySelectorAll('div');
+        console.log('页面上的div数量:', allDivs.length);
+        allDivs.forEach(div => {
+            if (div.id) {
+                console.log('找到有ID的div:', div.id);
+            }
+        });
         return;
     }
     
-    console.log('✅ 找到任务容器');
+    console.log('✅ 找到任务容器:', container);
+    console.log('容器当前内容:', container.innerHTML);
     
     // 获取选中日期的任务
     const selectedDate = getSelectedDate();
@@ -211,8 +226,14 @@ function renderTaskList() {
     const dateTasks = tasks.filter(task => task.date === selectedDate);
     console.log(`📋 找到 ${dateTasks.length} 个匹配的任务`);
     
-    // 调试：显示所有任务的日期
-    console.log('所有任务的日期:', tasks.map(t => ({date: t.date, name: t.name})));
+    // 调试：显示所有任务的详细信息
+    console.log('所有任务详情:', tasks.map(t => ({
+        id: t.id,
+        name: t.name,
+        date: t.date,
+        subject: t.subject,
+        completed: t.completed
+    })));
     
     if (dateTasks.length === 0) {
         console.log('ℹ️ 没有任务，显示空状态');
@@ -221,8 +242,12 @@ function renderTaskList() {
     }
     
     console.log('🎨 开始生成任务HTML');
-    container.innerHTML = createTasksHTML(dateTasks);
+    const tasksHTML = createTasksHTML(dateTasks);
+    console.log('生成的HTML:', tasksHTML);
+    
+    container.innerHTML = tasksHTML;
     console.log('✅ 任务列表渲染完成');
+    console.log('容器新内容:', container.innerHTML);
 }
 
 // 获取选中日期
@@ -265,7 +290,7 @@ function createTasksHTML(dateTasks) {
     console.log(`🎨 为 ${dateTasks.length} 个任务生成HTML`);
     
     dateTasks.forEach((task, index) => {
-        console.log(`📝 生成任务 ${index + 1}: ${task.name}`);
+        console.log(`📝 生成任务 ${index + 1}:`, task);
         
         const borderColor = getSubjectColor(task.subject);
         const completedClass = task.completed ? 'completed' : '';
