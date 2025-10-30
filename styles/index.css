@@ -194,11 +194,6 @@ h1 {
     white-space: nowrap; /* 防止换行 */
 }
 
-.week-info {
-    font-size: 1rem;
-    color: #666;
-    font-weight: 500;
-}
 
 .calendar-nav-buttons {
     display: flex;
