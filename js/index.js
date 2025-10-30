@@ -56,13 +56,11 @@ function navigateWeek(direction) {
 // 渲染周视图
 function renderWeekView() {
     const weekDaysContainer = document.getElementById('weekDays');
-    const currentDateElement = document.getElementById('currentDate');
-    const weekInfoElement = document.getElementById('weekInfo');
     
     if (!weekDaysContainer) return;
     
-    // 更新日期显示
-    updateDateDisplay(currentDateElement, weekInfoElement);
+    // 更新日期显示 - 直接在这里调用
+    updateDateDisplay();
     
     // 生成一周的日期卡片
     let weekDaysHTML = '';
@@ -88,9 +86,11 @@ function renderWeekView() {
     bindDayCardEvents();
 }
 
-
-// 更新日期显示
-function updateDateDisplay(currentDateElement, weekInfoElement) {
+// 更新日期显示 - 修改函数签名
+function updateDateDisplay() {
+    const currentDateElement = document.getElementById('currentDate');
+    const weekInfoElement = document.getElementById('weekInfo');
+    
     if (currentDateElement && weekInfoElement) {
         const monday = new Date(currentWeekStart);
         
@@ -103,6 +103,10 @@ function updateDateDisplay(currentDateElement, weekInfoElement) {
         
         currentDateElement.textContent = dateDisplay;
         weekInfoElement.textContent = `第${weekNumber}周`;
+        
+        console.log('更新日期显示:', dateDisplay, '第' + weekNumber + '周');
+    } else {
+        console.error('找不到日期显示元素');
     }
 }
 
