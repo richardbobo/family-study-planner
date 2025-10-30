@@ -1,55 +1,47 @@
-// 完整版本 - 主页面
+// 调试版本 - 主页面
 console.log('index.js 已加载');
 
 let tasks = [];
-let currentWeekStart = getMonday(new Date()); // 默认从周一开始
+let currentWeekStart = getMonday(new Date());
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
     console.log('主页DOM已加载');
+    console.log('=== 开始初始化 ===');
+    
     loadTasks();
     initializeNavigation();
     renderWeekView();
     renderTaskList();
     updateStats();
+    
+    console.log('=== 初始化完成 ===');
 });
 
 // 获取周一的日期
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 周日的特殊处理
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 }
 
 // 初始化导航功能
 function initializeNavigation() {
-    // 前一周按钮
+    console.log('初始化导航...');
+    
     const prevWeekBtn = document.getElementById('prevWeekBtn');
-    if (prevWeekBtn) {
-        prevWeekBtn.addEventListener('click', function() {
-            navigateWeek(-1);
-        });
-    }
-    
-    // 后一周按钮
     const nextWeekBtn = document.getElementById('nextWeekBtn');
-    if (nextWeekBtn) {
-        nextWeekBtn.addEventListener('click', function() {
-            navigateWeek(1);
-        });
-    }
-    
-    // 今天按钮
     const todayBtn = document.getElementById('todayBtn');
-    if (todayBtn) {
-        todayBtn.addEventListener('click', function() {
-            currentWeekStart = getMonday(new Date());
-            renderWeekView();
-            renderTaskList();
-            updateStats();
-        });
-    }
+    
+    if (prevWeekBtn) prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
+    if (nextWeekBtn) nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+    if (todayBtn) todayBtn.addEventListener('click', () => {
+        currentWeekStart = getMonday(new Date());
+        renderWeekView();
+        renderTaskList();
+        updateStats();
+    });
 }
 
 // 周导航
@@ -64,10 +56,15 @@ function navigateWeek(direction) {
 
 // 渲染周视图
 function renderWeekView() {
+    console.log('渲染周视图...');
+    
     const weekDaysContainer = document.getElementById('weekDays');
     const weekInfoElement = document.getElementById('weekInfo');
     
-    if (!weekDaysContainer) return;
+    if (!weekDaysContainer) {
+        console.error('❌ 找不到周日期容器 #weekDays');
+        return;
+    }
     
     // 更新周信息显示
     if (weekInfoElement) {
@@ -87,7 +84,7 @@ function renderWeekView() {
         const completedTasks = dayTasks.filter(task => task.completed);
         
         const isToday = dateStr === today;
-        const isActive = i === 0; // 默认选中周一
+        const isActive = i === 0;
         
         weekDaysHTML += createDayCardHTML(currentDate, dayTasks, completedTasks, isToday, isActive);
     }
@@ -109,6 +106,8 @@ function createDayCardHTML(date, dayTasks, completedTasks, isToday, isActive) {
     const activeClass = isActive ? 'active' : '';
     const todayClass = isToday ? 'today' : '';
     
+    console.log(`📅 日期卡片: ${dateStr}, 任务数: ${dayTasks.length}`);
+    
     return `
         <div class="day-card ${activeClass} ${todayClass}" data-date="${dateStr}">
             <div class="day-name">${dayName}</div>
@@ -127,6 +126,8 @@ function createDayCardHTML(date, dayTasks, completedTasks, isToday, isActive) {
 // 绑定日期卡片点击事件
 function bindDayCardEvents() {
     const dayCards = document.querySelectorAll('.day-card');
+    console.log(`🔍 找到 ${dayCards.length} 个日期卡片`);
+    
     dayCards.forEach(card => {
         card.addEventListener('click', function() {
             // 移除所有卡片的选中状态
@@ -134,10 +135,11 @@ function bindDayCardEvents() {
             // 添加当前卡片的选中状态
             this.classList.add('active');
             
-            // 这里可以添加加载对应日期任务的逻辑
             const selectedDate = this.getAttribute('data-date');
-            console.log('切换到日期:', selectedDate);
-            // 如果需要可以在这里实现日期切换功能
+            console.log(`🔄 切换到日期: ${selectedDate}`);
+            
+            // 🔥 关键修复：点击日期后重新渲染任务列表
+            renderTaskList();
         });
     });
 }
@@ -151,7 +153,6 @@ function getWeekInfo(startDate) {
     const endMonth = endDate.getMonth() + 1;
     const year = startDate.getFullYear();
     
-    // 计算周数
     const weekNumber = getWeekNumber(startDate);
     
     if (startMonth === endMonth) {
@@ -170,84 +171,74 @@ function getWeekNumber(date) {
 
 // 加载任务
 function loadTasks() {
+    console.log('📂 开始加载任务...');
+    
     try {
         const saved = localStorage.getItem('studyTasks');
+        console.log('localStorage数据:', saved);
+        
         if (saved) {
             tasks = JSON.parse(saved);
-            console.log('加载了', tasks.length, '个任务');
+            console.log('✅ 成功加载任务:', tasks);
         } else {
-            console.log('没有找到保存的任务，使用空数组');
+            console.log('ℹ️ 没有找到保存的任务，使用空数组');
             tasks = [];
         }
     } catch (e) {
-        console.error('加载任务失败:', e);
+        console.error('❌ 加载任务失败:', e);
         tasks = [];
     }
-}
-
-// 查找任务容器
-function findTaskContainer() {
-    const possibleIds = ['tasks-container', 'taskList', 'tasksContainer', 'task-list'];
     
-    for (let id of possibleIds) {
-        const container = document.getElementById(id);
-        if (container) {
-            console.log('找到任务容器:', id);
-            return container;
-        }
-    }
-    
-    const byClass = document.querySelector('.task-list');
-    if (byClass) {
-        console.log('通过class找到任务容器');
-        return byClass;
-    }
-    
-    console.error('无法找到任务容器，请检查HTML结构');
-    return null;
+    console.log(`📊 最终任务数组长度: ${tasks.length}`);
 }
 
 // 渲染任务列表
 function renderTaskList() {
-    const container = findTaskContainer();
+    console.log('🔄 开始渲染任务列表...');
+    
+    const container = document.getElementById('tasks-container');
     if (!container) {
-        createFallbackContainer();
+        console.error('❌ 找不到任务容器 #tasks-container');
         return;
     }
     
-    // 获取选中日期的任务（默认为周一）
-    const selectedDate = getSelectedDate();
-    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    console.log('✅ 找到任务容器');
     
-    console.log('选中日期', selectedDate, '有', dateTasks.length, '个任务');
+    // 获取选中日期的任务
+    const selectedDate = getSelectedDate();
+    console.log(`📅 选中日期: ${selectedDate}`);
+    
+    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    console.log(`📋 找到 ${dateTasks.length} 个匹配的任务`);
+    
+    // 调试：显示所有任务的日期
+    console.log('所有任务的日期:', tasks.map(t => ({date: t.date, name: t.name})));
     
     if (dateTasks.length === 0) {
+        console.log('ℹ️ 没有任务，显示空状态');
         container.innerHTML = createEmptyState();
         return;
     }
     
+    console.log('🎨 开始生成任务HTML');
     container.innerHTML = createTasksHTML(dateTasks);
+    console.log('✅ 任务列表渲染完成');
 }
 
-// 获取选中日期（默认为周一）
+// 获取选中日期
 function getSelectedDate() {
     const activeCard = document.querySelector('.day-card.active');
     if (activeCard) {
-        return activeCard.getAttribute('data-date');
+        const date = activeCard.getAttribute('data-date');
+        console.log(`🎯 从激活卡片获取日期: ${date}`);
+        return date;
     }
     
     // 如果没有选中卡片，返回周一的日期
     const monday = new Date(currentWeekStart);
-    return monday.toISOString().split('T')[0];
-}
-
-function createFallbackContainer() {
-    console.log('创建备用任务容器');
-    const container = document.createElement('div');
-    container.id = 'tasks-container';
-    container.style.padding = '20px';
-    document.body.appendChild(container);
-    renderTaskList();
+    const mondayStr = monday.toISOString().split('T')[0];
+    console.log(`📌 使用默认周一日期: ${mondayStr}`);
+    return mondayStr;
 }
 
 function createEmptyState() {
@@ -271,7 +262,11 @@ function createEmptyState() {
 
 function createTasksHTML(dateTasks) {
     let html = '';
-    dateTasks.forEach(task => {
+    console.log(`🎨 为 ${dateTasks.length} 个任务生成HTML`);
+    
+    dateTasks.forEach((task, index) => {
+        console.log(`📝 生成任务 ${index + 1}: ${task.name}`);
+        
         const borderColor = getSubjectColor(task.subject);
         const completedClass = task.completed ? 'completed' : '';
         
@@ -327,6 +322,7 @@ function createTasksHTML(dateTasks) {
     return html;
 }
 
+// 其余函数保持不变...
 function getSubjectColor(subject) {
     const colors = {
         '语文': '#ff6b6b',
@@ -344,7 +340,7 @@ function toggleTask(id) {
     if (task) {
         task.completed = !task.completed;
         saveTasks();
-        renderWeekView(); // 更新周视图的任务计数
+        renderWeekView();
         renderTaskList();
         updateStats();
         
@@ -358,7 +354,7 @@ function deleteTask(id) {
     if (confirm('确定要删除这个任务吗？')) {
         tasks = tasks.filter(t => t.id !== id);
         saveTasks();
-        renderWeekView(); // 更新周视图的任务计数
+        renderWeekView();
         renderTaskList();
         updateStats();
     }
@@ -382,7 +378,6 @@ function updateStatElement(elementId, value) {
 }
 
 function calculateStreakDays() {
-    // 简化版连续天数计算
     const today = new Date().toISOString().split('T')[0];
     const todayCompleted = tasks.filter(t => t.date === today && t.completed).length;
     return todayCompleted > 0 ? 1 : 0;
@@ -394,7 +389,7 @@ function calculateRewardPoints() {
 
 function saveTasks() {
     localStorage.setItem('studyTasks', JSON.stringify(tasks));
-    console.log('保存了', tasks.length, '个任务');
+    console.log('💾 保存了', tasks.length, '个任务');
 }
 
 // 通知函数
