@@ -40,61 +40,70 @@
         
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
-            <!-- 周视图 -->
-<div class="week-view">
-    <div class="week-header">
-        <h2>学习计划</h2>
-        <div class="week-info" id="weekInfo">2025年10月第44周</div>
-    </div>
-    
-    <div class="calendar-navigation">
-        <div class="nav-buttons">
-            <button class="nav-btn" id="prevWeekBtn">
-                <i class="fas fa-chevron-left"></i> 前一周
-            </button>
-            <button class="nav-btn today-btn" id="todayBtn">今天</button>
-            <button class="nav-btn" id="nextWeekBtn">
-                后一周 <i class="fas fa-chevron-right"></i>
-            </button>
-        </div>
-    </div>
-    
-    <div class="week-days" id="weekDays">
-        <!-- 日期卡片将通过JavaScript动态生成 -->
-    </div>
-</div>
+            <!-- 学习计划顶部按钮 -->
+            <div class="plan-header-actions">
+                <div class="plan-title">
+                    <h2>学习计划</h2>
+                </div>
+                <div class="plan-buttons">
+                    <button class="btn btn-batch">
+                        <i class="fas fa-layer-group"></i> 批量添加
+                    </button>
+                    <a href="add-plan.html" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 添加计划
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 日历区域 -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-info">
+                        <div class="current-date" id="currentDate">2025年10月27日</div>
+                        <div class="week-info" id="weekInfo">第44周</div>
+                    </div>
+                    <div class="calendar-nav-buttons">
+                        <button class="nav-btn" id="prevWeekBtn">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="nav-btn today-btn" id="todayBtn">今天</button>
+                        <button class="nav-btn" id="nextWeekBtn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="week-days" id="weekDays">
+                    <!-- 日期卡片将通过JavaScript动态生成 -->
+                </div>
+            </div>
             
             <!-- 我的学习计划列表 -->
             <div class="plan-list-section">
                 <div class="plan-list-header">
-                    <h3>我的学习计划</h3>
-                    <div class="plan-actions">
+                    <div class="list-title-section">
+                        <h3>我的学习计划</h3>
                         <button class="btn btn-share">
                             <i class="fas fa-share"></i> 分享任务
                         </button>
-                        <a href="add-plan.html" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> 添加计划
-                        </a>
                     </div>
-                </div>
-                
-                <div class="filter-section">
-                    <div class="filter-group">
+                    <div class="list-controls">
                         <select class="filter-select">
                             <option>全部科目</option>
                             <option>语文</option>
                             <option>数学</option>
                             <option>英语</option>
+                            <option>科学</option>
+                            <option>美术</option>
+                            <option>体育</option>
                         </select>
                         <select class="filter-select">
                             <option>默认排序</option>
                             <option>按时间排序</option>
                             <option>按科目排序</option>
+                            <option>按状态排序</option>
                         </select>
                     </div>
-                    <button class="btn btn-quick">
-                        <i class="fas fa-bolt"></i> 快速完成
-                    </button>
                 </div>
                 
                 <div class="task-list" id="tasks-container">
@@ -106,6 +115,53 @@
         <footer>
             <p>© 2025 LHR学习计划管理 | 培养良好学习习惯，成就更好的自己！</p>
         </footer>
+    </div>
+
+    <!-- 任务详情模态框 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTaskName">任务详情</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="task-detail-info">
+                    <div class="detail-row">
+                        <label>科目：</label>
+                        <span id="modalTaskSubject">数学</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>日期：</label>
+                        <span id="modalTaskDate">2025-10-27</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>时间：</label>
+                        <span id="modalTaskTime">19:00 - 20:30</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>时长：</label>
+                        <span id="modalTaskDuration">90分钟</span>
+                    </div>
+                    <div class="detail-row full-width">
+                        <label>备注：</label>
+                        <p id="modalTaskNote">无备注信息</p>
+                    </div>
+                    <div class="detail-row">
+                        <label>完成状态：</label>
+                        <span id="modalTaskStatus">未完成</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-edit" id="editTaskBtn">
+                    <i class="fas fa-edit"></i> 编辑计划
+                </button>
+                <button class="btn btn-delete" id="deleteTaskBtn">
+                    <i class="fas fa-trash"></i> 删除计划
+                </button>
+                <button class="btn btn-close" id="closeModalBtn">关闭</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/index.js"></script>
