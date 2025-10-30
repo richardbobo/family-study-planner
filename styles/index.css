@@ -1140,3 +1140,82 @@ footer {
     justify-content: center;
     margin-right: 4px;
 }
+/* 任务项点击交互 */
+.task-item {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.task-item:active {
+    transform: translateY(0);
+}
+
+/* 已完成任务的点击样式 */
+.task-item.completed:hover {
+    background: #f0f9f0;
+    border-left-color: #25c064;
+}
+
+/* 未完成任务的操作按钮区域 */
+.task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* 阻止按钮点击事件冒泡 */
+.task-actions button {
+    cursor: pointer;
+}
+
+/* 确保按钮点击不会触发任务项的点击事件 */
+.btn-quick-complete,
+.btn-start-timer {
+    pointer-events: auto;
+}
+
+/* 任务项点击手型光标 */
+.task-item {
+    cursor: pointer;
+}
+
+/* 模态框中的已完成状态标识 */
+.modal-task-header.completed {
+    border-left: 4px solid #2ed573;
+    padding-left: 15px;
+}
+
+.status-badge.completed {
+    background: #2ed573;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+.detail-row.highlight {
+    background: #f8fff9;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin: 8px 0;
+    border-left: 3px solid #2ed573;
+}
+
+.completion-notes {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    border-left: 3px solid #4a69bd;
+    font-style: normal;
+    line-height: 1.5;
+}
