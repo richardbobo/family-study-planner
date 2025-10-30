@@ -92,15 +92,14 @@ function renderWeekView() {
 // 更新日期显示
 function updateDateDisplay(currentDateElement, weekInfoElement) {
     if (currentDateElement && weekInfoElement) {
-        const today = new Date();
+        const monday = new Date(currentWeekStart);
         
-        // 格式化日期显示：显示今天的日期
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1;
-        const day = today.getDate();
+        // 格式化日期显示：显示当前周的年份和月份
+        const year = monday.getFullYear();
+        const month = monday.getMonth() + 1;
         
-        const dateDisplay = `${year}年${month}月${day}日`;
-        const weekNumber = getWeekNumber(today);
+        const dateDisplay = `${year}年${month}月`;
+        const weekNumber = getWeekNumber(monday);
         
         currentDateElement.textContent = dateDisplay;
         weekInfoElement.textContent = `第${weekNumber}周`;
