@@ -1,8 +1,8 @@
-// 主页面逻辑 - 更新版本
+// 主页面逻辑 - 完整修复版本
 console.log('index.js 已加载');
 
 let tasks = [];
-let currentWeekStart = getMonday(new Date());
+let currentWeekStart = getMonday(new Date()); // 默认从当前周的周一开始
 let currentTaskId = null;
 
 // 初始化页面
@@ -32,47 +32,15 @@ function initializeNavigation() {
     
     if (prevWeekBtn) prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
     if (nextWeekBtn) nextWeekBtn.addEventListener('click', () => navigateWeek(1));
-    if (todayBtn) todayBtn.addEventListener('click', () => {
-        currentWeekStart = getMonday(new Date());
-        renderWeekView();
-        renderTaskList();
-        updateStats();
-    });
+    if (todayBtn) todayBtn.addEventListener('click', goToToday);
 }
 
-// 初始化模态框
-function initializeModal() {
-    const modal = document.getElementById('taskModal');
-    const closeBtn = document.getElementById('closeModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const editTaskBtn = document.getElementById('editTaskBtn');
-    const deleteTaskBtn = document.getElementById('deleteTaskBtn');
-    
-    // 关闭模态框
-    [closeBtn, closeModalBtn].forEach(btn => {
-        if (btn) {
-            btn.addEventListener('click', closeModal);
-        }
-    });
-    
-    // 编辑任务
-    if (editTaskBtn) {
-        editTaskBtn.addEventListener('click', editTask);
-    }
-    
-    // 删除任务
-    if (deleteTaskBtn) {
-        deleteTaskBtn.addEventListener('click', deleteTask);
-    }
-    
-    // 点击模态框外部关闭
-    if (modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-    }
+// 跳转到今天
+function goToToday() {
+    currentWeekStart = getMonday(new Date());
+    renderWeekView();
+    renderTaskList();
+    updateStats();
 }
 
 // 周导航
@@ -88,21 +56,13 @@ function navigateWeek(direction) {
 // 渲染周视图
 function renderWeekView() {
     const weekDaysContainer = document.getElementById('weekDays');
-    const weekInfoElement = document.getElementById('weekInfo');
     const currentDateElement = document.getElementById('currentDate');
+    const weekInfoElement = document.getElementById('weekInfo');
     
     if (!weekDaysContainer) return;
     
     // 更新日期显示
-    if (currentDateElement) {
-        const monday = new Date(currentWeekStart);
-        currentDateElement.textContent = formatChineseDate(monday);
-    }
-    
-    // 更新周信息显示
-    if (weekInfoElement) {
-        weekInfoElement.textContent = getWeekInfo(currentWeekStart);
-    }
+    updateDateDisplay(currentDateElement, weekInfoElement);
     
     // 生成一周的日期卡片
     let weekDaysHTML = '';
@@ -128,12 +88,51 @@ function renderWeekView() {
     bindDayCardEvents();
 }
 
-// 格式化中文日期
-function formatChineseDate(date) {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${year}年${month}月${day}日`;
+// 更新日期显示
+function updateDateDisplay(currentDateElement, weekInfoElement) {
+    if (currentDateElement && weekInfoElement) {
+        const monday = new Date(currentWeekStart);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        // 格式化日期显示
+        const startYear = monday.getFullYear();
+        const startMonth = monday.getMonth() + 1;
+        const startDay = monday.getDate();
+        const endYear = sunday.getFullYear();
+        const endMonth = sunday.getMonth() + 1;
+        const endDay = sunday.getDate();
+        
+        let dateDisplay;
+        if (startYear === endYear && startMonth === endMonth) {
+            // 同一年同一月：2025年10月27日-31日
+            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endDay}日`;
+        } else if (startYear === endYear) {
+            // 同一年不同月：2025年10月27日-11月2日
+            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endMonth}月${endDay}日`;
+        } else {
+            // 跨年：2025年12月27日-2026年1月2日
+            dateDisplay = `${startYear}年${startMonth}月${startDay}日-${endYear}年${endMonth}月${endDay}日`;
+        }
+        
+        const weekNumber = getWeekNumber(monday);
+        
+        currentDateElement.textContent = dateDisplay;
+        weekInfoElement.textContent = `第${weekNumber}周`;
+    }
+}
+
+// 计算周数（ISO 8601标准）
+function getWeekNumber(date) {
+    const target = new Date(date.valueOf());
+    const dayNr = (date.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) {
+        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    }
+    return 1 + Math.ceil((firstThursday - target) / 604800000);
 }
 
 // 创建日期卡片HTML
@@ -178,17 +177,39 @@ function bindDayCardEvents() {
     });
 }
 
-// 获取周信息
-function getWeekInfo(startDate) {
-    const weekNumber = getWeekNumber(startDate);
-    return `第${weekNumber}周`;
-}
-
-// 计算周数
-function getWeekNumber(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+// 初始化模态框
+function initializeModal() {
+    const modal = document.getElementById('taskModal');
+    const closeBtn = document.getElementById('closeModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const editTaskBtn = document.getElementById('editTaskBtn');
+    const deleteTaskBtn = document.getElementById('deleteTaskBtn');
+    
+    // 关闭模态框
+    [closeBtn, closeModalBtn].forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', closeModal);
+        }
+    });
+    
+    // 编辑任务
+    if (editTaskBtn) {
+        editTaskBtn.addEventListener('click', editTask);
+    }
+    
+    // 删除任务
+    if (deleteTaskBtn) {
+        deleteTaskBtn.addEventListener('click', deleteTask);
+    }
+    
+    // 点击模态框外部关闭
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
 }
 
 // 加载任务
