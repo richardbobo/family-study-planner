@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
     renderWeekView();
     renderTaskList();
     updateStats();
+      // 调试信息
+    console.log('页面初始化完成');
+    console.log('任务数量:', tasks.length);
+    console.log('当前周开始日期:', currentWeekStart);
 });
 
 // 获取周一的日期
@@ -379,13 +383,25 @@ function loadTasks() {
 }
 
 // 渲染任务列表
+// 渲染任务列表 - 修复版本
 function renderTaskList() {
-    const taskListContainer = document.getElementById('taskList');
-    if (!taskListContainer) return;
+    // 修改这里：使用正确的容器ID
+    const taskListContainer = document.getElementById('tasks-container');
+    if (!taskListContainer) {
+        console.error('找不到任务列表容器，检查ID是否为 tasks-container');
+        return;
+    }
 
-    const selectedDate = getSelectedDate();
-    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    console.log('开始渲染任务列表，总任务数:', tasks.length);
     
+    // 获取当前选中的日期
+    const selectedDate = getSelectedDate();
+    console.log('选中的日期:', selectedDate);
+    
+    // 过滤出该日期的任务
+    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    console.log('找到的任务数量:', dateTasks.length);
+
     let html = '';
     
     if (dateTasks.length > 0) {
@@ -416,10 +432,13 @@ function renderTaskList() {
         `;
         
         dateTasks.forEach(task => {
+            console.log('渲染任务:', task.name, '完成状态:', task.completed);
+            
             const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
             const subjectClass = getSubjectClass(task.subject);
             
             if (task.completed) {
+                // 已完成的任务
                 const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
                 const timeString = completionTime.toTimeString().substring(0, 5);
                 const duration = task.time ? `${task.time}分钟` : '15分钟';
@@ -457,6 +476,7 @@ function renderTaskList() {
                     </div>
                 `;
             } else {
+                // 未完成的任务
                 html += `
                     <div class="task-item" data-task-id="${task.id}" onclick="openModal('${task.id}')">
                         <div class="task-header">
@@ -495,10 +515,21 @@ function renderTaskList() {
             </div>
         `;
     } else {
-        html = '<div class="no-tasks">今天还没有学习计划</div>';
+        html = `
+            <div class="no-tasks">
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-calendar-plus" style="font-size: 3rem; margin-bottom: 15px; color: #ddd;"></i>
+                    <p style="margin-bottom: 20px; font-size: 1.1rem;">${selectedDate} 还没有学习计划</p>
+                    <a href="add-plan.html" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 添加学习计划
+                    </a>
+                </div>
+            </div>
+        `;
     }
     
     taskListContainer.innerHTML = html;
+    console.log('任务列表渲染完成');
 }
 
 // 获取选中日期
@@ -511,12 +542,19 @@ function getSelectedDate() {
 }
 
 // 打开模态框
+// 打开模态框 - 修复ID
 function openModal(taskId) {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     
-    const modal = document.getElementById('taskDetailModal');
+    // 修改这里：使用正确的模态框ID
+    const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
+    
+    if (!modal) {
+        console.error('找不到任务详情模态框');
+        return;
+    }
     
     if (task.completed) {
         const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
@@ -610,6 +648,38 @@ function openModal(taskId) {
     modal.style.display = 'flex';
 }
 
+// 关闭模态框 - 修复ID
+function closeModal() {
+    const modal = document.getElementById('taskModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 初始化模态框 - 修复ID
+function initializeModal() {
+    const modal = document.getElementById('taskModal');
+    const closeBtn = document.getElementById('closeModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
+    
+    initializeQuickCompleteModal();
+}
 // 关闭模态框
 function closeModal() {
     const modal = document.getElementById('taskDetailModal');

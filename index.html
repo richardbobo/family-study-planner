@@ -118,52 +118,28 @@
     </div>
 
     <!-- 任务详情模态框 -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTaskName">任务详情</h3>
-                <button class="close-btn" id="closeModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="task-detail-info">
-                    <div class="detail-row">
-                        <label>科目：</label>
-                        <span id="modalTaskSubject">数学</span>
-                    </div>
-                    <div class="detail-row">
-                        <label>日期：</label>
-                        <span id="modalTaskDate">2025-10-27</span>
-                    </div>
-                    <div class="detail-row">
-                        <label>时间：</label>
-                        <span id="modalTaskTime">19:00 - 20:30</span>
-                    </div>
-                    <div class="detail-row">
-                        <label>时长：</label>
-                        <span id="modalTaskDuration">90分钟</span>
-                    </div>
-                    <div class="detail-row full-width">
-                        <label>备注：</label>
-                        <p id="modalTaskNote">无备注信息</p>
-                    </div>
-                    <div class="detail-row">
-                        <label>完成状态：</label>
-                        <span id="modalTaskStatus">未完成</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-edit" id="editTaskBtn">
-                    <i class="fas fa-edit"></i> 编辑计划
-                </button>
-                <button class="btn btn-delete" id="deleteTaskBtn">
-                    <i class="fas fa-trash"></i> 删除计划
-                </button>
-                <button class="btn btn-close" id="closeModalBtn">关闭</button>
-            </div>
+    <!-- 任务详情模态框 - 修改这部分 -->
+<div class="modal" id="taskModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>任务详情</h3>
+            <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body" id="taskDetailContent">
+            <!-- 内容将通过JavaScript动态生成 -->
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-edit" id="editTaskBtn">
+                <i class="fas fa-edit"></i> 编辑计划
+            </button>
+            <button class="btn btn-delete" id="deleteTaskBtn">
+                <i class="fas fa-trash"></i> 删除计划
+            </button>
+            <button class="btn btn-close" id="closeModalBtn">关闭</button>
         </div>
     </div>
-    
+</div>
+
 <!-- 快速完成任务模态框 -->
 <div class="modal" id="quickCompleteModal">
     <div class="modal-content quick-complete-modal">
