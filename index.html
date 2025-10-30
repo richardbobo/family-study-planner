@@ -40,46 +40,29 @@
         
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
-            <!-- 日期导航部分 -->
-            <div class="date-section">
-                <div class="week-header">
-                    <h2>学习计划</h2>
-                    <div class="week-info">2025年10月第44周</div>
-                </div>
-                
-                <div class="week-days">
-                    <div class="day-card">
-                        <div class="day-name">周一</div>
-                        <div class="day-date">10/27</div>
-                    </div>
-                    <div class="day-card">
-                        <div class="day-name">周二</div>
-                        <div class="day-date">10/28</div>
-                    </div>
-                    <div class="day-card today">
-                        <div class="day-name">周三</div>
-                        <div class="day-date">10/29</div>
-                        <div class="today-badge">今天</div>
-                    </div>
-                    <div class="day-card">
-                        <div class="day-name">周四</div>
-                        <div class="day-date">10/30</div>
-                    </div>
-                    <div class="day-card">
-                        <div class="day-name">周五</div>
-                        <div class="day-date">10/31</div>
-                    </div>
-                    <div class="day-card">
-                        <div class="day-name">周六</div>
-                        <div class="day-date">11/1</div>
-                        <div class="today-badge">今日</div>
-                    </div>
-                    <div class="day-card">
-                        <div class="day-name">周日</div>
-                        <div class="day-date">11/2</div>
-                    </div>
-                </div>
-            </div>
+            <!-- 周视图 -->
+<div class="week-view">
+    <div class="week-header">
+        <h2>学习计划</h2>
+        <div class="week-info" id="weekInfo">2025年10月第44周</div>
+    </div>
+    
+    <div class="calendar-navigation">
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevWeekBtn">
+                <i class="fas fa-chevron-left"></i> 前一周
+            </button>
+            <button class="nav-btn today-btn" id="todayBtn">今天</button>
+            <button class="nav-btn" id="nextWeekBtn">
+                后一周 <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="week-days" id="weekDays">
+        <!-- 日期卡片将通过JavaScript动态生成 -->
+    </div>
+</div>
             
             <!-- 我的学习计划列表 -->
             <div class="plan-list-section">
