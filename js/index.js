@@ -320,65 +320,71 @@ function updateTotalMinutes() {
 }
 
 // 确认快速完成
+// 在 confirmQuickComplete 函数中，修改任务更新部分：
 function confirmQuickComplete() {
-    if (!quickCompleteTaskId) return;
+    if (!currentQuickCompleteTaskId || isSubmittingCompletion) return;
     
-    const task = tasks.find(t => t.id === quickCompleteTaskId);
-    if (!task) return;
-    
-    const hoursInput = document.getElementById('hoursInput');
-    const minutesInput = document.getElementById('minutesInput');
-    const noteTextarea = document.getElementById('completionNote');
-    const confirmBtn = document.getElementById('confirmQuickComplete');
-    
-    if (!hoursInput || !minutesInput || !noteTextarea || !confirmBtn) return;
-    
-    // 获取输入值
-    const hours = parseInt(hoursInput.value) || 0;
-    const minutes = parseInt(minutesInput.value) || 0;
-    const totalMinutes = hours * 60 + minutes;
-    const note = noteTextarea.value.trim();
-    
-    // 验证时间
-    if (totalMinutes <= 0) {
-        showNotification('请设置有效的学习时间', 'warning');
+    const task = tasks.find(t => t.id === currentQuickCompleteTaskId);
+    if (!task) {
+        showNotification('任务不存在或已被删除', 'error');
+        closeQuickCompleteModal();
         return;
     }
     
-    // 显示加载状态
-    const originalText = confirmBtn.innerHTML;
-    confirmBtn.innerHTML = '<div class="loading-spinner"></div> 保存中...';
-    confirmBtn.disabled = true;
+    const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+    const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+    const totalMinutes = hours * 60 + minutes;
+    const completionNote = document.getElementById('completionNote').value.trim();
     
-    // 模拟保存过程（实际使用时可以替换为真实的API调用）
+    // 验证时间
+    if (totalMinutes <= 0) {
+        showNotification('请设置有效的学习时长', 'warning');
+        return;
+    }
+    
+    isSubmittingCompletion = true;
+    updateConfirmButton(true);
+    
     setTimeout(() => {
-        // 更新任务状态
-        task.completed = true;
-        task.time = totalMinutes;
-        if (note) {
-            task.completionNote = note;
-            task.note = task.note ? `${task.note}\n[完成记录] ${note}` : `[完成记录] ${note}`;
+        try {
+            // 更新任务状态
+            task.completed = true;
+            task.time = totalMinutes;
+            task.completionNote = completionNote;
+            task.completionTime = new Date().toISOString();
+            task.actualCompletionDate = getCurrentDate();
+            
+            // 更新连续打卡
+            updateStreak();
+            
+            // 记录完成历史
+            recordCompletionHistory(task, totalMinutes, completionNote);
+            
+            saveTasks();
+            
+            // 更新界面 - 重新渲染整个任务列表
+            renderWeekView();
+            renderTaskList();
+            updateStats();
+            
+            // 关闭所有打开的模态框
+            closeQuickCompleteModal();
+            closeModal();
+            
+            // 显示成功消息
+            const successMessage = completionNote 
+                ? `🎉 任务完成！学习时长：${totalMinutes}分钟，已记录学习心得`
+                : `🎉 任务完成！学习时长：${totalMinutes}分钟`;
+            showNotification(successMessage, 'success');
+            
+        } catch (error) {
+            console.error('保存任务完成状态失败:', error);
+            showNotification('保存失败，请重试', 'error');
+        } finally {
+            isSubmittingCompletion = false;
+            updateConfirmButton(false);
         }
-        
-        // 保存到本地存储
-        saveTasks();
-        
-        // 更新界面
-        renderWeekView();
-        renderTaskList();
-        updateStats();
-        
-        // 关闭模态框
-        closeQuickCompleteModal();
-        
-        // 恢复按钮状态
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
-        
-        // 显示成功通知
-        showNotification(`🎉 任务完成！学习时长：${totalMinutes}分钟`, 'success');
-        
-    }, 1500); // 模拟1.5秒的保存过程
+    }, 1500);
 }
 // 加载任务
 function loadTasks() {
@@ -398,22 +404,261 @@ function loadTasks() {
 }
 
 // 渲染任务列表
+// 渲染任务列表
 function renderTaskList() {
-    const container = document.getElementById('tasks-container');
-    if (!container) return;
+    const taskListContainer = document.getElementById('taskList');
+    if (!taskListContainer) return;
+
+    // 按日期分组任务
+    const tasksByDate = groupTasksByDate(tasks);
     
-    // 获取选中日期的任务
-    const selectedDate = getSelectedDate();
-    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    let html = '';
     
-    if (dateTasks.length === 0) {
-        container.innerHTML = createEmptyState();
-        return;
+    Object.keys(tasksByDate).sort().forEach(date => {
+        const dateTasks = tasksByDate[date];
+        const dateObj = new Date(date + 'T00:00:00');
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        
+        let dateLabel = '';
+        if (date === today.toISOString().split('T')[0]) {
+            dateLabel = '今天';
+        } else if (date === tomorrow.toISOString().split('T')[0]) {
+            dateLabel = '明天';
+        } else {
+            dateLabel = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+        }
+        
+        // 星期几
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekday = weekdays[dateObj.getDay()];
+        
+        html += `
+            <div class="date-section">
+                <div class="date-header">
+                    <span class="date-label">${dateLabel} 周${weekday}</span>
+                    <span class="date-full">${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日</span>
+                </div>
+                <div class="tasks-container">
+        `;
+        
+        dateTasks.forEach(task => {
+            const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
+            const subjectClass = getSubjectClass(task.subject);
+            
+            if (task.completed) {
+                // 已完成的任务
+                const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
+                const timeString = completionTime.toTimeString().substring(0, 5);
+                const duration = task.time ? `${task.time}分钟` : '15分钟';
+                
+                html += `
+                    <div class="task-item completed" data-task-id="${task.id}" onclick="openModal('${task.id}')">
+                        <div class="task-header">
+                            <div class="task-title">
+                                <span class="task-name">${task.name}</span>
+                                <span class="task-subject ${subjectClass}">${task.subject}</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="task-content">
+                            <div class="task-desc">${task.description || '无详细描述'}</div>
+                            
+                            <div class="completion-info">
+                                <div class="task-status">
+                                    <span class="status-completed">
+                                        <i class="fas fa-check-circle"></i> 已完成
+                                    </span>
+                                    <span class="completion-time">完成时间: ${timeString}</span>
+                                    <span class="study-duration">学习时长: ${duration}</span>
+                                </div>
+                                ${task.completionNote ? `
+                                    <div class="completion-note">
+                                        <strong>学习心得:</strong> ${task.completionNote}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 未完成的任务
+                html += `
+                    <div class="task-item" data-task-id="${task.id}" onclick="openModal('${task.id}')">
+                        <div class="task-header">
+                            <div class="task-title">
+                                <span class="task-name">${task.name}</span>
+                                <span class="task-subject ${subjectClass}">${task.subject}</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="task-content">
+                            <div class="task-desc">${task.description || '无详细描述'}</div>
+                            <div class="task-points">
+                                <span class="points-badge">积分: ${task.points || 10}</span>
+                                <span class="time-estimate">预计: ${timeDisplay}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="task-actions">
+                            <button class="btn btn-quick-complete" onclick="event.stopPropagation(); quickComplete('${task.id}')">
+                                <i class="fas fa-check"></i> 快速完成
+                            </button>
+                            <button class="btn btn-start-timer" onclick="event.stopPropagation(); startTimer('${task.id}')">
+                                <i class="fas fa-play"></i> 开始计时
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    taskListContainer.innerHTML = html || '<div class="no-tasks">暂无学习计划</div>';
+}
+function openModal(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const modal = document.getElementById('taskDetailModal');
+    const content = document.getElementById('taskDetailContent');
+    
+    if (task.completed) {
+        // 已完成任务的详情
+        const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
+        const timeString = completionTime.toLocaleString();
+        
+        content.innerHTML = `
+            <div class="modal-task-header completed">
+                <h3>${task.name} <span class="status-badge completed">已完成</span></h3>
+                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
+            </div>
+            
+            <div class="modal-task-body">
+                <div class="detail-row">
+                    <label>学习内容:</label>
+                    <span>${task.description || '无详细描述'}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>计划时间:</label>
+                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                </div>
+                
+                <div class="detail-row highlight">
+                    <label>完成时间:</label>
+                    <span>${timeString}</span>
+                </div>
+                
+                <div class="detail-row highlight">
+                    <label>实际学习时长:</label>
+                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟'}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>获得积分:</label>
+                    <span>${task.points || 10} 分</span>
+                </div>
+                
+                ${task.completionNote ? `
+                <div class="detail-row full-width">
+                    <label>学习心得:</label>
+                    <div class="completion-notes">${task.completionNote}</div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } else {
+        // 未完成任务的详情
+        content.innerHTML = `
+            <div class="modal-task-header">
+                <h3>${task.name}</h3>
+                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
+            </div>
+            
+            <div class="modal-task-body">
+                <div class="detail-row">
+                    <label>学习内容:</label>
+                    <span>${task.description || '无详细描述'}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>计划时间:</label>
+                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>重复类型:</label>
+                    <span>${getRepeatTypeText(task.repeatType)}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>预计时长:</label>
+                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <label>任务积分:</label>
+                    <span>${task.points || 10} 分</span>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="quickComplete('${task.id}')">
+                    <i class="fas fa-check"></i> 快速完成
+                </button>
+                <button class="btn btn-primary" onclick="startTimer('${task.id}')">
+                    <i class="fas fa-play"></i> 开始计时
+                </button>
+            </div>
+        `;
     }
     
-    container.innerHTML = createTasksHTML(dateTasks);
+    modal.style.display = 'flex';
 }
 
+// 获取重复类型文本
+function getRepeatTypeText(repeatType) {
+    const repeatTypes = {
+        'once': '仅当天',
+        'daily': '每天',
+        'weekly': '每周',
+        'monthly': '每月'
+    };
+    return repeatTypes[repeatType] || '仅当天';
+}
+
+// 获取科目样式类名
+function getSubjectClass(subject) {
+    const subjectClasses = {
+        '语文': 'subject-chinese',
+        '数学': 'subject-math',
+        '英语': 'subject-english',
+        '科学': 'subject-science',
+        '物理': 'subject-physics',
+        '化学': 'subject-chemistry',
+        '历史': 'subject-history',
+        '地理': 'subject-geography'
+    };
+    return subjectClasses[subject] || 'subject-other';
+}
+
+// 获取当前日期字符串
+function getCurrentDate() {
+    return new Date().toISOString().split('T')[0];
+}
 // 获取选中日期
 function getSelectedDate() {
     const activeCard = document.querySelector('.day-card.active');

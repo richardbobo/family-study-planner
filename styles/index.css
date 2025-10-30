@@ -381,15 +381,15 @@ h1 {
     justify-content: space-between;
     align-items: flex-start;
     border-left: 4px solid #4a69bd;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     cursor: pointer;
     gap: 15px;
+    position: relative;
 }
 
 .task-item:hover {
-    transform: translateX(3px);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
-    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .task-info {
@@ -1060,4 +1060,83 @@ footer {
     .quick-complete-modal .modal-actions {
         flex-direction: column;
     }
+}
+/* 已完成任务样式 */
+.task-item.completed {
+    background: #f8fff9;
+    border-left: 4px solid #2ed573;
+    opacity: 0.9;
+}
+
+.task-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 8px;
+}
+
+.status-completed {
+    color: #2ed573;
+    font-weight: 500;
+}
+
+.completion-time {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.study-duration {
+    color: #4a69bd;
+    font-weight: 500;
+}
+
+.completion-info {
+    background: #f1f8ff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+.completion-note {
+    color: #333;
+    font-style: italic;
+    margin-top: 4px;
+    padding: 6px 0;
+    border-top: 1px dashed #e9ecef;
+}
+
+/* 任务操作按钮容器 */
+.task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* 隐藏已完成任务的某些按钮 */
+.task-item.completed .btn-quick-complete,
+.task-item.completed .btn-start-timer {
+    display: none;
+}
+
+/* 已完成任务的查看详情按钮样式 */
+.task-item.completed .btn-details {
+    background: #6c757d;
+    color: white;
+}
+
+.task-item.completed .btn-details:hover {
+    background: #5a6268;
+}
+
+/* 任务图标 */
+.task-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
 }
