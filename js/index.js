@@ -541,18 +541,26 @@ function getSelectedDate() {
     return currentWeekStart.toISOString().split('T')[0];
 }
 
-// 打开模态框
-// 打开模态框 - 修复ID
+
+// 打开模态框 - 修复版本
 function openModal(taskId) {
+    console.log('打开任务详情:', taskId);
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task) {
+        console.error('找不到任务:', taskId);
+        return;
+    }
     
-    // 修改这里：使用正确的模态框ID
     const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
     
     if (!modal) {
-        console.error('找不到任务详情模态框');
+        console.error('找不到任务模态框');
+        return;
+    }
+    
+    if (!content) {
+        console.error('找不到任务详情内容容器');
         return;
     }
     
@@ -646,6 +654,7 @@ function openModal(taskId) {
     }
     
     modal.style.display = 'flex';
+    console.log('任务详情模态框已显示');
 }
 
 // 关闭模态框 - 修复ID
