@@ -1219,3 +1219,258 @@ footer {
     font-style: normal;
     line-height: 1.5;
 }
+/* 修复任务列表样式 */
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.date-section {
+    margin-bottom: 25px;
+}
+
+.date-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.date-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4a69bd;
+    margin-right: 10px;
+}
+
+.date-full {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.no-tasks {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+/* 修复任务项样式 */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.task-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.task-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.task-subject {
+    background: #e0e7ff;
+    color: #4a69bd;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.subject-chinese { background: #ffeaea; color: #ff6b6b; }
+.subject-math { background: #e0e7ff; color: #4a69bd; }
+.subject-english { background: #e0f7fa; color: #2bcbba; }
+.subject-science { background: #fff0e0; color: #ff9f43; }
+.subject-physics { background: #e8f4fd; color: #3498db; }
+.subject-chemistry { background: #f0e6ff; color: #9b59b6; }
+.subject-history { background: #fff8e1; color: #f39c12; }
+.subject-geography { background: #e8f5e8; color: #27ae60; }
+.subject-other { background: #f0f0f0; color: #666; }
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.task-time {
+    color: #666;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.task-content {
+    margin-bottom: 10px;
+}
+
+.task-desc {
+    color: #666;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.task-points {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.points-badge {
+    background: #ff9f43;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.time-estimate {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* 修复按钮样式 */
+.btn-quick-complete {
+    background: #2ed573;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.btn-quick-complete:hover {
+    background: #25c064;
+    transform: translateY(-1px);
+}
+
+.btn-start-timer {
+    background: #4a69bd;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.btn-start-timer:hover {
+    background: #3c5aa8;
+    transform: translateY(-1px);
+}
+
+/* 修复模态框样式 */
+.modal-task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-task-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.task-subject.large {
+    background: #4a69bd;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.modal-task-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.detail-row label {
+    font-weight: bold;
+    color: #333;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.detail-row span {
+    color: #666;
+    flex: 1;
+}
+
+.detail-row.full-width {
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-row.full-width label {
+    min-width: auto;
+}
+
+/* 快速完成模态框按钮修复 */
+.quick-complete-modal .btn-confirm {
+    background: #2ed573;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.quick-complete-modal .btn-confirm:hover {
+    background: #25c064;
+    transform: translateY(-1px);
+}
+
+.quick-complete-modal .btn-cancel {
+    background: #777;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.quick-complete-modal .btn-cancel:hover {
+    background: #666;
+    transform: translateY(-1px);
+}
