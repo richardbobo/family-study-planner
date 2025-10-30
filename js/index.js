@@ -4,6 +4,7 @@ console.log('index.js 已加载');
 let tasks = [];
 let currentWeekStart = getMonday(new Date()); // 默认从当前周的周一开始
 let currentTaskId = null;
+let quickCompleteTaskId = null;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
@@ -198,8 +199,187 @@ function initializeModal() {
             }
         });
     }
+       initializeQuickCompleteModal();
 }
 
+// 初始化快速完成模态框
+function initializeQuickCompleteModal() {
+    const modal = document.getElementById('quickCompleteModal');
+    const closeBtn = document.getElementById('closeQuickCompleteModal');
+    const cancelBtn = document.getElementById('cancelQuickComplete');
+    const confirmBtn = document.getElementById('confirmQuickComplete');
+    const timeOptions = document.querySelectorAll('.time-option');
+    const hoursInput = document.getElementById('hoursInput');
+    const minutesInput = document.getElementById('minutesInput');
+    
+    // 关闭模态框
+    [closeBtn, cancelBtn].forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', closeQuickCompleteModal);
+        }
+    });
+    
+    // 确认完成
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmQuickComplete);
+    }
+    
+    // 时间输入变化
+    if (hoursInput && minutesInput) {
+        hoursInput.addEventListener('input', updateTotalMinutes);
+        minutesInput.addEventListener('input', updateTotalMinutes);
+    }
+    
+    // 快速时间选项
+    timeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // 移除其他选项的active状态
+            timeOptions.forEach(opt => opt.classList.remove('active'));
+            // 添加当前选项的active状态
+            this.classList.add('active');
+            
+            const minutes = parseInt(this.getAttribute('data-minutes'));
+            setTimeFromMinutes(minutes);
+        });
+    });
+    
+    // 点击模态框外部关闭
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeQuickCompleteModal();
+            }
+        });
+    }
+}
+
+
+// 打开快速完成模态框
+function openQuickCompleteModal(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    quickCompleteTaskId = taskId;
+    
+    // 更新模态框内容
+    document.getElementById('quickCompleteTaskName').textContent = task.name;
+    document.getElementById('completionNote').value = '';
+    
+    // 重置时间选项
+    document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('active'));
+    document.querySelector('.time-option[data-minutes="30"]').classList.add('active');
+    
+    // 设置默认时间（使用任务原有时间或默认30分钟）
+    const defaultMinutes = task.time || 30;
+    setTimeFromMinutes(defaultMinutes);
+    
+    // 显示模态框
+    const modal = document.getElementById('quickCompleteModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// 关闭快速完成模态框
+function closeQuickCompleteModal() {
+    const modal = document.getElementById('quickCompleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    quickCompleteTaskId = null;
+}
+
+// 根据分钟数设置时间输入
+function setTimeFromMinutes(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    const hoursInput = document.getElementById('hoursInput');
+    const minutesInput = document.getElementById('minutesInput');
+    
+    if (hoursInput && minutesInput) {
+        hoursInput.value = hours;
+        minutesInput.value = minutes;
+        updateTotalMinutes();
+    }
+}
+
+// 更新总分钟数显示
+function updateTotalMinutes() {
+    const hoursInput = document.getElementById('hoursInput');
+    const minutesInput = document.getElementById('minutesInput');
+    const totalMinutesDisplay = document.getElementById('totalMinutesDisplay');
+    
+    if (hoursInput && minutesInput && totalMinutesDisplay) {
+        const hours = parseInt(hoursInput.value) || 0;
+        const minutes = parseInt(minutesInput.value) || 0;
+        const totalMinutes = hours * 60 + minutes;
+        
+        totalMinutesDisplay.textContent = `总计：${totalMinutes}分钟`;
+    }
+}
+
+// 确认快速完成
+function confirmQuickComplete() {
+    if (!quickCompleteTaskId) return;
+    
+    const task = tasks.find(t => t.id === quickCompleteTaskId);
+    if (!task) return;
+    
+    const hoursInput = document.getElementById('hoursInput');
+    const minutesInput = document.getElementById('minutesInput');
+    const noteTextarea = document.getElementById('completionNote');
+    const confirmBtn = document.getElementById('confirmQuickComplete');
+    
+    if (!hoursInput || !minutesInput || !noteTextarea || !confirmBtn) return;
+    
+    // 获取输入值
+    const hours = parseInt(hoursInput.value) || 0;
+    const minutes = parseInt(minutesInput.value) || 0;
+    const totalMinutes = hours * 60 + minutes;
+    const note = noteTextarea.value.trim();
+    
+    // 验证时间
+    if (totalMinutes <= 0) {
+        showNotification('请设置有效的学习时间', 'warning');
+        return;
+    }
+    
+    // 显示加载状态
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<div class="loading-spinner"></div> 保存中...';
+    confirmBtn.disabled = true;
+    
+    // 模拟保存过程（实际使用时可以替换为真实的API调用）
+    setTimeout(() => {
+        // 更新任务状态
+        task.completed = true;
+        task.time = totalMinutes;
+        if (note) {
+            task.completionNote = note;
+            task.note = task.note ? `${task.note}\n[完成记录] ${note}` : `[完成记录] ${note}`;
+        }
+        
+        // 保存到本地存储
+        saveTasks();
+        
+        // 更新界面
+        renderWeekView();
+        renderTaskList();
+        updateStats();
+        
+        // 关闭模态框
+        closeQuickCompleteModal();
+        
+        // 恢复按钮状态
+        confirmBtn.innerHTML = originalText;
+        confirmBtn.disabled = false;
+        
+        // 显示成功通知
+        showNotification(`🎉 任务完成！学习时长：${totalMinutes}分钟`, 'success');
+        
+    }, 1500); // 模拟1.5秒的保存过程
+}
 // 加载任务
 function loadTasks() {
     try {
@@ -365,16 +545,10 @@ function deleteTask() {
 }
 
 // 快速完成任务
+// 快速完成任务
 function quickComplete(taskId) {
-    const task = tasks.find(t => t.id === taskId);
-    if (task && !task.completed) {
-        task.completed = true;
-        saveTasks();
-        renderWeekView();
-        renderTaskList();
-        updateStats();
-        showNotification(`🎉 快速完成: ${task.name}`, 'success');
-    }
+    event.stopPropagation(); // 阻止事件冒泡
+    openQuickCompleteModal(taskId);
 }
 
 // 开始计时

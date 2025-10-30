@@ -163,7 +163,61 @@
             </div>
         </div>
     </div>
-
+<!-- 快速完成任务模态框 -->
+<div class="modal" id="quickCompleteModal">
+    <div class="modal-content quick-complete-modal">
+        <div class="modal-header">
+            <h3>快速完成任务</h3>
+            <button class="close-btn" id="closeQuickCompleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="quickCompleteForm">
+                <div class="form-group">
+                    <label class="form-label">任务名称</label>
+                    <div class="task-name-display" id="quickCompleteTaskName">数学作业</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">耗时设置</label>
+                    <div class="time-inputs">
+                        <div class="time-input-group">
+                            <input type="number" id="hoursInput" min="0" max="23" value="1" class="time-input">
+                            <span class="time-label">小时</span>
+                        </div>
+                        <div class="time-input-group">
+                            <input type="number" id="minutesInput" min="0" max="59" value="30" class="time-input">
+                            <span class="time-label">分钟</span>
+                        </div>
+                    </div>
+                    <div class="total-minutes" id="totalMinutesDisplay">总计：90分钟</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">常用时长</label>
+                    <div class="quick-time-options">
+                        <button type="button" class="time-option" data-minutes="15">15分钟</button>
+                        <button type="button" class="time-option" data-minutes="30">30分钟</button>
+                        <button type="button" class="time-option" data-minutes="45">45分钟</button>
+                        <button type="button" class="time-option" data-minutes="60">1小时</button>
+                        <button type="button" class="time-option" data-minutes="90">1.5小时</button>
+                        <button type="button" class="time-option" data-minutes="120">2小时</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">学习心得/笔记</label>
+                    <textarea id="completionNote" class="note-textarea" placeholder="记录本次学习的心得体会..." rows="4"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-cancel" id="cancelQuickComplete">取消</button>
+            <button type="button" class="btn btn-confirm" id="confirmQuickComplete">
+                <i class="fas fa-check"></i> 确认完成
+            </button>
+        </div>
+    </div>
+</div>
     <script src="js/index.js"></script>
 </body>
 </html>
