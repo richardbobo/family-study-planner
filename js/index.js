@@ -688,10 +688,57 @@ function closeModal() {
     }
 }
 
-// 快速完成任务
+// 快速完成任务 - 修复版本
 function quickComplete(taskId) {
-    event.stopPropagation();
+    event.stopPropagation(); // 阻止事件冒泡
+    console.log('快速完成任务:', taskId);
     openQuickCompleteModal(taskId);
+}
+
+// 打开快速完成模态框 - 修复版本
+function openQuickCompleteModal(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) {
+        console.error('找不到任务:', taskId);
+        return;
+    }
+    
+    currentQuickCompleteTaskId = taskId;
+    
+    // 更新模态框内容
+    const taskNameElement = document.getElementById('quickCompleteTaskName');
+    const completionNoteElement = document.getElementById('completionNote');
+    
+    if (taskNameElement) {
+        taskNameElement.textContent = task.name;
+    }
+    
+    if (completionNoteElement) {
+        completionNoteElement.value = '';
+    }
+    
+    // 重置时间选项
+    document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('active'));
+    const defaultOption = document.querySelector('.time-option[data-minutes="30"]');
+    if (defaultOption) {
+        defaultOption.classList.add('active');
+    }
+    
+    // 设置默认时间
+    const defaultMinutes = task.time || 30;
+    setTimeFromMinutes(defaultMinutes);
+    
+    isSubmittingCompletion = false;
+    updateConfirmButton(false);
+    
+    // 显示模态框
+    const modal = document.getElementById('quickCompleteModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        console.log('快速完成模态框已显示');
+    } else {
+        console.error('找不到快速完成模态框');
+    }
 }
 
 // 开始计时
