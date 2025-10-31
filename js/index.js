@@ -13,20 +13,19 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTasks();
     initializeNavigation();
     initializeModal();
+    initializeQuickCompleteModal();
     renderWeekView();
     renderTaskList();
     updateStats();
-      // 调试信息
     console.log('页面初始化完成');
     console.log('任务数量:', tasks.length);
-    // console.log('当前周开始日期:', currentWeekStart);
 });
 
 // 获取周一的日期
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day == 0 ? -6 : 1);
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 }
 
@@ -35,8 +34,7 @@ function getTodayDate() {
     return new Date().toISOString().split('T')[0];
 }
 
-
-// 按日期分组任务 - 添加这个缺失的函数
+// 按日期分组任务
 function groupTasksByDate(tasks) {
     const grouped = {};
     tasks.forEach(task => {
@@ -77,18 +75,19 @@ function navigateWeek(direction) {
     updateStats();
 }
 
-
 // 渲染周视图
 function renderWeekView() {
     const weekDaysContainer = document.getElementById('weekDays');
     
-    if (!weekDaysContainer) return;
+    if (!weekDaysContainer) {
+        console.error('找不到周视图容器');
+        return;
+    }
     
     updateDateDisplay();
     
     let weekDaysHTML = '';
     const today = getTodayDate();
-    let todayIndex = -1;
     
     for (let i = 0; i < 7; i++) {
         const currentDate = new Date(currentWeekStart);
@@ -99,12 +98,7 @@ function renderWeekView() {
         const completedTasks = dayTasks.filter(task => task.completed);
         
         const isToday = dateStr === today;
-        // 默认选中今天，如果今天不在当前周，则选中周一
-        const isActive = isToday || (todayIndex === -1 && i === 0);
-        
-        if (isToday) {
-            todayIndex = i;
-        }
+        const isActive = isToday;
         
         weekDaysHTML += createDayCardHTML(currentDate, dayTasks, completedTasks, isToday, isActive);
     }
@@ -180,7 +174,28 @@ function bindDayCardEvents() {
     });
 }
 
-
+// 初始化模态框
+function initializeModal() {
+    const modal = document.getElementById('taskModal');
+    const closeBtn = document.getElementById('closeModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
+}
 
 // 初始化快速完成模态框
 function initializeQuickCompleteModal() {
@@ -218,7 +233,7 @@ function initializeQuickCompleteModal() {
     
     if (modal) {
         modal.addEventListener('click', function(event) {
-            if (event.target == modal) {
+            if (event.target === modal) {
                 closeQuickCompleteModal();
             }
         });
@@ -236,7 +251,10 @@ function openQuickCompleteModal(taskId) {
     document.getElementById('completionNote').value = '';
     
     document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('active'));
-    document.querySelector('.time-option[data-minutes="30"]').classList.add('active');
+    const defaultOption = document.querySelector('.time-option[data-minutes="30"]');
+    if (defaultOption) {
+        defaultOption.classList.add('active');
+    }
     
     const defaultMinutes = task.time || 30;
     setTimeFromMinutes(defaultMinutes);
@@ -289,7 +307,7 @@ function updateTotalMinutes() {
     }
 }
 
-// 更新确认按钮状态 - 添加这个缺失的函数
+// 更新确认按钮状态
 function updateConfirmButton(isLoading) {
     const confirmBtn = document.getElementById('confirmQuickComplete');
     if (confirmBtn) {
@@ -377,8 +395,7 @@ function loadTasks() {
     }
 }
 
-
-// 渲染任务列表 - 修复版本
+// 渲染任务列表 - 美化版本
 function renderTaskList() {
     const taskListContainer = document.getElementById('tasks-container');
     if (!taskListContainer) {
@@ -386,38 +403,11 @@ function renderTaskList() {
         return;
     }
 
-    console.log('开始渲染任务列表，总任务数:', tasks.length);
-    
-    // 获取选中日期
-function getSelectedDate() {
-    const activeCard = document.querySelector('.day-card.active');
-    if (activeCard) {
-        return activeCard.getAttribute('data-date');
-    }
-    return getTodayDate(); // 默认返回今天日期
-}
-
-// 获取科目图标
-function getSubjectIcon(subject) {
-    const icons = {
-        '语文': 'fa-book',
-        '数学': 'fa-calculator',
-        '英语': 'fa-language',
-        '科学': 'fa-flask',
-        '物理': 'fa-atom',
-        '化学': 'fa-vial',
-        '历史': 'fa-monument',
-        '地理': 'fa-globe-asia',
-        '美术': 'fa-palette',
-        '音乐': 'fa-music',
-        '体育': 'fa-running'
-    };
-    return icons[subject] || 'fa-book';
-}
+    // 获取当前选中的日期
+    const selectedDate = getSelectedDate();
     
     // 过滤出该日期的任务
     const dateTasks = tasks.filter(task => task.date === selectedDate);
-    console.log('找到的任务数量:', dateTasks.length);
 
     let html = '';
     
@@ -559,7 +549,6 @@ function getSubjectIcon(subject) {
     }
     
     taskListContainer.innerHTML = html;
-    console.log('任务列表渲染完成');
 }
 
 // 获取选中日期
@@ -568,32 +557,36 @@ function getSelectedDate() {
     if (activeCard) {
         return activeCard.getAttribute('data-date');
     }
-    return currentWeekStart.toISOString().split('T')[0];
+    return getTodayDate();
 }
 
+// 获取科目图标
+function getSubjectIcon(subject) {
+    const icons = {
+        '语文': 'fa-book',
+        '数学': 'fa-calculator',
+        '英语': 'fa-language',
+        '科学': 'fa-flask',
+        '物理': 'fa-atom',
+        '化学': 'fa-vial',
+        '历史': 'fa-monument',
+        '地理': 'fa-globe-asia',
+        '美术': 'fa-palette',
+        '音乐': 'fa-music',
+        '体育': 'fa-running'
+    };
+    return icons[subject] || 'fa-book';
+}
 
-
-// 打开模态框 - 修复版本
+// 打开模态框
 function openModal(taskId) {
-    console.log('打开任务详情:', taskId);
     const task = tasks.find(t => t.id == taskId);
-    if (!task) {
-        console.error('找不到任务:', taskId);
-        return;
-    }
+    if (!task) return;
     
-    const modal = document.getElementById('taskModal'); // 使用正确的ID
+    const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
     
-    if (!modal) {
-        console.error('找不到任务模态框');
-        return;
-    }
-    
-    if (!content) {
-        console.error('找不到任务详情内容容器');
-        return;
-    }
+    if (!modal || !content) return;
     
     if (task.completed) {
         const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
@@ -685,10 +678,9 @@ function openModal(taskId) {
     }
     
     modal.style.display = 'flex';
-    console.log('任务详情模态框已显示');
 }
 
-// 关闭模态框 - 修复ID
+// 关闭模态框
 function closeModal() {
     const modal = document.getElementById('taskModal');
     if (modal) {
@@ -696,83 +688,10 @@ function closeModal() {
     }
 }
 
-// 初始化模态框 - 修复ID
-function initializeModal() {
-    const modal = document.getElementById('taskModal');
-    const closeBtn = document.getElementById('closeModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-    
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeModal);
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        });
-    }
-    
-    initializeQuickCompleteModal();
-}
-
-
-// 快速完成任务 - 修复版本
+// 快速完成任务
 function quickComplete(taskId) {
-    event.stopPropagation(); // 阻止事件冒泡
-    console.log('快速完成任务:', taskId);
+    event.stopPropagation();
     openQuickCompleteModal(taskId);
-}
-
-// 打开快速完成模态框 - 修复版本
-function openQuickCompleteModal(taskId) {
-    const task = tasks.find(t => t.id == taskId);
-    if (!task) {
-        console.error('找不到任务:', taskId);
-        return;
-    }
-    
-    currentQuickCompleteTaskId = taskId;
-    
-    // 更新模态框内容
-    const taskNameElement = document.getElementById('quickCompleteTaskName');
-    const completionNoteElement = document.getElementById('completionNote');
-    
-    if (taskNameElement) {
-        taskNameElement.textContent = task.name;
-    }
-    
-    if (completionNoteElement) {
-        completionNoteElement.value = '';
-    }
-    
-    // 重置时间选项
-    document.querySelectorAll('.time-option').forEach(opt => opt.classList.remove('active'));
-    const defaultOption = document.querySelector('.time-option[data-minutes="30"]');
-    if (defaultOption) {
-        defaultOption.classList.add('active');
-    }
-    
-    // 设置默认时间
-    const defaultMinutes = task.time || 30;
-    setTimeFromMinutes(defaultMinutes);
-    
-    isSubmittingCompletion = false;
-    updateConfirmButton(false);
-    
-    // 显示模态框
-    const modal = document.getElementById('quickCompleteModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        console.log('快速完成模态框已显示');
-    } else {
-        console.error('找不到快速完成模态框');
-    }
 }
 
 // 开始计时
@@ -790,6 +709,7 @@ function getRepeatTypeText(repeatType) {
         'once': '仅当天',
         'daily': '每天',
         'weekly': '每周',
+        'biweekly': '每两周',
         'monthly': '每月'
     };
     return repeatTypes[repeatType] || '仅当天';
@@ -805,7 +725,10 @@ function getSubjectClass(subject) {
         '物理': 'subject-physics',
         '化学': 'subject-chemistry',
         '历史': 'subject-history',
-        '地理': 'subject-geography'
+        '地理': 'subject-geography',
+        '美术': 'subject-art',
+        '音乐': 'subject-music',
+        '体育': 'subject-sports'
     };
     return subjectClasses[subject] || 'subject-other';
 }
@@ -815,11 +738,11 @@ function getCurrentDate() {
     return new Date().toISOString().split('T')[0];
 }
 
-// 更新连续打卡 - 简化版本
+// 更新连续打卡
 function updateStreak() {
     const today = getCurrentDate();
     const todayCompleted = tasks.filter(task => 
-        task.actualCompletionDate == today && task.completed
+        task.actualCompletionDate === today && task.completed
     ).length;
     
     if (todayCompleted > 0) {
@@ -829,9 +752,8 @@ function updateStreak() {
     }
 }
 
-// 记录完成历史 - 简化版本
+// 记录完成历史
 function recordCompletionHistory(task, totalMinutes, completionNote) {
-    // 简单实现，可以根据需要扩展
     console.log('记录完成历史:', task.name, totalMinutes, completionNote);
 }
 
@@ -863,12 +785,10 @@ function updateStatElement(elementId, value) {
 // 保存任务
 function saveTasks() {
     localStorage.setItem('studyTasks', JSON.stringify(tasks));
-    console.log('保存了', tasks.length, '个任务');
 }
 
 // 通知函数
 function showNotification(message, type = 'info') {
-    // 保持原有的通知函数不变
     const existingNotification = document.querySelector('.custom-notification');
     if (existingNotification) {
         existingNotification.remove();
