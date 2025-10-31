@@ -14,12 +14,20 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeModal();
     initializeQuickCompleteModal();
-    initializeFilterAndSort(); // 新增：初始化筛选和排序
+    initializeFilterAndSort(); // 这个现在会动态更新科目选项
     renderWeekView();
     renderTaskList();
     updateStats();
     console.log('页面初始化完成');
     console.log('任务数量:', tasks.length);
+
+    // 监听存储变化（用于跨页面同步）
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'studyCategories') {
+            updateSubjectFilterOptions();
+            renderTaskList();
+        }
+    });
 });
 
 // 初始化筛选和排序功能
@@ -890,10 +898,14 @@ function updateStatElement(elementId, value) {
     }
 }
 
-// 保存任务
+// 保存任务（修改版）
 function saveTasks() {
     localStorage.setItem('studyTasks', JSON.stringify(tasks));
+    // 保存后更新科目选项
+    updateSubjectFilterOptions();
 }
+
+
 
 // 通知函数
 function showNotification(message, type = 'info') {
@@ -964,4 +976,120 @@ function getNotificationColor(type) {
         'info': '#4a69bd'
     };
     return colors[type] || '#4a69bd';
+}
+// 获取所有科目类别（包括自定义类别）
+function getAllSubjects() {
+    const subjects = new Set();
+    
+    // 从任务中提取所有科目
+    tasks.forEach(task => {
+        if (task.subject) {
+            subjects.add(task.subject);
+        }
+    });
+    
+    // 从localStorage中获取已保存的自定义类别
+    try {
+        const savedCategories = localStorage.getItem('studyCategories');
+        if (savedCategories) {
+            const categories = JSON.parse(savedCategories);
+            categories.forEach(category => {
+                subjects.add(category);
+            });
+        }
+    } catch (e) {
+        console.error('加载自定义类别失败:', e);
+    }
+    
+    // 添加默认科目（确保基础科目存在）
+    const defaultSubjects = ['语文', '数学', '英语', '科学', '美术', '体育'];
+    defaultSubjects.forEach(subject => {
+        subjects.add(subject);
+    });
+    
+    return Array.from(subjects).sort();
+}
+
+// 更新科目筛选选项
+function updateSubjectFilterOptions() {
+    const subjectFilter = document.getElementById('subjectFilter');
+    if (!subjectFilter) return;
+    
+    // 保存当前选中的值
+    const currentValue = subjectFilter.value;
+    
+    // 清空现有选项（保留"全部科目"）
+    subjectFilter.innerHTML = '<option value="all">全部科目</option>';
+    
+    // 获取所有科目
+    const allSubjects = getAllSubjects();
+    
+    // 添加科目选项
+    allSubjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        subjectFilter.appendChild(option);
+    });
+    
+    // 恢复之前选中的值（如果还存在）
+    if (currentValue && allSubjects.includes(currentValue)) {
+        subjectFilter.value = currentValue;
+    }
+}
+
+// 在任务数据变化时更新科目选项
+function onTasksUpdated() {
+    updateSubjectFilterOptions();
+    renderTaskList();
+    updateStats();
+}
+
+// 初始化筛选和排序功能（修改版）
+function initializeFilterAndSort() {
+    const subjectFilter = document.getElementById('subjectFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    // 初始化科目选项
+    updateSubjectFilterOptions();
+    
+    if (subjectFilter) {
+        subjectFilter.addEventListener('change', function() {
+            console.log('科目筛选:', this.value);
+            renderTaskList();
+        });
+    }
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            console.log('排序方式:', this.value);
+            renderTaskList();
+        });
+    }
+}
+// 科目管理相关函数
+function manageSubjects() {
+    const allSubjects = getAllSubjects();
+    console.log('当前所有科目:', allSubjects);
+    
+    // 可以在这里添加科目管理功能
+    // 比如删除未使用的自定义科目等
+}
+
+// 清理未使用的自定义科目
+function cleanupUnusedSubjects() {
+    const allSubjects = getAllSubjects();
+    const usedSubjects = new Set(tasks.map(task => task.subject));
+    
+    const unusedSubjects = allSubjects.filter(subject => 
+        !usedSubjects.has(subject) && 
+        !['语文', '数学', '英语', '科学', '美术', '体育'].includes(subject)
+    );
+    
+    if (unusedSubjects.length > 0) {
+        console.log('未使用的科目:', unusedSubjects);
+        // 可以选择性地清理这些科目
+    }
+    
+    return unusedSubjects;
 }

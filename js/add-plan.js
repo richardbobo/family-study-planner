@@ -191,23 +191,28 @@ function initializeCategoryFeatures() {
     updateRecentCategories();
 }
 
-// 处理自定义类别输入
-function handleCustomCategoryInput() {
-    const categorySelect = document.getElementById('categorySelect');
-    const newCategoryName = document.getElementById('newCategoryName');
+// 修改现有的自定义类别处理函数
+function handleCustomCategory() {
     const customCategoryInput = document.getElementById('customCategoryInput');
+    const categorySelect = document.getElementById('categorySelect');
     
-    const categoryName = newCategoryName.value.trim();
+    if (!customCategoryInput || !categorySelect) return;
     
-    if (categoryName && categoryName.length <= 10 && categoryName.length > 0) {
-        addCustomCategory(categoryName);
-        categorySelect.value = categoryName;
+    const customCategory = customCategoryInput.value.trim();
+    if (customCategory) {
+        // 添加到下拉选项
+        const newOption = document.createElement('option');
+        newOption.value = customCategory;
+        newOption.textContent = customCategory;
+        categorySelect.appendChild(newOption);
+        categorySelect.value = customCategory;
+        
+        // 保存自定义类别
+        saveCustomCategory(customCategory);
+        
+        // 隐藏自定义输入框
         customCategoryInput.style.display = 'none';
-        newCategoryName.value = '';
-        addToRecentCategories(categoryName);
-    } else if (categoryName === '') {
-        categorySelect.value = '';
-        customCategoryInput.style.display = 'none';
+        customCategoryInput.value = '';
     }
 }
 
@@ -225,6 +230,26 @@ function addCustomCategory(categoryName) {
         categorySelect.insertBefore(option, customOption);
     }
 }
+
+// 在保存自定义类别时，同时保存到localStorage
+function saveCustomCategory(category) {
+    try {
+        let categories = JSON.parse(localStorage.getItem('studyCategories') || '[]');
+        if (!categories.includes(category)) {
+            categories.push(category);
+            localStorage.setItem('studyCategories', JSON.stringify(categories));
+        }
+        
+        // 同时更新主页面的科目筛选（如果主页面已加载）
+        if (window.opener && typeof window.opener.updateSubjectFilterOptions === 'function') {
+            window.opener.updateSubjectFilterOptions();
+        }
+    } catch (e) {
+        console.error('保存自定义类别失败:', e);
+    }
+}
+
+
 
 // 添加到最近使用类别
 function addToRecentCategories(categoryName) {
