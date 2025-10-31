@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModal();
     initializeQuickCompleteModal();
     initializeFilterAndSort(); // 这个现在会动态更新科目选项
+    initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框
     renderWeekView();
     renderTaskList();
     updateStats();
@@ -841,11 +842,11 @@ function openModal(taskId) {
     
     // 设置删除按钮事件
     const deleteBtn = document.getElementById('deleteTaskBtn');
-    if (deleteBtn) {
-        deleteBtn.onclick = function() {
-            deleteTask(taskId);
-        };
-    }
+if (deleteBtn) {
+    deleteBtn.onclick = function() {
+        openConfirmDeleteModal(taskId);
+    };
+}
     
     // 设置编辑按钮事件
     const editBtn = document.getElementById('editTaskBtn');
@@ -1214,4 +1215,94 @@ function editTask(taskId) {
     // 暂时先关闭模态框
     closeModal();
     showNotification('编辑功能开发中...', 'info');
+}
+let currentDeleteTaskId = null;
+
+// 初始化确认删除模态框
+function initializeConfirmDeleteModal() {
+    const modal = document.getElementById('confirmDeleteModal');
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeConfirmDeleteModal);
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmDeleteTask);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeConfirmDeleteModal();
+            }
+        });
+    }
+}
+
+// 打开确认删除模态框
+function openConfirmDeleteModal(taskId) {
+    const task = tasks.find(t => t.id == taskId);
+    if (!task) return;
+    
+    currentDeleteTaskId = taskId;
+    
+    // 更新模态框内容
+    document.getElementById('deleteTaskName').textContent = task.name;
+    document.getElementById('deleteTaskSubject').textContent = task.subject;
+    
+    // 显示模态框
+    const modal = document.getElementById('confirmDeleteModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// 关闭确认删除模态框
+function closeConfirmDeleteModal() {
+    const modal = document.getElementById('confirmDeleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentDeleteTaskId = null;
+}
+
+// 确认删除任务
+function confirmDeleteTask() {
+    if (!currentDeleteTaskId) return;
+    
+    const taskId = currentDeleteTaskId;
+    const taskIndex = tasks.findIndex(t => t.id == taskId);
+    
+    if (taskIndex === -1) {
+        showNotification('任务不存在或已被删除', 'error');
+        closeConfirmDeleteModal();
+        return;
+    }
+    
+    const taskName = tasks[taskIndex].name;
+    
+    try {
+        // 从数组中删除任务
+        tasks.splice(taskIndex, 1);
+        
+        // 保存到localStorage
+        saveTasks();
+        
+        // 关闭所有模态框
+        closeConfirmDeleteModal();
+        closeModal();
+        
+        // 更新界面
+        renderWeekView();
+        renderTaskList();
+        updateStats();
+        
+        showNotification(`已删除学习计划: ${taskName}`, 'success');
+        
+    } catch (error) {
+        console.error('删除任务失败:', error);
+        showNotification('删除失败，请重试', 'error');
+    }
 }
