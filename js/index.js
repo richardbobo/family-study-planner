@@ -734,6 +734,7 @@ function getSubjectIcon(subject) {
 
 // 打开模态框
 // 打开模态框 - 优化版本
+// 打开模态框 - 优化header版本
 function openModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (!task) return;
@@ -745,22 +746,51 @@ function openModal(taskId) {
     
     const subjectClass = getSubjectClass(task.subject);
     const subjectIcon = getSubjectIcon(task.subject);
+    const iconClass = `icon-${task.subject.toLowerCase()}`;
     
+    // 构建header HTML
+    const headerHTML = `
+        <div class="modal-header">
+            <div class="modal-header-content">
+                <div class="modal-task-icon ${iconClass}">
+                    <i class="fas ${subjectIcon}"></i>
+                </div>
+                <div class="modal-task-info">
+                    <h3 class="modal-task-title">${task.name}</h3>
+                    <div class="modal-task-meta">
+                        <span class="modal-task-subject ${subjectClass}">
+                            <i class="fas ${subjectIcon}"></i>
+                            ${task.subject}
+                        </span>
+                        ${task.completed ? `
+                        <span class="modal-task-status">
+                            <i class="fas fa-check-circle" style="color: #2ed573;"></i>
+                            已完成
+                        </span>
+                        ` : `
+                        <span class="modal-task-status">
+                            <i class="fas fa-clock" style="color: #ff9f43;"></i>
+                            未完成
+                        </span>
+                        `}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-header-actions">
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+        </div>
+    `;
+    
+    // 构建body HTML
+    let bodyHTML = '';
     if (task.completed) {
         // 已完成的任务详情
         const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
         const timeString = completionTime.toLocaleString();
         const duration = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟';
         
-        content.innerHTML = `
-            <div class="modal-task-header">
-                <i class="fas ${subjectIcon} modal-subject-icon"></i>
-                <div class="modal-task-info">
-                    <h3 class="modal-task-title">${task.name}</h3>
-                    <span class="modal-task-subject ${subjectClass}">${task.subject}</span>
-                </div>
-            </div>
-            
+        bodyHTML = `
             <div class="completion-info">
                 <div class="completion-time">
                     <i class="fas fa-check-circle"></i> 任务已完成
@@ -802,15 +832,7 @@ function openModal(taskId) {
         `;
     } else {
         // 未完成的任务详情
-        content.innerHTML = `
-            <div class="modal-task-header">
-                <i class="fas ${subjectIcon} modal-subject-icon"></i>
-                <div class="modal-task-info">
-                    <h3 class="modal-task-title">${task.name}</h3>
-                    <span class="modal-task-subject ${subjectClass}">${task.subject}</span>
-                </div>
-            </div>
-            
+        bodyHTML = `
             <div class="detail-item">
                 <div class="detail-label">重复类型:</div>
                 <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
@@ -840,13 +862,22 @@ function openModal(taskId) {
         `;
     }
     
+    // 组合完整的模态框内容
+    content.innerHTML = headerHTML + bodyHTML;
+    
+    // 重新绑定关闭按钮事件（因为重新生成了DOM）
+    const closeBtn = document.getElementById('closeModal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
     // 设置删除按钮事件
     const deleteBtn = document.getElementById('deleteTaskBtn');
-if (deleteBtn) {
-    deleteBtn.onclick = function() {
-        openConfirmDeleteModal(taskId);
-    };
-}
+    if (deleteBtn) {
+        deleteBtn.onclick = function() {
+            openConfirmDeleteModal(taskId);
+        };
+    }
     
     // 设置编辑按钮事件
     const editBtn = document.getElementById('editTaskBtn');
