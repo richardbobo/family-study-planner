@@ -14,12 +14,33 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeModal();
     initializeQuickCompleteModal();
+    initializeFilterAndSort(); // 新增：初始化筛选和排序
     renderWeekView();
     renderTaskList();
     updateStats();
     console.log('页面初始化完成');
     console.log('任务数量:', tasks.length);
 });
+
+// 初始化筛选和排序功能
+function initializeFilterAndSort() {
+    const subjectFilter = document.getElementById('subjectFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    if (subjectFilter) {
+        subjectFilter.addEventListener('change', function() {
+            console.log('科目筛选:', this.value);
+            renderTaskList();
+        });
+    }
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            console.log('排序方式:', this.value);
+            renderTaskList();
+        });
+    }
+}
 
 // 获取周一的日期
 function getMonday(date) {
@@ -396,6 +417,7 @@ function loadTasks() {
 }
 
 // 渲染任务列表 - 美化版本
+// 修改渲染任务列表函数，添加筛选和排序逻辑
 function renderTaskList() {
     const taskListContainer = document.getElementById('tasks-container');
     if (!taskListContainer) {
@@ -405,13 +427,30 @@ function renderTaskList() {
 
     // 获取当前选中的日期
     const selectedDate = getSelectedDate();
-    console.log('选中的日期:', selectedDate);
-    // 过滤出该日期的任务
-    const dateTasks = tasks.filter(task => task.date === selectedDate);
-console.log('过滤后的任务数量:', dateTasks.length);
+    
+    // 获取筛选和排序选项
+    const subjectFilter = document.getElementById('subjectFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    const selectedSubject = subjectFilter ? subjectFilter.value : 'all';
+    const selectedSort = sortSelect ? sortSelect.value : 'default';
+    
+    console.log('筛选条件 - 日期:', selectedDate, '科目:', selectedSubject, '排序:', selectedSort);
+    
+    // 筛选任务
+    let filteredTasks = tasks.filter(task => task.date === selectedDate);
+    
+    // 科目筛选
+    if (selectedSubject !== 'all') {
+        filteredTasks = filteredTasks.filter(task => task.subject === selectedSubject);
+    }
+    
+    // 排序任务
+    const sortedTasks = sortTasks(filteredTasks, selectedSort);
+    
     let html = '';
     
-    if (dateTasks.length > 0) {
+    if (sortedTasks.length > 0) {
         const dateObj = new Date(selectedDate + 'T00:00:00');
         const today = new Date();
         const tomorrow = new Date(today);
@@ -429,6 +468,15 @@ console.log('过滤后的任务数量:', dateTasks.length);
         const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
         const weekday = weekdays[dateObj.getDay()];
         
+        // 显示筛选和排序信息
+        html += `
+            <div class="filter-info">
+                <span class="task-count-badge">${sortedTasks.length} 个任务</span>
+                ${selectedSubject !== 'all' ? `<span class="filter-badge">科目: ${selectedSubject}</span>` : ''}
+                ${selectedSort !== 'default' ? `<span class="sort-badge">排序: ${getSortText(selectedSort)}</span>` : ''}
+            </div>
+        `;
+        
         html += `
             <div class="date-section">
                 <div class="date-header">
@@ -438,12 +486,13 @@ console.log('过滤后的任务数量:', dateTasks.length);
                 <div class="tasks-container">
         `;
         
-        dateTasks.forEach(task => {
+        sortedTasks.forEach(task => {
+            // 原有的任务渲染代码保持不变
             const subjectClass = getSubjectClass(task.subject);
             const subjectIcon = getSubjectIcon(task.subject);
             
             if (task.completed) {
-                // 已完成的任务 - 美化版本
+                // 已完成的任务
                 const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
                 const timeString = completionTime.toTimeString().substring(0, 5);
                 const duration = task.time ? `${task.time}分钟` : '15分钟';
@@ -487,7 +536,7 @@ console.log('过滤后的任务数量:', dateTasks.length);
                     </div>
                 `;
             } else {
-                // 未完成的任务 - 美化版本
+                // 未完成的任务
                 const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
                 
                 html += `
@@ -509,7 +558,7 @@ console.log('过滤后的任务数量:', dateTasks.length);
                             </div>
                             
                             <div class="task-details">
-                                <div class="task-desc">${task.description || ''}</div>
+                                <div class="task-desc">${task.description || '无详细描述'}</div>
                                 <div class="task-estimate">
                                     <span class="time-estimate">预计: ${timeDisplay}</span>
                                     <span class="points-badge">积分: ${task.points || 10}</span>
@@ -535,14 +584,19 @@ console.log('过滤后的任务数量:', dateTasks.length);
             </div>
         `;
     } else {
+        // 无任务时的显示
+        const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
         html = `
             <div class="no-tasks">
                 <div style="text-align: center; padding: 40px; color: #666;">
-                    <i class="fas fa-calendar-plus" style="font-size: 3rem; margin-bottom: 15px; color: #ddd;"></i>
-                    <p style="margin-bottom: 20px; font-size: 1.1rem;">${selectedDate} 还没有学习计划</p>
+                    <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px; color: #ddd;"></i>
+                    <p style="margin-bottom: 20px; font-size: 1.1rem;">${subjectInfo} 没有找到学习计划</p>
                     <a href="add-plan.html" class="btn btn-primary">
                         <i class="fas fa-plus"></i> 添加学习计划
                     </a>
+                    <button class="btn btn-secondary" onclick="resetFilters()" style="margin-left: 10px;">
+                        <i class="fas fa-refresh"></i> 重置筛选
+                    </button>
                 </div>
             </div>
         `;
@@ -551,6 +605,60 @@ console.log('过滤后的任务数量:', dateTasks.length);
     taskListContainer.innerHTML = html;
 }
 
+// 排序任务函数
+function sortTasks(tasks, sortType) {
+    const sortedTasks = [...tasks]; // 创建副本避免修改原数组
+    
+    switch (sortType) {
+        case 'time':
+            // 按开始时间排序
+            return sortedTasks.sort((a, b) => {
+                const timeA = a.startTime || '00:00';
+                const timeB = b.startTime || '00:00';
+                return timeA.localeCompare(timeB);
+            });
+            
+        case 'subject':
+            // 按科目排序
+            return sortedTasks.sort((a, b) => a.subject.localeCompare(b.subject));
+            
+        case 'status':
+            // 按状态排序：未完成在前，已完成在后
+            return sortedTasks.sort((a, b) => {
+                if (a.completed && !b.completed) return 1;
+                if (!a.completed && b.completed) return -1;
+                return 0;
+            });
+            
+        case 'default':
+        default:
+            // 默认排序：按创建时间或ID
+            return sortedTasks.sort((a, b) => b.id - a.id);
+    }
+}
+
+// 获取排序方式文本
+function getSortText(sortType) {
+    const sortTexts = {
+        'default': '默认排序',
+        'time': '按时间',
+        'subject': '按科目',
+        'status': '按状态'
+    };
+    return sortTexts[sortType] || '默认排序';
+}
+
+// 重置筛选和排序
+function resetFilters() {
+    const subjectFilter = document.getElementById('subjectFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    
+    if (subjectFilter) subjectFilter.value = 'all';
+    if (sortSelect) sortSelect.value = 'default';
+    
+    renderTaskList();
+    showNotification('筛选条件已重置', 'info');
+}
 // 获取选中日期
 function getSelectedDate() {
     const activeCard = document.querySelector('.day-card.active');

@@ -88,22 +88,22 @@
                         </button>
                     </div>
                     <div class="list-controls">
-                        <select class="filter-select">
-                            <option>全部科目</option>
-                            <option>语文</option>
-                            <option>数学</option>
-                            <option>英语</option>
-                            <option>科学</option>
-                            <option>美术</option>
-                            <option>体育</option>
-                        </select>
-                        <select class="filter-select">
-                            <option>默认排序</option>
-                            <option>按时间排序</option>
-                            <option>按科目排序</option>
-                            <option>按状态排序</option>
-                        </select>
-                    </div>
+    <select id="subjectFilter" class="filter-select">
+        <option value="all">全部科目</option>
+        <option value="语文">语文</option>
+        <option value="数学">数学</option>
+        <option value="英语">英语</option>
+        <option value="科学">科学</option>
+        <option value="美术">美术</option>
+        <option value="体育">体育</option>
+    </select>
+    <select id="sortSelect" class="filter-select">
+        <option value="default">默认排序</option>
+        <option value="time">按时间排序</option>
+        <option value="subject">按科目排序</option>
+        <option value="status">按状态排序</option>
+    </select>
+</div>
                 </div>
                 
                 <div class="task-list" id="tasks-container">
