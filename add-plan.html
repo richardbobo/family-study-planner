@@ -6,7 +6,6 @@
     <title>添加学习计划</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/add-plan.css">
-    <script src="js/add-plan.js"></script>
 </head>
 <body>
     <div class="container">
@@ -22,27 +21,58 @@
                 正在为 <span class="date-highlight">2025-10-29</span> 添加计划
             </div>
             
-            <form class="plan-form" id="planForm" onsubmit="handleFormSubmit(event)">
+            <form class="plan-form" id="planForm">
                 <!-- 起始日期 -->
                 <div class="form-section">
                     <h3 class="section-title">起始日期（可选）</h3>
-                    <!-- <div class="date-display">2025-10-29</div> -->
                     <p class="section-description">
                         选择计划的起始日期，默认为今天。对于"仅当天"类型，任务将在此日期创建；对于重复类型，从此日期开始生成任务。
                     </p>
                     <input type="date" class="form-input" id="startDate" value="2025-10-29">
                 </div>
                 
-                <!-- 类别标签 -->
+                <!-- 类别标签 - 修改为支持自定义 -->
                 <div class="form-section">
                     <h3 class="section-title">类别标签 <span class="required">*</span></h3>
-                    <select class="form-select" id="categorySelect" required>
-                        <option value="">请选择类别</option>
-                        <option value="语文">语文</option>
-                        <option value="数学">数学</option>
-                        <option value="英语">英语</option>
-                        <option value="科学">科学</option>
-                    </select>
+                    <div class="category-container">
+                        <div class="category-select-wrapper">
+                            <select class="form-select" id="categorySelect" required>
+                                <option value="">请选择类别</option>
+                                <option value="语文">语文</option>
+                                <option value="数学">数学</option>
+                                <option value="英语">英语</option>
+                                <option value="科学">科学</option>
+                                <option value="物理">物理</option>
+                                <option value="化学">化学</option>
+                                <option value="历史">历史</option>
+                                <option value="地理">地理</option>
+                                <option value="美术">美术</option>
+                                <option value="音乐">音乐</option>
+                                <option value="体育">体育</option>
+                            </select>
+                            <button type="button" class="btn-add-category" id="addCategoryBtn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="custom-category-input" id="customCategoryInput" style="display: none;">
+                            <div class="input-group">
+                                <input type="text" class="form-input" id="newCategoryName" placeholder="输入新类别名称" maxlength="10">
+                                <button type="button" class="btn btn-confirm" id="confirmAddCategory">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-cancel" id="cancelAddCategory">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="char-limit">限制 1-10 字</div>
+                        </div>
+                    </div>
+                    <div class="recent-categories" id="recentCategories">
+                        <div class="recent-title">最近使用：</div>
+                        <div class="category-tags" id="categoryTags">
+                            <!-- 最近使用的类别标签会动态生成在这里 -->
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- 计划名称 -->
@@ -181,7 +211,7 @@
                 <!-- 表单操作 -->
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" id="cancelBtn">取消</button>
-                    <button type="button" class="btn btn-save" onclick="handleFormSubmit(event)">保存计划</button>
+                    <button type="submit" class="btn btn-save">保存计划</button>
                 </div>
             </form>
         </div>

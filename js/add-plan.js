@@ -4,11 +4,22 @@ console.log('add-plan.js 已加载');
 // 全局变量
 let currentRecurrenceType = 'once';
 let isSubmitting = false; // 防止重复提交
+// 类别标签管理功能
+let customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
+let recentCategories = JSON.parse(localStorage.getItem('recentCategories') || '[]');
 
+// 修改原有的初始化函数，添加类别功能初始化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM已加载');
-    initializePage();
+    initializeForm();
+    initializeCustomCategories();
+    initializeCategoryFeatures();
+    
+    // 设置当前日期
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+    document.querySelector('.date-highlight').textContent = today;
 });
+
 
 function initializePage() {
     console.log('初始化页面');
@@ -482,3 +493,130 @@ function saveTasks(tasks) {
     
     console.log('保存了', tasks.length, '个任务，总共', allTasks.length, '个任务');
 }
+
+
+
+// 初始化类别功能
+function initializeCategoryFeatures() {
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    const confirmAddCategory = document.getElementById('confirmAddCategory');
+    const cancelAddCategory = document.getElementById('cancelAddCategory');
+    const newCategoryName = document.getElementById('newCategoryName');
+    const categorySelect = document.getElementById('categorySelect');
+    const categoryTags = document.getElementById('categoryTags');
+
+    // 显示添加类别输入框
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', function() {
+            customCategoryInput.style.display = 'block';
+            newCategoryName.focus();
+        });
+    }
+
+    // 取消添加类别
+    if (cancelAddCategory) {
+        cancelAddCategory.addEventListener('click', function() {
+            customCategoryInput.style.display = 'none';
+            newCategoryName.value = '';
+        });
+    }
+
+    // 确认添加类别
+    if (confirmAddCategory) {
+        confirmAddCategory.addEventListener('click', function() {
+            const categoryName = newCategoryName.value.trim();
+            if (categoryName && categoryName.length <= 10) {
+                addCustomCategory(categoryName);
+                customCategoryInput.style.display = 'none';
+                newCategoryName.value = '';
+            } else {
+                alert('请输入有效的类别名称（1-10个字符）');
+            }
+        });
+    }
+
+    // 回车键确认添加
+    if (newCategoryName) {
+        newCategoryName.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmAddCategory.click();
+            }
+        });
+    }
+
+    // 初始化最近使用类别
+    updateRecentCategories();
+}
+
+// 添加自定义类别
+function addCustomCategory(categoryName) {
+    if (!customCategories.includes(categoryName)) {
+        customCategories.push(categoryName);
+        localStorage.setItem('customCategories', JSON.stringify(customCategories));
+        
+        // 添加到下拉选择框
+        const categorySelect = document.getElementById('categorySelect');
+        const option = document.createElement('option');
+        option.value = categoryName;
+        option.textContent = categoryName;
+        categorySelect.appendChild(option);
+    }
+    
+    // 添加到最近使用
+    addToRecentCategories(categoryName);
+    
+    // 选中新添加的类别
+    categorySelect.value = categoryName;
+}
+
+// 添加到最近使用类别
+function addToRecentCategories(categoryName) {
+    // 移除已存在的
+    recentCategories = recentCategories.filter(cat => cat !== categoryName);
+    // 添加到开头
+    recentCategories.unshift(categoryName);
+    // 只保留最近8个
+    recentCategories = recentCategories.slice(0, 8);
+    localStorage.setItem('recentCategories', JSON.stringify(recentCategories));
+    
+    updateRecentCategories();
+}
+
+// 更新最近使用类别显示
+function updateRecentCategories() {
+    const categoryTags = document.getElementById('categoryTags');
+    if (!categoryTags) return;
+
+    categoryTags.innerHTML = '';
+    
+    recentCategories.forEach(category => {
+        const tag = document.createElement('div');
+        tag.className = 'category-tag';
+        tag.textContent = category;
+        tag.addEventListener('click', function() {
+            // 设置选中状态
+            document.querySelectorAll('.category-tag').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 设置下拉框值
+            const categorySelect = document.getElementById('categorySelect');
+            categorySelect.value = category;
+        });
+        categoryTags.appendChild(tag);
+    });
+}
+
+// 在页面加载时初始化自定义类别到下拉框
+function initializeCustomCategories() {
+    const categorySelect = document.getElementById('categorySelect');
+    
+    customCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
+
