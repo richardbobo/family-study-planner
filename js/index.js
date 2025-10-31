@@ -732,6 +732,7 @@ function getSubjectIcon(subject) {
 }
 
 // 打开模态框
+// 打开模态框 - 优化版本
 function openModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (!task) return;
@@ -741,93 +742,117 @@ function openModal(taskId) {
     
     if (!modal || !content) return;
     
+    const subjectClass = getSubjectClass(task.subject);
+    const subjectIcon = getSubjectIcon(task.subject);
+    
     if (task.completed) {
+        // 已完成的任务详情
         const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
         const timeString = completionTime.toLocaleString();
+        const duration = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟';
         
         content.innerHTML = `
-            <div class="modal-task-header completed">
-                <h3>${task.name} <span class="status-badge completed">已完成</span></h3>
-                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
+            <div class="modal-task-header">
+                <i class="fas ${subjectIcon} modal-subject-icon"></i>
+                <div class="modal-task-info">
+                    <h3 class="modal-task-title">${task.name}</h3>
+                    <span class="modal-task-subject ${subjectClass}">${task.subject}</span>
+                </div>
             </div>
             
-            <div class="modal-task-body">
-                <div class="detail-row">
-                    <label>学习内容:</label>
-                    <span>${task.description || ''}</span>
+            <div class="completion-info">
+                <div class="completion-time">
+                    <i class="fas fa-check-circle"></i> 任务已完成
                 </div>
-                
-                <div class="detail-row">
-                    <label>计划时间:</label>
-                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                <div class="completion-duration">
+                    完成时间: ${timeString}<br>
+                    学习时长: ${duration}
                 </div>
-                
-                <div class="detail-row highlight">
-                    <label>完成时间:</label>
-                    <span>${timeString}</span>
-                </div>
-                
-                <div class="detail-row highlight">
-                    <label>实际学习时长:</label>
-                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟'}</span>
-                </div>
-                
-                <div class="detail-row">
-                    <label>获得积分:</label>
-                    <span>${task.points || 10} 分</span>
-                </div>
-                
-                ${task.completionNote ? `
-                <div class="detail-row full-width">
-                    <label>学习心得:</label>
-                    <div class="completion-notes">${task.completionNote}</div>
-                </div>
-                ` : ''}
             </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">重复类型:</div>
+                <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">计划时间:</div>
+                <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">任务积分:</div>
+                <div class="detail-value">${task.points || 10} 分</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">预计时长:</div>
+                <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+            </div>
+            
+            ${task.completionNote ? `
+            <div class="detail-item">
+                <div class="detail-label">完成备注:</div>
+                <div class="detail-value">
+                    <div class="detail-note">${task.completionNote}</div>
+                </div>
+            </div>
+            ` : ''}
         `;
     } else {
+        // 未完成的任务详情
         content.innerHTML = `
             <div class="modal-task-header">
-                <h3>${task.name}</h3>
-                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
-            </div>
-            
-            <div class="modal-task-body">
-                <div class="detail-row">
-                    <label>学习内容:</label>
-                    <span>${task.description || ''}</span>
-                </div>
-                
-                <div class="detail-row">
-                    <label>计划时间:</label>
-                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
-                </div>
-                
-                <div class="detail-row">
-                    <label>重复类型:</label>
-                    <span>${getRepeatTypeText(task.repeatType)}</span>
-                </div>
-                
-                <div class="detail-row">
-                    <label>预计时长:</label>
-                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</span>
-                </div>
-                
-                <div class="detail-row">
-                    <label>任务积分:</label>
-                    <span>${task.points || 10} 分</span>
+                <i class="fas ${subjectIcon} modal-subject-icon"></i>
+                <div class="modal-task-info">
+                    <h3 class="modal-task-title">${task.name}</h3>
+                    <span class="modal-task-subject ${subjectClass}">${task.subject}</span>
                 </div>
             </div>
             
-            <div class="modal-actions">
-                <button class="btn btn-success" onclick="quickComplete('${task.id}')">
-                    <i class="fas fa-check"></i> 快速完成
-                </button>
-                <button class="btn btn-primary" onclick="startTimer('${task.id}')">
-                    <i class="fas fa-play"></i> 开始计时
-                </button>
+            <div class="detail-item">
+                <div class="detail-label">重复类型:</div>
+                <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
             </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">计划时间:</div>
+                <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">任务积分:</div>
+                <div class="detail-value">${task.points || 10} 分</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">预计时长:</div>
+                <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+            </div>
+            
+            ${task.description ? `
+            <div class="detail-item">
+                <div class="detail-label">任务内容:</div>
+                <div class="detail-value">${task.description}</div>
+            </div>
+            ` : ''}
         `;
+    }
+    
+    // 设置删除按钮事件
+    const deleteBtn = document.getElementById('deleteTaskBtn');
+    if (deleteBtn) {
+        deleteBtn.onclick = function() {
+            deleteTask(taskId);
+        };
+    }
+    
+    // 设置编辑按钮事件
+    const editBtn = document.getElementById('editTaskBtn');
+    if (editBtn) {
+        editBtn.onclick = function() {
+            editTask(taskId);
+        };
     }
     
     modal.style.display = 'flex';
@@ -1144,4 +1169,49 @@ function cleanupUnusedSubjects() {
     }
     
     return unusedSubjects;
+}
+// 删除任务
+function deleteTask(taskId) {
+    if (!confirm('确定要删除这个学习计划吗？此操作不可恢复。')) {
+        return;
+    }
+    
+    try {
+        // 找到任务索引
+        const taskIndex = tasks.findIndex(t => t.id == taskId);
+        if (taskIndex === -1) {
+            showNotification('任务不存在或已被删除', 'error');
+            return;
+        }
+        
+        const taskName = tasks[taskIndex].name;
+        
+        // 从数组中删除任务
+        tasks.splice(taskIndex, 1);
+        
+        // 保存到localStorage
+        saveTasks();
+        
+        // 关闭模态框
+        closeModal();
+        
+        // 更新界面
+        renderWeekView();
+        renderTaskList();
+        updateStats();
+        
+        showNotification(`已删除学习计划: ${taskName}`, 'success');
+        
+    } catch (error) {
+        console.error('删除任务失败:', error);
+        showNotification('删除失败，请重试', 'error');
+    }
+}
+
+// 编辑任务（暂时跳转到添加计划页面）
+function editTask(taskId) {
+    // 这里可以跳转到编辑页面，或者在当前页面打开编辑表单
+    // 暂时先关闭模态框
+    closeModal();
+    showNotification('编辑功能开发中...', 'info');
 }

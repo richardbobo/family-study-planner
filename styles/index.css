@@ -1960,3 +1960,159 @@ footer {
         transform: translateY(-5px);
     }
 }
+/* 优化模态框样式 */
+.modal-content {
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 20px 0 20px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+/* 模态框主体布局 */
+.modal-task-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0 20px 20px 20px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.modal-subject-icon {
+    font-size: 2rem;
+    color: #4dabf7;
+}
+
+.modal-task-info {
+    flex: 1;
+}
+
+.modal-task-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.modal-task-subject {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: white;
+}
+
+/* 详情项样式 */
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding: 0 20px;
+}
+
+.detail-label {
+    width: 100px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    flex: 1;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.detail-note {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #4dabf7;
+    margin-top: 5px;
+}
+
+/* 完成状态样式 */
+.completion-info {
+    background: #e8f5e8;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 0 20px 15px 20px;
+    border-left: 4px solid #2ed573;
+}
+
+.completion-time {
+    font-weight: 600;
+    color: #2ed573;
+    margin-bottom: 8px;
+}
+
+.completion-duration {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* 操作按钮样式 */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #e9ecef;
+    margin-top: 20px;
+}
+
+.btn-edit {
+    background: #4dabf7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-edit:hover {
+    background: #339af0;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-delete:hover {
+    background: #ff5252;
+    transform: translateY(-1px);
+}
