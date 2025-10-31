@@ -286,9 +286,10 @@ function handleFormSubmit(event) {
     if (validateForm(formData)) {
         // 添加延时动画
         setTimeout(() => {
-            savePlan(formData);
+            const tasks = generateTasks(formData);
+            saveAllTasks(tasks);
             showLoadingState(saveBtn, false);
-            showSuccessNotification('学习计划添加成功！');
+            showSuccessNotification(`学习计划添加成功！共创建 ${tasks.length} 个任务`);
             
             // 2秒后跳转回首页
             setTimeout(() => {
@@ -356,16 +357,64 @@ function getFormData() {
         }
     }
     
+    // 获取重复类型详情
+    const recurrenceType = document.querySelector('.recurrence-option.active')?.getAttribute('data-value') || 'once';
+    const recurrenceData = getRecurrenceData(recurrenceType);
+    
     return {
         startDate: document.getElementById('startDate').value,
         category: category,
         name: document.getElementById('planName').value.trim(),
         content: document.getElementById('planContent').value.trim(),
-        recurrenceType: document.querySelector('.recurrence-option.active')?.getAttribute('data-value') || 'once',
+        recurrenceType: recurrenceType,
+        recurrenceData: recurrenceData,
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
         customPoints: document.getElementById('customPoints').checked
     };
+}
+
+// 获取重复类型数据
+function getRecurrenceData(type) {
+    const data = {
+        startDate: document.getElementById('startDate').value
+    };
+    
+    switch (type) {
+        case 'daily':
+            data.startDate = document.getElementById('dailyStartDate').value;
+            data.endDate = document.getElementById('dailyEndDate').value;
+            break;
+            
+        case 'weekly':
+            data.startDate = document.getElementById('weeklyStartDate').value;
+            data.endDate = document.getElementById('weeklyEndDate').value;
+            data.weekdays = getSelectedWeekdays('weekly');
+            break;
+            
+        case 'biweekly':
+            data.startDate = document.getElementById('biweeklyStartDate').value;
+            data.endDate = document.getElementById('biweeklyEndDate').value;
+            data.weekdays = getSelectedWeekdays('biweekly');
+            break;
+    }
+    
+    return data;
+}
+
+// 获取选中的星期
+function getSelectedWeekdays(type) {
+    const selector = document.querySelector(`.${type}-details .weekday-selector`);
+    if (!selector) return [];
+    
+    const selectedDays = [];
+    const options = selector.querySelectorAll('.weekday-option.active');
+    
+    options.forEach(option => {
+        selectedDays.push(parseInt(option.getAttribute('data-day')));
+    });
+    
+    return selectedDays;
 }
 
 // 验证表单
@@ -381,29 +430,154 @@ function validateForm(data) {
         return false;
     }
     
+    // 验证重复计划的日期范围
+    if (data.recurrenceType !== 'once') {
+        const startDate = new Date(data.recurrenceData.startDate);
+        const endDate = new Date(data.recurrenceData.endDate);
+        
+        if (startDate > endDate) {
+            alert('结束日期不能早于开始日期');
+            return false;
+        }
+        
+        // 对于每周和每两周，需要至少选择一个星期
+        if ((data.recurrenceType === 'weekly' || data.recurrenceType === 'biweekly') && 
+            data.recurrenceData.weekdays.length === 0) {
+            alert('请至少选择一个重复日期');
+            return false;
+        }
+    }
+    
     return true;
 }
 
-// 保存计划
-function savePlan(data) {
-    const taskId = Date.now();
+// 根据重复类型生成任务
+function generateTasks(data) {
+    const tasks = [];
+    const baseTaskId = Date.now();
     
-    const task = {
-        id: taskId,
+    const baseTask = {
         name: data.name,
         subject: data.category,
         description: data.content,
-        date: data.startDate,
         startTime: data.startTime,
         endTime: data.endTime,
-        repeatType: data.recurrenceType,
         time: calculateDuration(data.startTime, data.endTime),
         points: data.customPoints ? 10 : 5,
-        completed: false
+        completed: false,
+        repeatType: data.recurrenceType
     };
     
-    saveTaskToStorage(task);
-    console.log('计划保存成功:', task);
+    switch (data.recurrenceType) {
+        case 'once':
+            // 仅当天：创建一个任务
+            tasks.push({
+                ...baseTask,
+                id: baseTaskId,
+                date: data.startDate
+            });
+            break;
+            
+        case 'daily':
+            // 每天：从开始日期到结束日期每天创建任务
+            tasks.push(...generateDailyTasks(baseTask, data.recurrenceData, baseTaskId));
+            break;
+            
+        case 'weekly':
+            // 每周：在选定的星期几创建任务
+            tasks.push(...generateWeeklyTasks(baseTask, data.recurrenceData, baseTaskId));
+            break;
+            
+        case 'biweekly':
+            // 每两周：在选定的星期几创建任务，间隔两周
+            tasks.push(...generateBiweeklyTasks(baseTask, data.recurrenceData, baseTaskId));
+            break;
+    }
+    
+    return tasks;
+}
+
+// 生成每日任务
+function generateDailyTasks(baseTask, recurrenceData, baseTaskId) {
+    const tasks = [];
+    const startDate = new Date(recurrenceData.startDate);
+    const endDate = new Date(recurrenceData.endDate);
+    
+    let currentDate = new Date(startDate);
+    let taskId = baseTaskId;
+    
+    while (currentDate <= endDate) {
+        tasks.push({
+            ...baseTask,
+            id: taskId++,
+            date: currentDate.toISOString().split('T')[0]
+        });
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return tasks;
+}
+
+// 生成每周任务
+function generateWeeklyTasks(baseTask, recurrenceData, baseTaskId) {
+    const tasks = [];
+    const startDate = new Date(recurrenceData.startDate);
+    const endDate = new Date(recurrenceData.endDate);
+    const weekdays = recurrenceData.weekdays;
+    
+    let currentDate = new Date(startDate);
+    let taskId = baseTaskId;
+    
+    while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        
+        if (weekdays.includes(dayOfWeek)) {
+            tasks.push({
+                ...baseTask,
+                id: taskId++,
+                date: currentDate.toISOString().split('T')[0]
+            });
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return tasks;
+}
+
+// 生成每两周任务
+function generateBiweeklyTasks(baseTask, recurrenceData, baseTaskId) {
+    const tasks = [];
+    const startDate = new Date(recurrenceData.startDate);
+    const endDate = new Date(recurrenceData.endDate);
+    const weekdays = recurrenceData.weekdays;
+    
+    let currentDate = new Date(startDate);
+    let taskId = baseTaskId;
+    let weekCounter = 0;
+    
+    while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        
+        // 只在偶数周（第0周、第2周、第4周...）创建任务
+        if (weekdays.includes(dayOfWeek) && weekCounter % 2 === 0) {
+            tasks.push({
+                ...baseTask,
+                id: taskId++,
+                date: currentDate.toISOString().split('T')[0]
+            });
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+        
+        // 如果是周日，增加周计数
+        if (currentDate.getDay() === 0) {
+            weekCounter++;
+        }
+    }
+    
+    return tasks;
 }
 
 // 计算学习时长
@@ -417,9 +591,15 @@ function calculateDuration(startTime, endTime) {
     return Math.max(diff, 0);
 }
 
-// 保存任务到localStorage
-function saveTaskToStorage(task) {
-    let tasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
-    tasks.push(task);
-    localStorage.setItem('studyTasks', JSON.stringify(tasks));
+// 保存所有任务到localStorage
+function saveAllTasks(tasks) {
+    let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+    
+    // 添加新任务
+    tasks.forEach(task => {
+        existingTasks.push(task);
+    });
+    
+    localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
+    console.log(`成功保存 ${tasks.length} 个任务`);
 }
