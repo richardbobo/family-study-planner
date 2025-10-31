@@ -188,5 +188,34 @@
     </div>
 </div>
     <script src="js/index.js"></script>
+    <!-- 确认删除模态框 -->
+<div class="confirm-modal" id="confirmDeleteModal">
+    <div class="confirm-modal-content">
+        <div class="confirm-modal-header">
+            <div class="delete-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="confirm-modal-title">确认删除计划</h3>
+            <p class="confirm-modal-subtitle">此操作无法撤销</p>
+        </div>
+        
+        <div class="confirm-modal-body">
+            <div class="task-to-delete">
+                <div class="task-to-delete-label">即将删除的计划</div>
+                <h4 class="task-to-delete-name" id="deleteTaskName">计划名称</h4>
+                <span class="task-to-delete-subject" id="deleteTaskSubject">科目</span>
+            </div>
+            
+            <p class="warning-text">
+                删除后，与此计划相关的所有任务记录都将被移除。
+            </p>
+        </div>
+        
+        <div class="confirm-modal-actions">
+            <button class="confirm-btn-cancel" id="cancelDeleteBtn">取消</button>
+            <button class="confirm-btn-delete" id="confirmDeleteBtn">确认删除</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
