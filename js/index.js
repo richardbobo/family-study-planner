@@ -100,6 +100,8 @@ function navigateWeek(direction) {
     newDate.setDate(currentWeekStart.getDate() + (direction * 7));
     currentWeekStart = newDate;
     renderWeekView();
+    // 导航时更新筛选选项
+    updateSubjectFilterOptions();
     renderTaskList();
     updateStats();
 }
@@ -198,6 +200,8 @@ function bindDayCardEvents() {
         card.addEventListener('click', function() {
             dayCards.forEach(c => c.classList.remove('active'));
             this.classList.add('active');
+            // 切换日期时更新筛选选项
+            updateSubjectFilterOptions();
             renderTaskList();
         });
     });
@@ -436,6 +440,9 @@ function renderTaskList() {
     // 获取当前选中的日期
     const selectedDate = getSelectedDate();
     
+     // 先更新筛选选项（基于当天任务）
+    updateSubjectFilterOptions();
+
     // 获取筛选和排序选项
     const subjectFilter = document.getElementById('subjectFilter');
     const sortSelect = document.getElementById('sortSelect');
@@ -978,39 +985,32 @@ function getNotificationColor(type) {
     return colors[type] || '#4a69bd';
 }
 // 获取所有科目类别（包括自定义类别）
+// 获取当天任务中的所有科目类别 v1.1
 function getAllSubjects() {
     const subjects = new Set();
     
-    // 从任务中提取所有科目
-    tasks.forEach(task => {
+    // 获取当前选中的日期
+    const selectedDate = getSelectedDate();
+    
+    // 只从当天任务中提取科目
+    const todayTasks = tasks.filter(task => task.date === selectedDate);
+    todayTasks.forEach(task => {
         if (task.subject) {
             subjects.add(task.subject);
         }
     });
     
-    // 从localStorage中获取已保存的自定义类别
-    try {
-        const savedCategories = localStorage.getItem('studyCategories');
-        if (savedCategories) {
-            const categories = JSON.parse(savedCategories);
-            categories.forEach(category => {
-                subjects.add(category);
-            });
-        }
-    } catch (e) {
-        console.error('加载自定义类别失败:', e);
-    }
-    
-    // 添加默认科目（确保基础科目存在）
-    const defaultSubjects = ['语文', '数学', '英语', '科学', '美术', '体育'];
-    defaultSubjects.forEach(subject => {
-        subjects.add(subject);
-    });
+    // 如果没有任务，返回空数组而不是提示文字
+    // 这样筛选器会显示"全部科目"选项，但没有任何具体科目
+    // if (subjects.size === 0) {
+    //     return ['暂无任务'];
+    // }
     
     return Array.from(subjects).sort();
 }
 
 // 更新科目筛选选项
+// 更新科目筛选选项（基于当天任务）
 function updateSubjectFilterOptions() {
     const subjectFilter = document.getElementById('subjectFilter');
     if (!subjectFilter) return;
@@ -1018,14 +1018,14 @@ function updateSubjectFilterOptions() {
     // 保存当前选中的值
     const currentValue = subjectFilter.value;
     
-    // 清空现有选项（保留"全部科目"）
+    // 清空现有选项
     subjectFilter.innerHTML = '<option value="all">全部科目</option>';
     
-    // 获取所有科目
-    const allSubjects = getAllSubjects();
+    // 获取当天任务的所有科目
+    const todaySubjects = getAllSubjects();
     
     // 添加科目选项
-    allSubjects.forEach(subject => {
+    todaySubjects.forEach(subject => {
         const option = document.createElement('option');
         option.value = subject;
         option.textContent = subject;
@@ -1033,8 +1033,30 @@ function updateSubjectFilterOptions() {
     });
     
     // 恢复之前选中的值（如果还存在）
-    if (currentValue && allSubjects.includes(currentValue)) {
+    if (currentValue && todaySubjects.includes(currentValue)) {
         subjectFilter.value = currentValue;
+    } else {
+        subjectFilter.value = 'all'; // 重置为全部
+    }
+    
+    // 更新筛选器状态显示
+    updateFilterBadge();
+}
+
+// 更新筛选器状态徽章
+function updateFilterBadge() {
+    const subjectFilter = document.getElementById('subjectFilter');
+    const filterInfo = document.querySelector('.filter-info');
+    
+    if (!subjectFilter || !filterInfo) return;
+    
+    const todaySubjects = getAllSubjects();
+    const subjectCount = todaySubjects.includes('暂无任务') ? 0 : todaySubjects.length;
+    
+    // 更新任务数量徽章
+    const countBadge = filterInfo.querySelector('.task-count-badge');
+    if (countBadge) {
+        countBadge.textContent = `${subjectCount} 个科目`;
     }
 }
 
