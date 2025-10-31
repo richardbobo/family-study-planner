@@ -80,85 +80,123 @@
                     <div class="char-limit"><span id="contentCount">0</span>/500</div>
                 </div>
                 
-                <!-- 重复类型 -->
-                <div class="form-section">
-                    <h3 class="section-title">重复类型 <span class="required">*</span></h3>
-                    <div class="recurrence-options">
-                        <div class="recurrence-option" data-value="once">
-                            <div class="option-icon">①</div>
-                            <div class="option-text">仅当天</div>
-                        </div>
-                        <div class="recurrence-option" data-value="daily">
-                            <div class="option-icon">②</div>
-                            <div class="option-text">每天</div>
-                        </div>
-                        <div class="recurrence-option" data-value="weekly">
-                            <div class="option-icon">③</div>
-                            <div class="option-text">每周</div>
-                        </div>
-                        <div class="recurrence-option" data-value="monthly">
-                            <div class="option-icon">④</div>
-                            <div class="option-text">每月</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 重复选项详情 -->
-                    <div class="recurrence-details" id="recurrenceDetails">
-                        <!-- 每天重复 -->
-                        <div class="detail-section daily-details">
-                            <h4>重复设置</h4>
-                            <div class="time-range">
-                                <div class="form-group">
-                                    <label>开始日期</label>
-                                    <input type="date" class="form-input" id="dailyStartDate">
-                                </div>
-                                <div class="form-group">
-                                    <label>结束日期</label>
-                                    <input type="date" class="form-input" id="dailyEndDate">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 每周重复 -->
-                        <div class="detail-section weekly-details">
-                            <h4>选择重复日期</h4>
-                            <div class="weekday-selector">
-                                <div class="weekday-option" data-day="1">周一</div>
-                                <div class="weekday-option" data-day="2">周二</div>
-                                <div class="weekday-option" data-day="3">周三</div>
-                                <div class="weekday-option" data-day="4">周四</div>
-                                <div class="weekday-option" data-day="5">周五</div>
-                                <div class="weekday-option" data-day="6">周六</div>
-                                <div class="weekday-option" data-day="0">周日</div>
-                            </div>
-                            <div class="time-range">
-                                <div class="form-group">
-                                    <label>开始日期</label>
-                                    <input type="date" class="form-input" id="weeklyStartDate">
-                                </div>
-                                <div class="form-group">
-                                    <label>结束日期</label>
-                                    <input type="date" class="form-input" id="weeklyEndDate">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 每月重复 -->
-                        <div class="detail-section monthly-details">
-                            <h4>每月重复</h4>
-                            <div class="time-range">
-                                <div class="form-group">
-                                    <label>开始日期</label>
-                                    <input type="date" class="form-input" id="monthlyStartDate">
-                                </div>
-                                <div class="form-group">
-                                    <label>结束日期</label>
-                                    <input type="date" class="form-input" id="monthlyEndDate">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+<!-- 重复类型 -->
+<div class="form-section">
+    <h3 class="section-title">重复类型 <span class="required">*</span></h3>
+    <div class="recurrence-options">
+        <div class="recurrence-option" data-value="once">
+            <div class="option-icon">①</div>
+            <div class="option-text">仅当天</div>
+        </div>
+        <div class="recurrence-option" data-value="daily">
+            <div class="option-icon">②</div>
+            <div class="option-text">每天</div>
+        </div>
+        <div class="recurrence-option" data-value="weekly">
+            <div class="option-icon">③</div>
+            <div class="option-text">每周</div>
+        </div>
+        <div class="recurrence-option" data-value="biweekly">
+            <div class="option-icon">④</div>
+            <div class="option-text">每两周</div>
+        </div>
+        <div class="recurrence-option" data-value="monthly">
+            <div class="option-icon">⑤</div>
+            <div class="option-text">每月</div>
+        </div>
+    </div>
+    
+    <!-- 重复选项详情 -->
+    <div class="recurrence-details" id="recurrenceDetails">
+        <!-- 每天重复 -->
+        <div class="detail-section daily-details">
+            <h4>重复设置</h4>
+            <div class="time-range">
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="date" class="form-input" id="dailyStartDate">
                 </div>
+                <div class="form-group">
+                    <label>结束日期</label>
+                    <input type="date" class="form-input" id="dailyEndDate">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 每周重复 -->
+        <div class="detail-section weekly-details">
+            <h4>选择重复日期</h4>
+            <div class="weekday-selector">
+                <div class="weekday-option" data-day="1">周一</div>
+                <div class="weekday-option" data-day="2">周二</div>
+                <div class="weekday-option" data-day="3">周三</div>
+                <div class="weekday-option" data-day="4">周四</div>
+                <div class="weekday-option" data-day="5">周五</div>
+                <div class="weekday-option" data-day="6">周六</div>
+                <div class="weekday-option" data-day="0">周日</div>
+            </div>
+            <div class="time-range">
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="date" class="form-input" id="weeklyStartDate">
+                </div>
+                <div class="form-group">
+                    <label>结束日期</label>
+                    <input type="date" class="form-input" id="weeklyEndDate">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 每两周重复 -->
+        <div class="detail-section biweekly-details">
+            <h4>选择重复日期（每两周）</h4>
+            <div class="weekday-selector">
+                <div class="weekday-option" data-day="1">周一</div>
+                <div class="weekday-option" data-day="2">周二</div>
+                <div class="weekday-option" data-day="3">周三</div>
+                <div class="weekday-option" data-day="4">周四</div>
+                <div class="weekday-option" data-day="5">周五</div>
+                <div class="weekday-option" data-day="6">周六</div>
+                <div class="weekday-option" data-day="0">周日</div>
+            </div>
+            <div class="time-range">
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="date" class="form-input" id="biweeklyStartDate">
+                </div>
+                <div class="form-group">
+                    <label>结束日期</label>
+                    <input type="date" class="form-input" id="biweeklyEndDate">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 每月重复 -->
+        <div class="detail-section monthly-details">
+            <h4>每月重复</h4>
+            <div class="monthly-options">
+                <div class="radio-group">
+                    <input type="radio" id="monthlySameDay" name="monthlyType" value="sameDay" checked>
+                    <label for="monthlySameDay">每月同一天（如：每月15日）</label>
+                </div>
+                <div class="radio-group">
+                    <input type="radio" id="monthlyWeekday" name="monthlyType" value="weekday">
+                    <label for="monthlyWeekday">每月相同星期（如：每月第二个周一）</label>
+                </div>
+            </div>
+            <div class="time-range">
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="date" class="form-input" id="monthlyStartDate">
+                </div>
+                <div class="form-group">
+                    <label>结束日期</label>
+                    <input type="date" class="form-input" id="monthlyEndDate">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                 
                 <!-- 计划时间 -->
                 <div class="form-section">

@@ -625,3 +625,108 @@ body {
     font-weight: bold;
     background: #f0f4ff;
 }
+/* 重复类型选项修复 */
+.recurrence-option.active {
+    background: #4a69bd;
+    color: white;
+    border-color: #4a69bd;
+}
+
+.recurrence-option.active .option-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 每月重复选项样式 */
+.monthly-options {
+    margin-bottom: 15px;
+}
+
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.radio-group input[type="radio"] {
+    width: 16px;
+    height: 16px;
+}
+
+.radio-group label {
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+}
+
+/* 保存动画 */
+.btn-save.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn-save.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 气泡通知样式 */
+.notification-bubble {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2ed573;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 10000;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 300px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-bubble.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-bubble i {
+    font-size: 1.2rem;
+}
+
+/* 重复日期选择器样式增强 */
+.weekday-option.active {
+    background: #4a69bd;
+    color: white;
+    border-color: #4a69bd;
+}
+
+.weekday-option {
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.weekday-option:hover {
+    background: #f0f4ff;
+    border-color: #4a69bd;
+}
