@@ -558,7 +558,7 @@ function renderTaskList() {
                             </div>
                             
                             <div class="task-details">
-                                <div class="task-desc">${task.description || '无详细描述'}</div>
+                                <div class="task-desc">${task.description || ''}</div>
                                 <div class="task-estimate">
                                     <span class="time-estimate">预计: ${timeDisplay}</span>
                                     <span class="points-badge">积分: ${task.points || 10}</span>
@@ -709,7 +709,7 @@ function openModal(taskId) {
             <div class="modal-task-body">
                 <div class="detail-row">
                     <label>学习内容:</label>
-                    <span>${task.description || '无详细描述'}</span>
+                    <span>${task.description || ''}</span>
                 </div>
                 
                 <div class="detail-row">
@@ -750,7 +750,7 @@ function openModal(taskId) {
             <div class="modal-task-body">
                 <div class="detail-row">
                     <label>学习内容:</label>
-                    <span>${task.description || '无详细描述'}</span>
+                    <span>${task.description || ''}</span>
                 </div>
                 
                 <div class="detail-row">
