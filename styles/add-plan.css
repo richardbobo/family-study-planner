@@ -96,13 +96,6 @@ body {
     line-height: 1.5;
 }
 
-.date-display {
-    font-size: 1.1rem;
-    color: #4a69bd;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
 .form-input, .form-select, .form-textarea {
     width: 100%;
     padding: 12px 15px;
@@ -153,16 +146,10 @@ body {
     transform: translateY(-2px);
 }
 
-.recurrence-option.selected {
+.recurrence-option.active {
+    background: #4a69bd;
+    color: white;
     border-color: #4a69bd;
-    background: #e3f2fd;
-}
-
-.option-icon {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #4a69bd;
-    margin-bottom: 5px;
 }
 
 .option-text {
@@ -180,10 +167,6 @@ body {
 
 .detail-section {
     display: none;
-}
-
-.detail-section.active {
-    display: block;
 }
 
 .detail-section h4 {
@@ -213,7 +196,7 @@ body {
     border-color: #4a69bd;
 }
 
-.weekday-option.selected {
+.weekday-option.active {
     background: #4a69bd;
     color: white;
     border-color: #4a69bd;
@@ -334,6 +317,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-weight: 500;
 }
 
 .btn-cancel {
@@ -343,6 +327,7 @@ body {
 
 .btn-cancel:hover {
     background: #5a6268;
+    transform: translateY(-1px);
 }
 
 .btn-save {
@@ -355,213 +340,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    .add-plan-page {
-        padding: 20px;
-    }
-    
-    .recurrence-options {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .weekday-selector {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .time-range {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 480px) {
-    .recurrence-options {
-        grid-template-columns: 1fr;
-    }
-    
-    .weekday-selector {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .time-inputs {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .time-separator {
-        margin: 10px 0;
-        text-align: center;
-    }
-}
-/* 类别标签自定义样式 */
-.category-container {
-    margin-bottom: 15px;
-}
-
-.category-select-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.category-select-wrapper .form-select {
-    flex: 1;
-}
-
-.btn-add-category {
-    background: #4a69bd;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.btn-add-category:hover {
-    background: #3c5aa8;
-    transform: translateY(-1px);
-}
-
-.custom-category-input {
-    margin-bottom: 15px;
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.input-group {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.input-group .form-input {
-    flex: 1;
-}
-
-.btn-confirm {
-    background: #2ed573;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.btn-confirm:hover {
-    background: #25c064;
-}
-
-.btn-cancel {
-    background: #ff6b6b;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.btn-cancel:hover {
-    background: #ff4757;
-}
-
-.recent-categories {
-    margin-top: 15px;
-}
-
-.recent-title {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.category-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.category-tag {
-    background: #e0e7ff;
-    color: #4a69bd;
-    padding: 6px 12px;
-    border-radius: 15px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: 1px solid transparent;
-}
-
-.category-tag:hover {
-    background: #4a69bd;
-    color: white;
-    transform: translateY(-1px);
-}
-
-.category-tag.active {
-    background: #4a69bd;
-    color: white;
-    border-color: #4a69bd;
-}
-
-/* 响应式设计 */
-@media (max-width: 480px) {
-    .category-select-wrapper {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .btn-add-category {
-        align-self: flex-end;
-        width: 100%;
-        max-width: 120px;
-    }
-    
-    .input-group {
-        flex-direction: column;
-    }
-    
-    .input-group .btn-confirm,
-    .input-group .btn-cancel {
-        width: 100%;
-        height: 40px;
-    }
-}
 /* 类别标签自定义样式 */
 .custom-category-input {
     margin-top: 10px;
@@ -625,39 +403,6 @@ body {
     font-weight: bold;
     background: #f0f4ff;
 }
-/* 重复类型选项修复 */
-.recurrence-option.active {
-    background: #4a69bd;
-    color: white;
-    border-color: #4a69bd;
-}
-
-.recurrence-option.active .option-icon {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* 每月重复选项样式 */
-.monthly-options {
-    margin-bottom: 15px;
-}
-
-.radio-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.radio-group input[type="radio"] {
-    width: 16px;
-    height: 16px;
-}
-
-.radio-group label {
-    font-size: 0.9rem;
-    color: #333;
-    cursor: pointer;
-}
 
 /* 保存动画 */
 .btn-save.loading {
@@ -714,19 +459,49 @@ body {
     font-size: 1.2rem;
 }
 
-/* 重复日期选择器样式增强 */
-.weekday-option.active {
-    background: #4a69bd;
-    color: white;
-    border-color: #4a69bd;
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .add-plan-page {
+        padding: 20px;
+    }
+    
+    .recurrence-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .weekday-selector {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .time-range {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
 }
 
-.weekday-option {
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.weekday-option:hover {
-    background: #f0f4ff;
-    border-color: #4a69bd;
+@media (max-width: 480px) {
+    .recurrence-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .weekday-selector {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .time-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .time-separator {
+        margin: 10px 0;
+        text-align: center;
+    }
 }
