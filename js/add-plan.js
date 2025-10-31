@@ -8,6 +8,9 @@ let recentCategories = JSON.parse(localStorage.getItem('recentCategories') || '[
 document.addEventListener('DOMContentLoaded', function() {
     console.log('添加计划页面DOM已加载');
     initializePage();
+    initializePointsSettings();
+    // 初始更新一次积分预览
+    setTimeout(updatePointsPreview, 100);
 });
 
 // 初始化页面
@@ -371,31 +374,22 @@ function showSuccessNotification(message) {
 }
 
 // 获取表单数据
+// 获取表单数据 - 确保包含积分设置
 function getFormData() {
-    const categorySelect = document.getElementById('categorySelect');
-    let category = categorySelect.value;
-    
-    if (category === 'custom') {
-        const newCategoryName = document.getElementById('newCategoryName').value.trim();
-        if (newCategoryName) {
-            category = newCategoryName;
-        }
-    }
-    
-    // 获取重复类型详情
-    const recurrenceType = document.querySelector('.recurrence-option.active')?.getAttribute('data-value') || 'once';
-    const recurrenceData = getRecurrenceData(recurrenceType);
+    const pointsType = document.querySelector('input[name="pointsType"]:checked')?.value;
+    const customPoints = document.getElementById('customPoints')?.value;
     
     return {
+        name: document.getElementById('planName').value,
+        category: document.getElementById('categorySelect').value,
+        content: document.getElementById('planContent').value,
         startDate: document.getElementById('startDate').value,
-        category: category,
-        name: document.getElementById('planName').value.trim(),
-        content: document.getElementById('planContent').value.trim(),
-        recurrenceType: recurrenceType,
-        recurrenceData: recurrenceData,
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
-        customPoints: document.getElementById('customPoints').checked
+        recurrenceType: document.getElementById('recurrenceType').value,
+        recurrenceData: getRecurrenceData(),
+        pointsType: pointsType,
+        customPoints: customPoints ? parseInt(customPoints) : null
     };
 }
 
@@ -477,9 +471,41 @@ function validateForm(data) {
 }
 
 // 根据重复类型生成任务
+// 根据重复类型生成任务 - 集成积分系统
 function generateTasks(data) {
     const tasks = [];
     const baseTaskId = Date.now();
+    
+    // 获取积分设置
+    const pointsType = document.querySelector('input[name="pointsType"]:checked')?.value;
+    const useCustomPoints = pointsType === 'custom';
+    const customPoints = useCustomPoints ? parseInt(document.getElementById('customPoints').value) || 10 : null;
+    
+    // 计算积分
+    let points;
+    let pointsBreakdown;
+    
+    if (useCustomPoints && customPoints) {
+        points = customPoints;
+        pointsBreakdown = {
+            total: points,
+            base: points,
+            timeBonus: 0,
+            morningBonus: 0,
+            weekendBonus: 0,
+            isCustom: true
+        };
+    } else {
+        // 系统自动计算（使用开始日期作为示例日期）
+        const taskData = {
+            startTime: data.startTime,
+            endTime: data.endTime,
+            startDate: data.startDate,
+            time: calculateDuration(data.startTime, data.endTime)
+        };
+        pointsBreakdown = PointsSystem.calculateAutoPoints(taskData);
+        points = pointsBreakdown.total;
+    }
     
     const baseTask = {
         name: data.name,
@@ -488,9 +514,13 @@ function generateTasks(data) {
         startTime: data.startTime,
         endTime: data.endTime,
         time: calculateDuration(data.startTime, data.endTime),
-        points: data.customPoints ? 10 : 5,
+        points: points,
+        pointsBreakdown: pointsBreakdown, // 保存积分明细
+        useCustomPoints: useCustomPoints, // 记录是否使用自定义积分
+        customPoints: customPoints, // 记录自定义积分值
         completed: false,
-        repeatType: data.recurrenceType
+        repeatType: data.recurrenceType,
+        createdAt: new Date().toISOString()
     };
     
     switch (data.recurrenceType) {
@@ -628,3 +658,159 @@ function saveAllTasks(tasks) {
     localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
     console.log(`成功保存 ${tasks.length} 个任务`);
 }
+// 积分计算系统
+const PointsSystem = {
+    // 计算任务积分
+    calculateTaskPoints: function(taskData) {
+        if (taskData.useCustomPoints && taskData.customPoints) {
+            // 使用自定义积分
+            return {
+                total: parseInt(taskData.customPoints),
+                base: parseInt(taskData.customPoints),
+                timeBonus: 0,
+                morningBonus: 0,
+                weekendBonus: 0,
+                isCustom: true
+            };
+        } else {
+            // 系统自动计算
+            return this.calculateAutoPoints(taskData);
+        }
+    },
+    
+    // 系统自动计算积分
+    calculateAutoPoints: function(taskData) {
+        // 基础积分
+        let basePoints = 1;
+        
+        // 时间奖励：每15分钟加1分
+        const taskMinutes = taskData.time || calculateDuration(taskData.startTime, taskData.endTime);
+        const timeBonus = Math.floor(taskMinutes / 15);
+        
+        // 早起加成：6:00-8:00 ×1.2
+        let morningBonus = 0;
+        const startHour = parseInt(taskData.startTime?.split(':')[0]) || 19;
+        if (startHour >= 6 && startHour < 8) {
+            morningBonus = 0.2;
+        }
+        
+        // 周末加成：周六日 ×1.5
+        let weekendBonus = 0;
+        const taskDate = new Date(taskData.startDate + 'T00:00:00');
+        const dayOfWeek = taskDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) { // 0=周日, 6=周六
+            weekendBonus = 0.5;
+        }
+        
+        // 计算总积分
+        let totalPoints = basePoints + timeBonus;
+        totalPoints *= (1 + morningBonus + weekendBonus);
+        
+        // 四舍五入到整数
+        totalPoints = Math.round(totalPoints);
+        
+        return {
+            total: totalPoints,
+            base: basePoints,
+            timeBonus: timeBonus,
+            morningBonus: morningBonus,
+            weekendBonus: weekendBonus,
+            isCustom: false
+        };
+    },
+    
+    // 获取加成描述
+    getBonusDescription: function(pointsBreakdown) {
+        if (pointsBreakdown.isCustom) {
+            return "自定义积分";
+        }
+        
+        let description = `基础${pointsBreakdown.base}分`;
+        
+        if (pointsBreakdown.timeBonus > 0) {
+            description += ` + 时长${pointsBreakdown.timeBonus}分`;
+        }
+        
+        if (pointsBreakdown.morningBonus > 0) {
+            description += ` + 早起×1.2`;
+        }
+        
+        if (pointsBreakdown.weekendBonus > 0) {
+            description += ` + 周末×1.5`;
+        }
+        
+        return description;
+    }
+};
+
+// 初始化积分设置
+function initializePointsSettings() {
+    const pointsTypeRadios = document.querySelectorAll('input[name="pointsType"]');
+    const customPointsInput = document.getElementById('customPointsInput');
+    const customPointsField = document.getElementById('customPoints');
+    const pointsPreview = document.getElementById('pointsPreview');
+    
+    if (!pointsTypeRadios.length) return;
+    
+    pointsTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customPointsInput.style.display = 'block';
+                updatePointsPreview();
+            } else {
+                customPointsInput.style.display = 'none';
+                updatePointsPreview();
+            }
+        });
+    });
+    
+    // 监听自定义积分输入
+    if (customPointsField) {
+        customPointsField.addEventListener('input', updatePointsPreview);
+    }
+    
+    // 监听时间变化更新积分预览
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const startDateInput = document.getElementById('startDate');
+    
+    if (startTimeInput) startTimeInput.addEventListener('change', updatePointsPreview);
+    if (endTimeInput) endTimeInput.addEventListener('change', updatePointsPreview);
+    if (startDateInput) startDateInput.addEventListener('change', updatePointsPreview);
+}
+
+// 更新积分预览
+function updatePointsPreview() {
+    const pointsPreview = document.getElementById('pointsPreview');
+    const pointsType = document.querySelector('input[name="pointsType"]:checked')?.value;
+    
+    if (!pointsPreview) return;
+    
+    // 获取表单数据
+    const formData = getFormData();
+    
+    if (pointsType === 'custom') {
+        const customPoints = parseInt(document.getElementById('customPoints').value) || 10;
+        pointsPreview.innerHTML = `
+            <strong>积分预览: ${customPoints} 分</strong>
+            <div class="points-breakdown">自定义积分</div>
+        `;
+    } else {
+        // 使用系统自动计算
+        const taskData = {
+            startTime: formData.startTime,
+            endTime: formData.endTime,
+            startDate: formData.startDate,
+            time: calculateDuration(formData.startTime, formData.endTime)
+        };
+        
+        const pointsBreakdown = PointsSystem.calculateAutoPoints(taskData);
+        pointsPreview.innerHTML = `
+            <strong>积分预览: ${pointsBreakdown.total} 分</strong>
+            <div class="points-breakdown">
+                ${PointsSystem.getBonusDescription(pointsBreakdown)}
+            </div>
+        `;
+    }
+}
+

@@ -1465,3 +1465,65 @@ function closeConfirmDeleteModal() {
     }
     currentDeleteTaskId = null;
 }
+
+// 在 index.js 中添加积分计算系统（与 add-plan.js 中相同）
+const PointsSystem = {
+    calculateTaskPoints: function(task) {
+        if (task.useCustomPoints && task.customPoints) {
+            return {
+                total: task.customPoints,
+                base: task.customPoints,
+                timeBonus: 0,
+                morningBonus: 0,
+                weekendBonus: 0,
+                isCustom: true
+            };
+        } else {
+            return this.calculateAutoPoints(task);
+        }
+    },
+    
+    calculateAutoPoints: function(task) {
+        // ... 与 add-plan.js 中相同的实现
+        let basePoints = 1;
+        const taskMinutes = task.time || 30;
+        const timeBonus = Math.floor(taskMinutes / 15);
+        
+        let morningBonus = 0;
+        const startHour = parseInt(task.startTime?.split(':')[0]) || 19;
+        if (startHour >= 6 && startHour < 8) {
+            morningBonus = 0.2;
+        }
+        
+        let weekendBonus = 0;
+        const taskDate = new Date(task.date + 'T00:00:00');
+        const dayOfWeek = taskDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            weekendBonus = 0.5;
+        }
+        
+        let totalPoints = basePoints + timeBonus;
+        totalPoints *= (1 + morningBonus + weekendBonus);
+        totalPoints = Math.round(totalPoints);
+        
+        return {
+            total: totalPoints,
+            base: basePoints,
+            timeBonus: timeBonus,
+            morningBonus: morningBonus,
+            weekendBonus: weekendBonus,
+            isCustom: false
+        };
+    },
+    
+    getBonusDescription: function(pointsBreakdown) {
+        // ... 与 add-plan.js 中相同的实现
+        if (pointsBreakdown.isCustom) return "自定义积分";
+        
+        let description = `基础${pointsBreakdown.base}分`;
+        if (pointsBreakdown.timeBonus > 0) description += ` + 时长${pointsBreakdown.timeBonus}分`;
+        if (pointsBreakdown.morningBonus > 0) description += ` + 早起×1.2`;
+        if (pointsBreakdown.weekendBonus > 0) description += ` + 周末×1.5`;
+        return description;
+    }
+};

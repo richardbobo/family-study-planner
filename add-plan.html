@@ -184,26 +184,32 @@
                 </div>
                 
                 <!-- 积分设置 -->
-                <div class="form-section">
-                    <h3 class="section-title">积分设置（可选）</h3>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="customPoints">
-                        <label for="customPoints" class="checkbox-label">启用自定义积分</label>
-                    </div>
-                    <p class="section-description">
-                        为任务设置固定积分数值，替代系统默认计算规则
-                    </p>
-                    
-                    <div class="points-rules">
-                        <strong>系统默认规则</strong>
-                        <ul>
-                            <li>基础积分：1星</li>
-                            <li>时间奖励：30分钟+1星，60分钟+2星</li>
-                            <li>早起加成：6:00-8:00 ×1.2倍</li>
-                            <li>周末加成：×1.5倍</li>
-                        </ul>
-                    </div>
-                </div>
+<!-- 积分设置 -->
+<div class="form-group">
+    <label>积分设置</label>
+    <div class="points-options">
+        <div class="radio-group">
+            <label class="radio-label">
+                <input type="radio" name="pointsType" value="auto" checked> 
+                系统自动计算
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="pointsType" value="custom">
+                自定义积分
+            </label>
+        </div>
+        
+        <div class="custom-points-input" id="customPointsInput" style="display: none;">
+            <input type="number" id="customPoints" min="1" max="100" placeholder="输入1-100的积分值">
+            <span class="input-hint">积分范围: 1-100</span>
+        </div>
+        
+        <div class="points-preview" id="pointsPreview">
+            <strong>积分预览: 5 分</strong>
+            <div class="points-breakdown">基础积分 + 时长奖励</div>
+        </div>
+    </div>
+</div>
                 
                 <!-- 表单操作 -->
                 <div class="form-actions">
