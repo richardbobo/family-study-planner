@@ -2419,3 +2419,21 @@ footer {
 .icon-music { background: linear-gradient(135deg, #00cec9, #00a8a8); }
 .icon-sports { background: linear-gradient(135deg, #74b9ff, #0984e3); }
 .icon-other { background: linear-gradient(135deg, #636e72, #2d3436); }
+/* 模态框body内容区域 */
+.modal-body-content {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* 确保模态框内容正确显示 */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-body {
+    flex: 1;
+    overflow: hidden;
+}
