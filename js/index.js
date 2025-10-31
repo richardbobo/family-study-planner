@@ -6,6 +6,7 @@ let currentWeekStart = getMonday(new Date());
 let currentTaskId = null;
 let currentQuickCompleteTaskId = null;
 let isSubmittingCompletion = false;
+let currentDeleteTask = null;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
@@ -730,6 +731,7 @@ function openModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (!task) return;
     
+ 
     const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
     
@@ -857,6 +859,9 @@ function openModal(taskId) {
     }
     
     content.innerHTML = modalHTML;
+
+       // 更新删除按钮文本
+    updateDeleteButtonText(task);
     
     // 设置删除按钮事件
     const deleteBtn = document.getElementById('deleteTaskBtn');
@@ -1260,15 +1265,48 @@ function initializeConfirmDeleteModal() {
 }
 
 // 打开确认删除模态框
+// 打开确认删除模态框 - 支持批量删除
 function openConfirmDeleteModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
-    if (!task) return;
+    if (!task) {
+        console.error('任务不存在:', taskId);
+        return;
+    }
     
     currentDeleteTaskId = taskId;
+    currentDeleteTask = task;
     
     // 更新模态框内容
     document.getElementById('deleteTaskName').textContent = task.name;
     document.getElementById('deleteTaskSubject').textContent = task.subject;
+    document.getElementById('deleteTaskRepeatType').textContent = getRepeatTypeText(task.repeatType);
+    
+    // 设置模态框标题和模式
+    const isBatchDelete = task.repeatType !== 'once';
+    const modalTitle = document.getElementById('deleteModalTitle');
+    const modalSubtitle = document.getElementById('deleteModalSubtitle');
+    const batchOptions = document.getElementById('batchDeleteOptions');
+    const warningText = document.getElementById('deleteWarningText');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    if (isBatchDelete) {
+        // 批量删除模式
+        modalTitle.innerHTML = '确认批量删除计划 <span class="delete-mode-indicator"><i class="fas fa-layer-group"></i> 批量删除</span>';
+        modalSubtitle.textContent = '此操作将删除多个重复任务';
+        batchOptions.style.display = 'block';
+        warningText.textContent = '删除后，从选定日期开始的所有重复任务都将被移除。';
+        confirmBtn.textContent = '确认批量删除';
+        
+        // 初始化日期选择器
+        initializeBatchDeleteOptions(task);
+    } else {
+        // 单次删除模式
+        modalTitle.textContent = '确认删除计划';
+        modalSubtitle.textContent = '此操作无法撤销';
+        batchOptions.style.display = 'none';
+        warningText.textContent = '删除后，此任务记录将被移除。';
+        confirmBtn.textContent = '确认删除';
+    }
     
     // 显示模态框
     const modal = document.getElementById('confirmDeleteModal');
@@ -1277,33 +1315,110 @@ function openConfirmDeleteModal(taskId) {
     }
 }
 
-// 关闭确认删除模态框
-function closeConfirmDeleteModal() {
-    const modal = document.getElementById('confirmDeleteModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    currentDeleteTaskId = null;
+// 初始化批量删除选项
+function initializeBatchDeleteOptions(task) {
+    const dateInput = document.getElementById('deleteStartDate');
+    const deleteSummary = document.getElementById('deleteSummary');
+    
+    if (!dateInput || !deleteSummary) return;
+    
+    // 设置默认日期为任务开始日期
+    const taskDate = new Date(task.date + 'T00:00:00');
+    dateInput.value = task.date;
+    
+    // 计算删除统计
+    updateDeleteSummary(task, task.date);
+    
+    // 监听日期变化
+    dateInput.addEventListener('change', function() {
+        updateDeleteSummary(task, this.value);
+    });
 }
 
-// 确认删除任务
-function confirmDeleteTask() {
-    if (!currentDeleteTaskId) return;
+// 更新删除统计信息
+function updateDeleteSummary(task, startDate) {
+    const deleteSummary = document.getElementById('deleteSummary');
+    if (!deleteSummary) return;
     
-    const taskId = currentDeleteTaskId;
-    const taskIndex = tasks.findIndex(t => t.id == taskId);
+    // 计算受影响的重复任务
+    const affectedTasks = getAffectedRepeatTasks(task, startDate);
+    const completedCount = affectedTasks.filter(t => t.completed).length;
+    const pendingCount = affectedTasks.length - completedCount;
     
-    if (taskIndex === -1) {
-        showNotification('任务不存在或已被删除', 'error');
-        closeConfirmDeleteModal();
-        return;
+    deleteSummary.innerHTML = `
+        <div class="delete-summary-item">
+            <span>受影响任务总数：</span>
+            <span>${affectedTasks.length} 个</span>
+        </div>
+        <div class="delete-summary-item">
+            <span>已完成任务：</span>
+            <span style="color: #2ed573;">${completedCount} 个</span>
+        </div>
+        <div class="delete-summary-item">
+            <span>未完成任务：</span>
+            <span style="color: #ff9f43;">${pendingCount} 个</span>
+        </div>
+        <div class="delete-summary-total">
+            <span>总计删除：</span>
+            <span>${affectedTasks.length} 个任务</span>
+        </div>
+    `;
+}
+
+// 获取受影响的重复任务
+function getAffectedRepeatTasks(originalTask, startDate) {
+    if (originalTask.repeatType === 'once') {
+        return [originalTask];
     }
     
-    const taskName = tasks[taskIndex].name;
+    // 找到所有相关的重复任务
+    const affectedTasks = tasks.filter(task => 
+        task.name === originalTask.name &&
+        task.subject === originalTask.subject &&
+        task.repeatType === originalTask.repeatType &&
+        task.date >= startDate
+    );
+    
+    return affectedTasks;
+}
+
+// 确认删除任务 - 支持批量删除
+function confirmDeleteTask() {
+    if (!currentDeleteTaskId || !currentDeleteTask) return;
+    
+    const taskId = currentDeleteTaskId;
+    const task = currentDeleteTask;
+    const isBatchDelete = task.repeatType !== 'once';
     
     try {
-        // 从数组中删除任务
-        tasks.splice(taskIndex, 1);
+        let deletedTasks = [];
+        
+        if (isBatchDelete) {
+            // 批量删除模式
+            const startDate = document.getElementById('deleteStartDate').value;
+            const affectedTasks = getAffectedRepeatTasks(task, startDate);
+            
+            // 从tasks数组中删除所有受影响的任务
+            affectedTasks.forEach(affectedTask => {
+                const taskIndex = tasks.findIndex(t => t.id === affectedTask.id);
+                if (taskIndex !== -1) {
+                    deletedTasks.push(tasks[taskIndex]);
+                    tasks.splice(taskIndex, 1);
+                }
+            });
+        } else {
+            // 单次删除模式
+            const taskIndex = tasks.findIndex(t => t.id == taskId);
+            if (taskIndex !== -1) {
+                deletedTasks.push(tasks[taskIndex]);
+                tasks.splice(taskIndex, 1);
+            }
+        }
+        
+        if (deletedTasks.length === 0) {
+            showNotification('没有找到要删除的任务', 'warning');
+            return;
+        }
         
         // 保存到localStorage
         saveTasks();
@@ -1317,10 +1432,36 @@ function confirmDeleteTask() {
         renderTaskList();
         updateStats();
         
-        showNotification(`已删除学习计划: ${taskName}`, 'success');
+        // 显示成功消息
+        if (isBatchDelete) {
+            showNotification(`已批量删除 ${deletedTasks.length} 个重复任务`, 'success');
+        } else {
+            showNotification(`已删除学习计划: ${task.name}`, 'success');
+        }
         
     } catch (error) {
         console.error('删除任务失败:', error);
         showNotification('删除失败，请重试', 'error');
     }
+}
+
+// 修改删除按钮文本显示
+function updateDeleteButtonText(task) {
+    const deleteBtn = document.getElementById('deleteTaskBtn');
+    if (!deleteBtn) return;
+    
+    if (task.repeatType !== 'once') {
+        deleteBtn.innerHTML = '<i class="fas fa-layer-group"></i> 批量删除';
+    } else {
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 删除计划';
+    }
+}
+
+// 关闭确认删除模态框
+function closeConfirmDeleteModal() {
+    const modal = document.getElementById('confirmDeleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentDeleteTaskId = null;
 }

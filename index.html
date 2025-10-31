@@ -187,14 +187,15 @@
 </div>
     <script src="js/index.js"></script>
     <!-- 确认删除模态框 -->
+<!-- 确认删除模态框 - 支持批量删除 -->
 <div class="confirm-modal" id="confirmDeleteModal">
     <div class="confirm-modal-content">
         <div class="confirm-modal-header">
             <div class="delete-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h3 class="confirm-modal-title">确认删除计划</h3>
-            <p class="confirm-modal-subtitle">此操作无法撤销</p>
+            <h3 class="confirm-modal-title" id="deleteModalTitle">确认删除计划</h3>
+            <p class="confirm-modal-subtitle" id="deleteModalSubtitle">此操作无法撤销</p>
         </div>
         
         <div class="confirm-modal-body">
@@ -202,9 +203,21 @@
                 <div class="task-to-delete-label">即将删除的计划</div>
                 <h4 class="task-to-delete-name" id="deleteTaskName">计划名称</h4>
                 <span class="task-to-delete-subject" id="deleteTaskSubject">科目</span>
+                <div class="repeat-type-badge" id="deleteTaskRepeatType">重复类型</div>
             </div>
             
-            <p class="warning-text">
+            <!-- 批量删除选项 - 默认隐藏 -->
+            <div class="batch-delete-options" id="batchDeleteOptions" style="display: none;">
+                <div class="date-selection">
+                    <label for="deleteStartDate">删除起始日期：</label>
+                    <input type="date" id="deleteStartDate" class="date-input">
+                </div>
+                <div class="delete-summary" id="deleteSummary">
+                    <!-- 删除统计信息将动态生成 -->
+                </div>
+            </div>
+            
+            <p class="warning-text" id="deleteWarningText">
                 删除后，与此计划相关的所有任务记录都将被移除。
             </p>
         </div>

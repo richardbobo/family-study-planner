@@ -2437,3 +2437,87 @@ footer {
     flex: 1;
     overflow: hidden;
 }
+/* 批量删除相关样式 */
+.repeat-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    border: 1px solid #bbdefb;
+}
+
+.batch-delete-options {
+    background: #fff3e0;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid #ffcc80;
+}
+
+.date-selection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.date-selection label {
+    font-weight: 600;
+    color: #e65100;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.date-input {
+    padding: 8px 12px;
+    border: 2px solid #ffb74d;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #ff9800;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.delete-summary {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.delete-summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.delete-summary-total {
+    font-weight: 600;
+    color: #e65100;
+    border-top: 1px solid #ffe0b2;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+/* 删除模式指示器 */
+.delete-mode-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #ffebee;
+    color: #c62828;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
