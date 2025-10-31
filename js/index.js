@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const diff = d.getDate() - day + (day == 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 }
 
@@ -87,11 +87,11 @@ function renderWeekView() {
         currentDate.setDate(currentWeekStart.getDate() + i);
         
         const dateStr = currentDate.toISOString().split('T')[0];
-        const dayTasks = tasks.filter(task => task.date === dateStr);
+        const dayTasks = tasks.filter(task => task.date == dateStr);
         const completedTasks = dayTasks.filter(task => task.completed);
         
-        const isToday = dateStr === today;
-        const isActive = i === 0;
+        const isToday = dateStr == today;
+        const isActive = i == 0;
         
         weekDaysHTML += createDayCardHTML(currentDate, dayTasks, completedTasks, isToday, isActive);
     }
@@ -205,7 +205,7 @@ function initializeQuickCompleteModal() {
     
     if (modal) {
         modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
+            if (event.target == modal) {
                 closeQuickCompleteModal();
             }
         });
@@ -214,7 +214,7 @@ function initializeQuickCompleteModal() {
 
 // 打开快速完成模态框
 function openQuickCompleteModal(taskId) {
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.id == taskId);
     if (!task) return;
     
     currentQuickCompleteTaskId = taskId;
@@ -294,7 +294,7 @@ function updateConfirmButton(isLoading) {
 function confirmQuickComplete() {
     if (!currentQuickCompleteTaskId || isSubmittingCompletion) return;
     
-    const task = tasks.find(t => t.id === currentQuickCompleteTaskId);
+    const task = tasks.find(t => t.id == currentQuickCompleteTaskId);
     if (!task) {
         showNotification('任务不存在或已被删除', 'error');
         closeQuickCompleteModal();
@@ -381,7 +381,7 @@ function renderTaskList() {
     console.log('选中的日期:', selectedDate);
     
     // 过滤出该日期的任务
-    const dateTasks = tasks.filter(task => task.date === selectedDate);
+    const dateTasks = tasks.filter(task => task.date == selectedDate);
     console.log('找到的任务数量:', dateTasks.length);
 
     let html = '';
@@ -393,9 +393,9 @@ function renderTaskList() {
         tomorrow.setDate(today.getDate() + 1);
         
         let dateLabel = '';
-        if (selectedDate === today.toISOString().split('T')[0]) {
+        if (selectedDate == today.toISOString().split('T')[0]) {
             dateLabel = '今天';
-        } else if (selectedDate === tomorrow.toISOString().split('T')[0]) {
+        } else if (selectedDate == tomorrow.toISOString().split('T')[0]) {
             dateLabel = '明天';
         } else {
             dateLabel = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
@@ -528,7 +528,7 @@ function getSelectedDate() {
 // 打开模态框 - 修复版本
 function openModal(taskId) {
     console.log('打开任务详情:', taskId);
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.id == taskId);
     if (!task) {
         console.error('找不到任务:', taskId);
         return;
@@ -664,7 +664,7 @@ function initializeModal() {
     
     if (modal) {
         modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
+            if (event.target == modal) {
                 closeModal();
             }
         });
@@ -683,7 +683,7 @@ function quickComplete(taskId) {
 
 // 打开快速完成模态框 - 修复版本
 function openQuickCompleteModal(taskId) {
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.id == taskId);
     if (!task) {
         console.error('找不到任务:', taskId);
         return;
@@ -730,7 +730,7 @@ function openQuickCompleteModal(taskId) {
 // 开始计时
 function startTimer(taskId) {
     event.stopPropagation();
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.id == taskId);
     if (task) {
         showNotification(`⏰ 开始计时: ${task.name}`, 'info');
     }
@@ -771,7 +771,7 @@ function getCurrentDate() {
 function updateStreak() {
     const today = getCurrentDate();
     const todayCompleted = tasks.filter(task => 
-        task.actualCompletionDate === today && task.completed
+        task.actualCompletionDate == today && task.completed
     ).length;
     
     if (todayCompleted > 0) {
