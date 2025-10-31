@@ -31,49 +31,40 @@
                     <input type="date" class="form-input" id="startDate" value="2025-10-29">
                 </div>
                 
-                <!-- 类别标签 - 修改为支持自定义 -->
-                <div class="form-section">
-                    <h3 class="section-title">类别标签 <span class="required">*</span></h3>
-                    <div class="category-container">
-                        <div class="category-select-wrapper">
-                            <select class="form-select" id="categorySelect" required>
-                                <option value="">请选择类别</option>
-                                <option value="语文">语文</option>
-                                <option value="数学">数学</option>
-                                <option value="英语">英语</option>
-                                <option value="科学">科学</option>
-                                <option value="物理">物理</option>
-                                <option value="化学">化学</option>
-                                <option value="历史">历史</option>
-                                <option value="地理">地理</option>
-                                <option value="美术">美术</option>
-                                <option value="音乐">音乐</option>
-                                <option value="体育">体育</option>
-                            </select>
-                            <button type="button" class="btn-add-category" id="addCategoryBtn">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="custom-category-input" id="customCategoryInput" style="display: none;">
-                            <div class="input-group">
-                                <input type="text" class="form-input" id="newCategoryName" placeholder="输入新类别名称" maxlength="10">
-                                <button type="button" class="btn btn-confirm" id="confirmAddCategory">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button type="button" class="btn btn-cancel" id="cancelAddCategory">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="char-limit">限制 1-10 字</div>
-                        </div>
-                    </div>
-                    <div class="recent-categories" id="recentCategories">
-                        <div class="recent-title">最近使用：</div>
-                        <div class="category-tags" id="categoryTags">
-                            <!-- 最近使用的类别标签会动态生成在这里 -->
-                        </div>
-                    </div>
-                </div>
+            
+                <!-- 类别标签 - 修改为下拉框自定义 -->
+<div class="form-section">
+    <h3 class="section-title">类别标签 <span class="required">*</span></h3>
+    <select class="form-select" id="categorySelect" required>
+        <option value="">请选择类别</option>
+        <option value="语文">语文</option>
+        <option value="数学">数学</option>
+        <option value="英语">英语</option>
+        <option value="科学">科学</option>
+        <option value="物理">物理</option>
+        <option value="化学">化学</option>
+        <option value="历史">历史</option>
+        <option value="地理">地理</option>
+        <option value="美术">美术</option>
+        <option value="音乐">音乐</option>
+        <option value="体育">体育</option>
+        <option value="custom">+ 自定义类别</option>
+    </select>
+    
+    <!-- 自定义类别输入框 -->
+    <div class="custom-category-input" id="customCategoryInput" style="display: none;">
+        <input type="text" class="form-input" id="newCategoryName" placeholder="请输入新类别名称" maxlength="10">
+        <div class="char-limit">限制 1-10 字</div>
+    </div>
+    
+    <!-- 最近使用类别 -->
+    <div class="recent-categories" id="recentCategories">
+        <div class="recent-title">最近使用：</div>
+        <div class="category-tags" id="categoryTags">
+            <!-- 最近使用的类别标签会动态生成在这里 -->
+        </div>
+    </div>
+</div>
                 
                 <!-- 计划名称 -->
                 <div class="form-section">

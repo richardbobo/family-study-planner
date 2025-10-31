@@ -1,547 +1,139 @@
-// 修复版本 - 添加计划页面
+// 添加学习计划页面逻辑
 console.log('add-plan.js 已加载');
 
-// 全局变量
-let currentRecurrenceType = 'once';
-let isSubmitting = false; // 防止重复提交
-// 类别标签管理功能
 let customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
 let recentCategories = JSON.parse(localStorage.getItem('recentCategories') || '[]');
 
-// 修改原有的初始化函数，添加类别功能初始化
+// 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
-    initializeForm();
-    initializeCustomCategories();
+    console.log('添加计划页面DOM已加载');
+    initializePage();
     initializeCategoryFeatures();
-    
+});
+
+// 初始化页面
+function initializePage() {
     // 设置当前日期
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('startDate').value = today;
     document.querySelector('.date-highlight').textContent = today;
-});
-
-
-function initializePage() {
-    console.log('初始化页面');
     
-    // 设置动态日期
-    setDynamicDates();
+    // 初始化表单事件
+    initializeFormEvents();
     
-    // 绑定事件
-    bindEvents();
-    
-    // 设置默认重复类型
-    setRecurrenceType('once');
+    // 初始化自定义类别到下拉框
+    initializeCustomCategories();
 }
 
-function setDynamicDates() {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    const nextWeek = new Date(today);
-    const nextMonth = new Date(today);
-    
-    tomorrow.setDate(today.getDate() + 1);
-    nextWeek.setDate(today.getDate() + 7);
-    nextMonth.setMonth(today.getMonth() + 1);
-    
-    // 更新页面显示的日期
-    updateDateDisplay(today);
-    
-    // 设置表单日期输入框
-    const dateElements = {
-        'startDate': today,
-        'dailyStartDate': today,
-        'dailyEndDate': nextWeek,
-        'weeklyStartDate': today,
-        'weeklyEndDate': nextMonth,
-        'monthlyStartDate': today,
-        'monthlyEndDate': nextMonth
-    };
-    
-    Object.keys(dateElements).forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.value = formatDate(dateElements[id]);
-        }
-    });
-}
-
-function updateDateDisplay(today) {
-    // 更新"正在为 XXXX年XX月XX日 添加计划"的显示
-    const dateDisplay = document.querySelector('.current-date-info .date-highlight');
-    if (dateDisplay) {
-        const formattedDate = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-        dateDisplay.textContent = formattedDate;
-    }
-}
-
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function bindEvents() {
-    console.log('绑定事件');
-    
-    // 重复类型选择
-    const recurrenceOptions = document.querySelectorAll('.recurrence-option');
-    recurrenceOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const type = this.getAttribute('data-value');
-            console.log('选择了重复类型:', type);
-            setRecurrenceType(type);
-        });
-    });
-    
-    // 星期选择
-    const weekdayOptions = document.querySelectorAll('.weekday-option');
-    weekdayOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            this.classList.toggle('selected');
-            console.log('星期选择状态变化');
-        });
-    });
-    
-    // 取消按钮
+// 初始化表单事件
+function initializeFormEvents() {
     const cancelBtn = document.getElementById('cancelBtn');
+    const planForm = document.getElementById('planForm');
+    const planContent = document.getElementById('planContent');
+    const contentCount = document.getElementById('contentCount');
+
+    // 取消按钮
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function() {
-            if (confirm('确定要取消吗？')) {
+            if (confirm('确定要取消吗？已填写的内容将不会保存。')) {
                 window.location.href = 'index.html';
             }
         });
     }
-    
-    // 保存按钮 - 使用一次性事件
-    const saveBtn = document.querySelector('.btn-save');
-    if (saveBtn) {
-        // 移除之前的事件监听器，避免重复绑定
-        saveBtn.replaceWith(saveBtn.cloneNode(true));
-        // 重新获取元素并绑定事件
-        document.querySelector('.btn-save').addEventListener('click', handleFormSubmit);
-    }
-    
-    // 字符计数
-    const planContent = document.getElementById('planContent');
-    if (planContent) {
-        planContent.addEventListener('input', updateCharCount);
-    }
-}
 
-function setRecurrenceType(type) {
-    console.log('设置重复类型:', type);
-    currentRecurrenceType = type;
-    
-    // 更新UI选中状态
-    document.querySelectorAll('.recurrence-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-    
-    const selectedOption = document.querySelector(`.recurrence-option[data-value="${type}"]`);
-    if (selectedOption) {
-        selectedOption.classList.add('selected');
+    // 表单提交
+    if (planForm) {
+        planForm.addEventListener('submit', handleFormSubmit);
     }
-    
-    // 显示对应的详情区域
-    document.querySelectorAll('.detail-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    
-    const detailSection = document.querySelector(`.${type}-details`);
-    if (detailSection) {
-        detailSection.classList.add('active');
-    }
-}
 
-function updateCharCount() {
-    const textarea = document.getElementById('planContent');
-    const count = document.getElementById('contentCount');
-    if (textarea && count) {
-        count.textContent = textarea.value.length;
-    }
-}
-
-function handleFormSubmit(event) {
-    if (event) {
-        event.preventDefault();
-    }
-    
-    // 防止重复提交
-    if (isSubmitting) {
-        console.log('正在提交中，请勿重复点击');
-        return;
-    }
-    
-    isSubmitting = true;
-    console.log('开始处理表单提交');
-    
-    // 禁用保存按钮
-    const saveBtn = document.querySelector('.btn-save');
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 保存中...';
-    }
-    
-    try {
-        if (!validateForm()) {
-            resetSubmitState();
-            return;
-        }
-        
-        const formData = collectFormData();
-        console.log('收集的表单数据:', formData);
-        
-        const tasks = generateTasks(formData);
-        console.log('生成的任务:', tasks);
-        
-        if (tasks.length === 0) {
-            showNotification('请选择至少一个重复日期', 'warning');
-            resetSubmitState();
-            return;
-        }
-        
-        saveTasks(tasks);
-        
-        // 使用漂亮的通知而不是alert
-        showNotification(`🎉 成功创建 ${tasks.length} 个学习计划！`, 'success');
-        
-        // 3秒后跳转回主页
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 3000);
-        
-    } catch (error) {
-        console.error('提交出错:', error);
-        showNotification('❌ 保存失败，请重试', 'error');
-        resetSubmitState();
-    }
-}
-
-function resetSubmitState() {
-    isSubmitting = false;
-    const saveBtn = document.querySelector('.btn-save');
-    if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '保存计划';
-    }
-}
-
-// 漂亮的通知函数
-function showNotification(message, type = 'info') {
-    // 移除现有的通知
-    const existingNotification = document.querySelector('.custom-notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    // 创建通知元素
-    const notification = document.createElement('div');
-    notification.className = `custom-notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas ${getNotificationIcon(type)}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    // 添加样式
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${getNotificationColor(type)};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        z-index: 10000;
-        transform: translateX(400px);
-        opacity: 0;
-        transition: all 0.3s ease;
-        max-width: 300px;
-        font-family: inherit;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // 动画显示
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-        notification.style.opacity = '1';
-    }, 100);
-    
-    // 3秒后自动消失
-    setTimeout(() => {
-        notification.style.transform = 'translateX(400px)';
-        notification.style.opacity = '0';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 300);
-    }, 3000);
-}
-
-function getNotificationIcon(type) {
-    const icons = {
-        'success': 'fa-check-circle',
-        'error': 'fa-exclamation-circle',
-        'warning': 'fa-exclamation-triangle',
-        'info': 'fa-info-circle'
-    };
-    return icons[type] || 'fa-info-circle';
-}
-
-function getNotificationColor(type) {
-    const colors = {
-        'success': '#2ed573',
-        'error': '#ff6b6b',
-        'warning': '#ff9f43',
-        'info': '#4a69bd'
-    };
-    return colors[type] || '#4a69bd';
-}
-
-function validateForm() {
-    const planName = document.getElementById('planName')?.value.trim();
-    const category = document.getElementById('categorySelect')?.value;
-    
-    if (!planName) {
-        showNotification('请填写计划名称', 'warning');
-        document.getElementById('planName')?.focus();
-        return false;
-    }
-    
-    if (planName.length > 20) {
-        showNotification('计划名称不能超过20个字', 'warning');
-        document.getElementById('planName')?.focus();
-        return false;
-    }
-    
-    if (!category) {
-        showNotification('请选择科目', 'warning');
-        document.getElementById('categorySelect')?.focus();
-        return false;
-    }
-    
-    return true;
-}
-
-function collectFormData() {
-    // 获取选中的星期
-    const selectedWeekdays = Array.from(document.querySelectorAll('.weekday-option.selected'))
-        .map(opt => parseInt(opt.getAttribute('data-day')));
-    
-    return {
-        name: document.getElementById('planName').value.trim(),
-        subject: document.getElementById('categorySelect').value,
-        content: document.getElementById('planContent').value.trim(),
-        recurrenceType: currentRecurrenceType,
-        startTime: document.getElementById('startTime').value || '19:00',
-        endTime: document.getElementById('endTime').value || '20:30',
-        startDate: document.getElementById('startDate').value,
-        dailyStartDate: document.getElementById('dailyStartDate').value,
-        dailyEndDate: document.getElementById('dailyEndDate').value,
-        weeklyStartDate: document.getElementById('weeklyStartDate').value,
-        weeklyEndDate: document.getElementById('weeklyEndDate').value,
-        monthlyStartDate: document.getElementById('monthlyStartDate').value,
-        monthlyEndDate: document.getElementById('monthlyEndDate').value,
-        selectedWeekdays: selectedWeekdays
-    };
-}
-
-function generateTasks(formData) {
-    const tasks = [];
-    
-    switch (formData.recurrenceType) {
-        case 'once':
-            tasks.push(createSingleTask(formData));
-            break;
-        case 'daily':
-            tasks.push(...createDailyTasks(formData));
-            break;
-        case 'weekly':
-            tasks.push(...createWeeklyTasks(formData));
-            break;
-        case 'monthly':
-            tasks.push(...createMonthlyTasks(formData));
-            break;
-    }
-    
-    return tasks;
-}
-
-function createSingleTask(formData) {
-    const duration = calculateDuration(formData.startTime, formData.endTime);
-    
-    return {
-        name: formData.name,
-        subject: formData.subject,
-        date: formData.startDate,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        time: duration,
-        note: formData.content,
-        completed: false,
-        recurrence: null
-    };
-}
-
-function createDailyTasks(formData) {
-    const tasks = [];
-    const startDate = new Date(formData.dailyStartDate);
-    const endDate = new Date(formData.dailyEndDate);
-    
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        tasks.push({
-            ...createSingleTask(formData),
-            date: formatDate(currentDate),
-            recurrence: 'daily'
+    // 字数统计
+    if (planContent && contentCount) {
+        planContent.addEventListener('input', function() {
+            contentCount.textContent = this.value.length;
         });
-        currentDate.setDate(currentDate.getDate() + 1);
     }
-    
-    return tasks;
+
+    // 初始化重复类型选择
+    initializeRecurrenceOptions();
 }
 
-function createWeeklyTasks(formData) {
-    const tasks = [];
-    const startDate = new Date(formData.weeklyStartDate);
-    const endDate = new Date(formData.weeklyEndDate);
-    const selectedWeekdays = formData.selectedWeekdays || [];
+// 初始化重复类型选项
+function initializeRecurrenceOptions() {
+    const recurrenceOptions = document.querySelectorAll('.recurrence-option');
+    const recurrenceDetails = document.getElementById('recurrenceDetails');
     
-    if (selectedWeekdays.length === 0) {
-        showNotification('请选择至少一个重复日期', 'warning');
-        return [];
-    }
-    
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        const dayOfWeek = currentDate.getDay();
-        
-        if (selectedWeekdays.includes(dayOfWeek)) {
-            tasks.push({
-                ...createSingleTask(formData),
-                date: formatDate(currentDate),
-                recurrence: 'weekly'
-            });
-        }
-        
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return tasks;
-}
-
-function createMonthlyTasks(formData) {
-    const tasks = [];
-    const startDate = new Date(formData.monthlyStartDate);
-    const endDate = new Date(formData.monthlyEndDate);
-    
-    let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-        tasks.push({
-            ...createSingleTask(formData),
-            date: formatDate(currentDate),
-            recurrence: 'monthly'
+    recurrenceOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // 移除其他选项的active状态
+            recurrenceOptions.forEach(opt => opt.classList.remove('active'));
+            // 添加当前选项的active状态
+            this.classList.add('active');
+            
+            // 显示对应的重复详情
+            const value = this.getAttribute('data-value');
+            showRecurrenceDetails(value);
         });
-        currentDate.setMonth(currentDate.getMonth() + 1);
-    }
-    
-    return tasks;
-}
-
-function calculateDuration(startTime, endTime) {
-    if (!startTime || !endTime) return 60;
-    
-    const start = new Date(`2000-01-01T${startTime}`);
-    const end = new Date(`2000-01-01T${endTime}`);
-    const diff = (end - start) / (1000 * 60);
-    
-    return diff > 0 ? Math.round(diff) : 60;
-}
-
-function saveTasks(tasks) {
-    // 获取现有任务
-    let existingTasks = [];
-    try {
-        const saved = localStorage.getItem('studyTasks');
-        if (saved) {
-            existingTasks = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('读取本地存储失败:', e);
-    }
-    
-    // 为新任务生成ID
-    const maxId = existingTasks.length > 0 ? 
-        Math.max(...existingTasks.map(t => t.id || 0)) : 0;
-    
-    tasks.forEach((task, index) => {
-        task.id = maxId + index + 1;
     });
     
-    // 合并并保存
-    const allTasks = [...existingTasks, ...tasks];
-    localStorage.setItem('studyTasks', JSON.stringify(allTasks));
-    
-    console.log('保存了', tasks.length, '个任务，总共', allTasks.length, '个任务');
+    // 默认选择"仅当天"
+    recurrenceOptions[0].classList.add('active');
+    showRecurrenceDetails('once');
 }
 
+// 显示重复详情
+function showRecurrenceDetails(type) {
+    const details = document.getElementById('recurrenceDetails');
+    const allSections = details.querySelectorAll('.detail-section');
+    
+    // 隐藏所有详情部分
+    allSections.forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // 显示对应的详情部分
+    const targetSection = details.querySelector(`.${type}-details`);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    }
+}
 
-
-// 初始化类别功能
+// 类别标签管理功能
 function initializeCategoryFeatures() {
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
-    const customCategoryInput = document.getElementById('customCategoryInput');
-    const confirmAddCategory = document.getElementById('confirmAddCategory');
-    const cancelAddCategory = document.getElementById('cancelAddCategory');
-    const newCategoryName = document.getElementById('newCategoryName');
     const categorySelect = document.getElementById('categorySelect');
-    const categoryTags = document.getElementById('categoryTags');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    const newCategoryName = document.getElementById('newCategoryName');
 
-    // 显示添加类别输入框
-    if (addCategoryBtn) {
-        addCategoryBtn.addEventListener('click', function() {
-            customCategoryInput.style.display = 'block';
-            newCategoryName.focus();
-        });
-    }
-
-    // 取消添加类别
-    if (cancelAddCategory) {
-        cancelAddCategory.addEventListener('click', function() {
-            customCategoryInput.style.display = 'none';
-            newCategoryName.value = '';
-        });
-    }
-
-    // 确认添加类别
-    if (confirmAddCategory) {
-        confirmAddCategory.addEventListener('click', function() {
-            const categoryName = newCategoryName.value.trim();
-            if (categoryName && categoryName.length <= 10) {
-                addCustomCategory(categoryName);
-                customCategoryInput.style.display = 'none';
-                newCategoryName.value = '';
+    // 类别选择变化事件
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                // 显示自定义输入框
+                customCategoryInput.style.display = 'block';
+                newCategoryName.focus();
             } else {
-                alert('请输入有效的类别名称（1-10个字符）');
+                // 隐藏自定义输入框
+                customCategoryInput.style.display = 'none';
+                // 添加到最近使用
+                if (this.value) {
+                    addToRecentCategories(this.value);
+                }
             }
         });
     }
 
-    // 回车键确认添加
+    // 自定义类别输入框失去焦点时处理
     if (newCategoryName) {
+        newCategoryName.addEventListener('blur', function() {
+            setTimeout(() => {
+                handleCustomCategoryInput();
+            }, 150);
+        });
+        
+        // 回车键确认
         newCategoryName.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                confirmAddCategory.click();
+                handleCustomCategoryInput();
             }
         });
     }
@@ -550,25 +142,45 @@ function initializeCategoryFeatures() {
     updateRecentCategories();
 }
 
+// 处理自定义类别输入
+function handleCustomCategoryInput() {
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategoryName = document.getElementById('newCategoryName');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    
+    const categoryName = newCategoryName.value.trim();
+    
+    if (categoryName && categoryName.length <= 10 && categoryName.length > 0) {
+        addCustomCategory(categoryName);
+        // 选中新添加的类别
+        categorySelect.value = categoryName;
+        // 隐藏输入框
+        customCategoryInput.style.display = 'none';
+        // 清空输入框
+        newCategoryName.value = '';
+        // 添加到最近使用
+        addToRecentCategories(categoryName);
+    } else if (categoryName === '') {
+        // 如果输入为空，重置为请选择
+        categorySelect.value = '';
+        customCategoryInput.style.display = 'none';
+    }
+}
+
 // 添加自定义类别
 function addCustomCategory(categoryName) {
     if (!customCategories.includes(categoryName)) {
         customCategories.push(categoryName);
         localStorage.setItem('customCategories', JSON.stringify(customCategories));
         
-        // 添加到下拉选择框
+        // 添加到下拉选择框（在"自定义类别"选项之前）
         const categorySelect = document.getElementById('categorySelect');
+        const customOption = categorySelect.querySelector('option[value="custom"]');
         const option = document.createElement('option');
         option.value = categoryName;
         option.textContent = categoryName;
-        categorySelect.appendChild(option);
+        categorySelect.insertBefore(option, customOption);
     }
-    
-    // 添加到最近使用
-    addToRecentCategories(categoryName);
-    
-    // 选中新添加的类别
-    categorySelect.value = categoryName;
 }
 
 // 添加到最近使用类别
@@ -603,6 +215,8 @@ function updateRecentCategories() {
             // 设置下拉框值
             const categorySelect = document.getElementById('categorySelect');
             categorySelect.value = category;
+            // 隐藏自定义输入框
+            document.getElementById('customCategoryInput').style.display = 'none';
         });
         categoryTags.appendChild(tag);
     });
@@ -611,12 +225,119 @@ function updateRecentCategories() {
 // 在页面加载时初始化自定义类别到下拉框
 function initializeCustomCategories() {
     const categorySelect = document.getElementById('categorySelect');
+    const customOption = categorySelect.querySelector('option[value="custom"]');
     
     customCategories.forEach(category => {
         const option = document.createElement('option');
         option.value = category;
         option.textContent = category;
-        categorySelect.appendChild(option);
+        categorySelect.insertBefore(option, customOption);
     });
 }
 
+// 表单提交处理
+function handleFormSubmit(event) {
+    event.preventDefault();
+    console.log('表单提交处理');
+    
+    // 获取表单数据
+    const formData = getFormData();
+    
+    if (validateForm(formData)) {
+        savePlan(formData);
+        showSuccessMessage();
+    }
+}
+
+// 获取表单数据
+function getFormData() {
+    const categorySelect = document.getElementById('categorySelect');
+    let category = categorySelect.value;
+    
+    // 如果选择的是自定义类别且正在输入，使用输入的值
+    if (category === 'custom') {
+        const newCategoryName = document.getElementById('newCategoryName').value.trim();
+        if (newCategoryName) {
+            category = newCategoryName;
+        }
+    }
+    
+    return {
+        startDate: document.getElementById('startDate').value,
+        category: category,
+        name: document.getElementById('planName').value.trim(),
+        content: document.getElementById('planContent').value.trim(),
+        recurrenceType: document.querySelector('.recurrence-option.active')?.getAttribute('data-value') || 'once',
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        customPoints: document.getElementById('customPoints').checked
+    };
+}
+
+// 验证表单
+function validateForm(data) {
+    if (!data.category || data.category === 'custom') {
+        alert('请选择或输入有效的类别');
+        return false;
+    }
+    
+    if (!data.name) {
+        alert('请输入计划名称');
+        document.getElementById('planName').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// 保存计划
+function savePlan(data) {
+    // 生成任务ID
+    const taskId = Date.now();
+    
+    // 创建任务对象
+    const task = {
+        id: taskId,
+        name: data.name,
+        subject: data.category,
+        description: data.content,
+        date: data.startDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        repeatType: data.recurrenceType,
+        time: calculateDuration(data.startTime, data.endTime),
+        points: data.customPoints ? 10 : 5, // 简单示例
+        completed: false
+    };
+    
+    // 保存到localStorage
+    saveTaskToStorage(task);
+    
+    console.log('计划保存成功:', task);
+}
+
+// 计算学习时长（分钟）
+function calculateDuration(startTime, endTime) {
+    if (!startTime || !endTime) return 30; // 默认30分钟
+    
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diff = (end - start) / (1000 * 60); // 转换为分钟
+    
+    return Math.max(diff, 0); // 确保非负数
+}
+
+// 保存任务到localStorage
+function saveTaskToStorage(task) {
+    let tasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+    tasks.push(task);
+    localStorage.setItem('studyTasks', JSON.stringify(tasks));
+}
+
+// 显示成功消息
+function showSuccessMessage() {
+    alert('学习计划添加成功！');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1000);
+}

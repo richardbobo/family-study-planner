@@ -562,3 +562,66 @@ body {
         height: 40px;
     }
 }
+/* 类别标签自定义样式 */
+.custom-category-input {
+    margin-top: 10px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.recent-categories {
+    margin-top: 15px;
+}
+
+.recent-title {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.category-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.category-tag {
+    background: #e0e7ff;
+    color: #4a69bd;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+.category-tag:hover {
+    background: #4a69bd;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.category-tag.active {
+    background: #4a69bd;
+    color: white;
+    border-color: #4a69bd;
+}
+
+/* 自定义选项样式 */
+.form-select option[value="custom"] {
+    color: #4a69bd;
+    font-weight: bold;
+    background: #f0f4ff;
+}
