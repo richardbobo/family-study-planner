@@ -1474,3 +1474,288 @@ footer {
     background: #666;
     transform: translateY(-1px);
 }
+/* 美化任务列表样式 */
+.task-item {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.task-item.completed {
+    background: #f8fff9;
+    border-left: 4px solid #2ed573;
+}
+
+.task-left {
+    flex-shrink: 0;
+    width: 80px;
+}
+
+.subject-tab {
+    background: #4a69bd;
+    color: white;
+    padding: 12px 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transform: rotate(-2deg);
+    transition: all 0.3s ease;
+}
+
+.task-item:hover .subject-tab {
+    transform: rotate(0deg) scale(1.05);
+}
+
+.subject-tab i {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 1.2rem;
+}
+
+/* 科目颜色 */
+.subject-tab.subject-chinese { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+.subject-tab.subject-math { background: linear-gradient(135deg, #4a69bd, #6a89cc); }
+.subject-tab.subject-english { background: linear-gradient(135deg, #2ed573, #7bed9f); }
+.subject-tab.subject-science { background: linear-gradient(135deg, #ff9f43, #ffaf60); }
+.subject-tab.subject-physics { background: linear-gradient(135deg, #3498db, #74b9ff); }
+.subject-tab.subject-chemistry { background: linear-gradient(135deg, #9b59b6, #a29bfe); }
+.subject-tab.subject-history { background: linear-gradient(135deg, #f39c12, #fdcb6e); }
+.subject-tab.subject-geography { background: linear-gradient(135deg, #27ae60, #55efc4); }
+.subject-tab.subject-other { background: linear-gradient(135deg, #636e72, #b2bec3); }
+
+.task-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-header {
+    margin-bottom: 12px;
+}
+
+.task-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.task-meta-info {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.repeat-type {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.plan-time {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.task-details {
+    margin-bottom: 15px;
+}
+
+.task-desc {
+    color: #666;
+    margin-bottom: 10px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.task-estimate {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.time-estimate {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.points-badge {
+    background: #ff9f43;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* 已完成任务详情 */
+.completion-details {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.completion-time, .study-duration {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.completion-time i {
+    color: #2ed573;
+}
+
+.study-duration i {
+    color: #4a69bd;
+}
+
+.completion-note {
+    background: #f8f9fa;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #4a69bd;
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.completion-note i {
+    color: #4a69bd;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: flex-start;
+}
+
+.btn-quick-complete {
+    background: #2ed573;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.btn-quick-complete:hover {
+    background: #25c064;
+    transform: translateY(-1px);
+}
+
+.btn-start-timer {
+    background: #4a69bd;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.btn-start-timer:hover {
+    background: #3c5aa8;
+    transform: translateY(-1px);
+}
+
+/* 隐藏已完成任务的按钮 */
+.task-item.completed .task-actions {
+    display: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .task-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .task-left {
+        width: 100%;
+    }
+    
+    .subject-tab {
+        width: 120px;
+        transform: rotate(0deg);
+    }
+    
+    .task-meta-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .completion-details {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .task-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .btn-quick-complete,
+    .btn-start-timer {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .task-item {
+        padding: 15px;
+    }
+    
+    .task-name {
+        font-size: 1.1rem;
+    }
+    
+    .task-estimate {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // 调试信息
     console.log('页面初始化完成');
     console.log('任务数量:', tasks.length);
-    console.log('当前周开始日期:', currentWeekStart);
+    // console.log('当前周开始日期:', currentWeekStart);
 });
 
 // 获取周一的日期
@@ -29,6 +29,12 @@ function getMonday(date) {
     const diff = d.getDate() - day + (day == 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 }
+
+// 获取今天的日期
+function getTodayDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
 
 // 按日期分组任务 - 添加这个缺失的函数
 function groupTasksByDate(tasks) {
@@ -71,6 +77,7 @@ function navigateWeek(direction) {
     updateStats();
 }
 
+
 // 渲染周视图
 function renderWeekView() {
     const weekDaysContainer = document.getElementById('weekDays');
@@ -80,18 +87,24 @@ function renderWeekView() {
     updateDateDisplay();
     
     let weekDaysHTML = '';
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDate();
+    let todayIndex = -1;
     
     for (let i = 0; i < 7; i++) {
         const currentDate = new Date(currentWeekStart);
         currentDate.setDate(currentWeekStart.getDate() + i);
         
         const dateStr = currentDate.toISOString().split('T')[0];
-        const dayTasks = tasks.filter(task => task.date == dateStr);
+        const dayTasks = tasks.filter(task => task.date === dateStr);
         const completedTasks = dayTasks.filter(task => task.completed);
         
-        const isToday = dateStr == today;
-        const isActive = i == 0;
+        const isToday = dateStr === today;
+        // 默认选中今天，如果今天不在当前周，则选中周一
+        const isActive = isToday || (todayIndex === -1 && i === 0);
+        
+        if (isToday) {
+            todayIndex = i;
+        }
         
         weekDaysHTML += createDayCardHTML(currentDate, dayTasks, completedTasks, isToday, isActive);
     }
@@ -364,24 +377,46 @@ function loadTasks() {
     }
 }
 
-// 渲染任务列表
+
 // 渲染任务列表 - 修复版本
 function renderTaskList() {
-    // 修改这里：使用正确的容器ID
     const taskListContainer = document.getElementById('tasks-container');
     if (!taskListContainer) {
-        console.error('找不到任务列表容器，检查ID是否为 tasks-container');
+        console.error('找不到任务列表容器');
         return;
     }
 
     console.log('开始渲染任务列表，总任务数:', tasks.length);
     
-    // 获取当前选中的日期
-    const selectedDate = getSelectedDate();
-    console.log('选中的日期:', selectedDate);
+    // 获取选中日期
+function getSelectedDate() {
+    const activeCard = document.querySelector('.day-card.active');
+    if (activeCard) {
+        return activeCard.getAttribute('data-date');
+    }
+    return getTodayDate(); // 默认返回今天日期
+}
+
+// 获取科目图标
+function getSubjectIcon(subject) {
+    const icons = {
+        '语文': 'fa-book',
+        '数学': 'fa-calculator',
+        '英语': 'fa-language',
+        '科学': 'fa-flask',
+        '物理': 'fa-atom',
+        '化学': 'fa-vial',
+        '历史': 'fa-monument',
+        '地理': 'fa-globe-asia',
+        '美术': 'fa-palette',
+        '音乐': 'fa-music',
+        '体育': 'fa-running'
+    };
+    return icons[subject] || 'fa-book';
+}
     
     // 过滤出该日期的任务
-    const dateTasks = tasks.filter(task => task.date == selectedDate);
+    const dateTasks = tasks.filter(task => task.date === selectedDate);
     console.log('找到的任务数量:', dateTasks.length);
 
     let html = '';
@@ -393,9 +428,9 @@ function renderTaskList() {
         tomorrow.setDate(today.getDate() + 1);
         
         let dateLabel = '';
-        if (selectedDate == today.toISOString().split('T')[0]) {
+        if (selectedDate === today.toISOString().split('T')[0]) {
             dateLabel = '今天';
-        } else if (selectedDate == tomorrow.toISOString().split('T')[0]) {
+        } else if (selectedDate === tomorrow.toISOString().split('T')[0]) {
             dateLabel = '明天';
         } else {
             dateLabel = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
@@ -414,68 +449,81 @@ function renderTaskList() {
         `;
         
         dateTasks.forEach(task => {
-            console.log('渲染任务:', task.name, '完成状态:', task.completed);
-            
-            const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
             const subjectClass = getSubjectClass(task.subject);
+            const subjectIcon = getSubjectIcon(task.subject);
             
             if (task.completed) {
-                // 已完成的任务
+                // 已完成的任务 - 美化版本
                 const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
                 const timeString = completionTime.toTimeString().substring(0, 5);
                 const duration = task.time ? `${task.time}分钟` : '15分钟';
                 
                 html += `
                     <div class="task-item completed" data-task-id="${task.id}" onclick="openModal('${task.id}')">
-                        <div class="task-header">
-                            <div class="task-title">
-                                <span class="task-name">${task.name}</span>
-                                <span class="task-subject ${subjectClass}">${task.subject}</span>
-                            </div>
-                            <div class="task-meta">
-                                <span class="task-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                        <div class="task-left">
+                            <div class="subject-tab ${subjectClass}">
+                                <i class="fas ${subjectIcon}"></i>
+                                <span>${task.subject}</span>
                             </div>
                         </div>
                         
-                        <div class="task-content">
-                            <div class="task-desc">${task.description || '无详细描述'}</div>
-                            
-                            <div class="completion-info">
-                                <div class="task-status">
-                                    <span class="status-completed">
-                                        <i class="fas fa-check-circle"></i> 已完成
-                                    </span>
-                                    <span class="completion-time">完成时间: ${timeString}</span>
-                                    <span class="study-duration">学习时长: ${duration}</span>
+                        <div class="task-main">
+                            <div class="task-header">
+                                <h3 class="task-name">${task.name}</h3>
+                                <div class="task-meta-info">
+                                    <span class="repeat-type">${getRepeatTypeText(task.repeatType)}</span>
+                                    <span class="plan-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
                                 </div>
-                                ${task.completionNote ? `
-                                    <div class="completion-note">
-                                        <strong>学习心得:</strong> ${task.completionNote}
-                                    </div>
-                                ` : ''}
                             </div>
+                            
+                            <div class="completion-details">
+                                <div class="completion-time">
+                                    <i class="fas fa-check-circle"></i>
+                                    完成于 ${timeString}
+                                </div>
+                                <div class="study-duration">
+                                    <i class="fas fa-clock"></i>
+                                    学习时长: ${duration}
+                                </div>
+                            </div>
+                            
+                            ${task.completionNote ? `
+                                <div class="completion-note">
+                                    <i class="fas fa-sticky-note"></i>
+                                    ${task.completionNote}
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             } else {
-                // 未完成的任务
+                // 未完成的任务 - 美化版本
+                const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
+                
                 html += `
                     <div class="task-item" data-task-id="${task.id}" onclick="openModal('${task.id}')">
-                        <div class="task-header">
-                            <div class="task-title">
-                                <span class="task-name">${task.name}</span>
-                                <span class="task-subject ${subjectClass}">${task.subject}</span>
-                            </div>
-                            <div class="task-meta">
-                                <span class="task-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                        <div class="task-left">
+                            <div class="subject-tab ${subjectClass}">
+                                <i class="fas ${subjectIcon}"></i>
+                                <span>${task.subject}</span>
                             </div>
                         </div>
                         
-                        <div class="task-content">
-                            <div class="task-desc">${task.description || '无详细描述'}</div>
-                            <div class="task-points">
-                                <span class="points-badge">积分: ${task.points || 10}</span>
-                                <span class="time-estimate">预计: ${timeDisplay}</span>
+                        <div class="task-main">
+                            <div class="task-header">
+                                <h3 class="task-name">${task.name}</h3>
+                                <div class="task-meta-info">
+                                    <span class="repeat-type">${getRepeatTypeText(task.repeatType)}</span>
+                                    <span class="plan-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="task-details">
+                                <div class="task-desc">${task.description || '无详细描述'}</div>
+                                <div class="task-estimate">
+                                    <span class="time-estimate">预计: ${timeDisplay}</span>
+                                    <span class="points-badge">积分: ${task.points || 10}</span>
+                                </div>
                             </div>
                         </div>
                         
@@ -524,7 +572,7 @@ function getSelectedDate() {
 }
 
 
-// 打开模态框 - 修复版本
+
 // 打开模态框 - 修复版本
 function openModal(taskId) {
     console.log('打开任务详情:', taskId);
