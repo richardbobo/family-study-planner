@@ -509,7 +509,7 @@ console.log('过滤后的任务数量:', dateTasks.length);
                             </div>
                             
                             <div class="task-details">
-                                <div class="task-desc">${task.description || '无详细描述'}</div>
+                                <div class="task-desc">${task.description || ''}</div>
                                 <div class="task-estimate">
                                     <span class="time-estimate">预计: ${timeDisplay}</span>
                                     <span class="points-badge">积分: ${task.points || 10}</span>
