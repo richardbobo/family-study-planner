@@ -599,23 +599,53 @@ function renderTaskList() {
             </div>
         `;
     } else {
-        // 无任务时的显示
-        const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
+    const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
+    const hasSubjects = getAllSubjects().length > 0;
+    
+    if (hasSubjects && selectedSubject !== 'all') {
+        // 情况1：有科目但当前筛选条件下无任务（显示重置按钮）
         html = `
             <div class="no-tasks">
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px; color: #ddd;"></i>
-                    <p style="margin-bottom: 20px; font-size: 1.1rem;">${subjectInfo} 没有找到学习计划</p>
-                    <a href="add-plan.html" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> 添加学习计划
-                    </a>
-                    <button class="btn btn-secondary" onclick="resetFilters()" style="margin-left: 10px;">
+                <i class="fas fa-search no-tasks-icon"></i>
+                <p class="no-tasks-message">${subjectInfo} 没有找到学习任务</p>
+                <div class="no-tasks-actions">
+                    <button class="no-tasks-btn no-tasks-btn-secondary" onclick="resetFilters()">
                         <i class="fas fa-refresh"></i> 重置筛选
                     </button>
+                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
+                        <i class="fas fa-plus"></i> 添加学习计划
+                    </a>
+                </div>
+            </div>
+        `;
+    } else if (hasSubjects && selectedSubject === 'all') {
+        // 情况2：有科目但该日期没有任务（不显示重置按钮）
+        html = `
+            <div class="no-tasks">
+                <i class="fas fa-calendar-plus no-tasks-icon"></i>
+                <p class="no-tasks-message">${selectedDate} 还没有学习计划</p>
+                <div class="no-tasks-actions">
+                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
+                        <i class="fas fa-plus"></i> 添加学习计划
+                    </a>
+                </div>
+            </div>
+        `;
+    } else {
+        // 情况3：完全没有科目（全新用户）
+        html = `
+            <div class="no-tasks">
+                <i class="fas fa-calendar-plus no-tasks-icon"></i>
+                <p class="no-tasks-message">开始规划您的学习计划吧！</p>
+                <div class="no-tasks-actions">
+                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
+                        <i class="fas fa-plus"></i> 添加第一个学习计划
+                    </a>
                 </div>
             </div>
         `;
     }
+}
     
     taskListContainer.innerHTML = html;
 }
