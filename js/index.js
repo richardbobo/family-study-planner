@@ -405,10 +405,10 @@ function renderTaskList() {
 
     // 获取当前选中的日期
     const selectedDate = getSelectedDate();
-    
+    console.log('选中的日期:', selectedDate);
     // 过滤出该日期的任务
     const dateTasks = tasks.filter(task => task.date === selectedDate);
-
+console.log('过滤后的任务数量:', dateTasks.length);
     let html = '';
     
     if (dateTasks.length > 0) {
