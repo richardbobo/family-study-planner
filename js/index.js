@@ -6,7 +6,6 @@ let currentWeekStart = getMonday(new Date());
 let currentTaskId = null;
 let currentQuickCompleteTaskId = null;
 let isSubmittingCompletion = false;
-let currentDeleteTask = null;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModal();
     initializeQuickCompleteModal();
     initializeFilterAndSort(); // 这个现在会动态更新科目选项
-    initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框
     renderWeekView();
     renderTaskList();
     updateStats();
@@ -102,8 +100,6 @@ function navigateWeek(direction) {
     newDate.setDate(currentWeekStart.getDate() + (direction * 7));
     currentWeekStart = newDate;
     renderWeekView();
-    // 导航时更新筛选选项
-    updateSubjectFilterOptions();
     renderTaskList();
     updateStats();
 }
@@ -202,16 +198,24 @@ function bindDayCardEvents() {
         card.addEventListener('click', function() {
             dayCards.forEach(c => c.classList.remove('active'));
             this.classList.add('active');
-            // 切换日期时更新筛选选项
-            updateSubjectFilterOptions();
             renderTaskList();
         });
     });
 }
 
-// 初始化模态框 - 简化版本
+// 初始化模态框
 function initializeModal() {
     const modal = document.getElementById('taskModal');
+    const closeBtn = document.getElementById('closeModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
     
     if (modal) {
         modal.addEventListener('click', function(event) {
@@ -220,8 +224,6 @@ function initializeModal() {
             }
         });
     }
-    
-    // 不需要再绑定关闭按钮，因为关闭按钮是动态生成的
 }
 
 // 初始化快速完成模态框
@@ -434,9 +436,6 @@ function renderTaskList() {
     // 获取当前选中的日期
     const selectedDate = getSelectedDate();
     
-     // 先更新筛选选项（基于当天任务）
-    updateSubjectFilterOptions();
-
     // 获取筛选和排序选项
     const subjectFilter = document.getElementById('subjectFilter');
     const sortSelect = document.getElementById('sortSelect');
@@ -593,53 +592,23 @@ function renderTaskList() {
             </div>
         `;
     } else {
-    const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
-    const hasSubjects = getAllSubjects().length > 0;
-    
-    if (hasSubjects && selectedSubject !== 'all') {
-        // 情况1：有科目但当前筛选条件下无任务（显示重置按钮）
+        // 无任务时的显示
+        const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
         html = `
             <div class="no-tasks">
-                <i class="fas fa-search no-tasks-icon"></i>
-                <p class="no-tasks-message">${subjectInfo} 没有找到学习任务</p>
-                <div class="no-tasks-actions">
-                    <button class="no-tasks-btn no-tasks-btn-secondary" onclick="resetFilters()">
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px; color: #ddd;"></i>
+                    <p style="margin-bottom: 20px; font-size: 1.1rem;">${subjectInfo} 没有找到学习计划</p>
+                    <a href="add-plan.html" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 添加学习计划
+                    </a>
+                    <button class="btn btn-secondary" onclick="resetFilters()" style="margin-left: 10px;">
                         <i class="fas fa-refresh"></i> 重置筛选
                     </button>
-                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
-                        <i class="fas fa-plus"></i> 添加学习计划
-                    </a>
-                </div>
-            </div>
-        `;
-    } else if (hasSubjects && selectedSubject === 'all') {
-        // 情况2：有科目但该日期没有任务（不显示重置按钮）
-        html = `
-            <div class="no-tasks">
-                <i class="fas fa-calendar-plus no-tasks-icon"></i>
-                <p class="no-tasks-message">${selectedDate} 还没有学习计划</p>
-                <div class="no-tasks-actions">
-                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
-                        <i class="fas fa-plus"></i> 添加学习计划
-                    </a>
-                </div>
-            </div>
-        `;
-    } else {
-        // 情况3：完全没有科目（全新用户）
-        html = `
-            <div class="no-tasks">
-                <i class="fas fa-calendar-plus no-tasks-icon"></i>
-                <p class="no-tasks-message">开始规划您的学习计划吧！</p>
-                <div class="no-tasks-actions">
-                    <a href="add-plan.html" class="no-tasks-btn no-tasks-btn-primary">
-                        <i class="fas fa-plus"></i> 添加第一个学习计划
-                    </a>
                 </div>
             </div>
         `;
     }
-}
     
     taskListContainer.innerHTML = html;
 }
@@ -725,158 +694,103 @@ function getSubjectIcon(subject) {
     return icons[subject] || 'fa-book';
 }
 
-
-// 打开模态框 - 修正版本
+// 打开模态框
 function openModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (!task) return;
     
- 
     const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
     
     if (!modal || !content) return;
     
-    const subjectClass = getSubjectClass(task.subject);
-    const subjectIcon = getSubjectIcon(task.subject);
-    const iconClass = `icon-${task.subject.toLowerCase()}`;
-    
-    // 构建完整的模态框内容（包括header和body）
-    let modalHTML = `
-        <div class="modal-header">
-            <div class="modal-header-content">
-                <div class="modal-task-icon ${iconClass}">
-                    <i class="fas ${subjectIcon}"></i>
-                </div>
-                <div class="modal-task-info">
-                    <h3 class="modal-task-title">${task.name}</h3>
-                    <div class="modal-task-meta">
-                        <span class="modal-task-subject ${subjectClass}">
-                            <i class="fas ${subjectIcon}"></i>
-                            ${task.subject}
-                        </span>
-                        ${task.completed ? `
-                        <span class="modal-task-status">
-                            <i class="fas fa-check-circle" style="color: #2ed573;"></i>
-                            已完成
-                        </span>
-                        ` : `
-                        <span class="modal-task-status">
-                            <i class="fas fa-clock" style="color: #ff9f43;"></i>
-                            未完成
-                        </span>
-                        `}
-                    </div>
-                </div>
-            </div>
-            <div class="modal-header-actions">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-        </div>
-    `;
-    
-    // 构建body内容
     if (task.completed) {
-        // 已完成的任务详情
         const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
         const timeString = completionTime.toLocaleString();
-        const duration = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟';
         
-        modalHTML += `
-            <div class="modal-body-content">
-                <div class="completion-info">
-                    <div class="completion-time">
-                        <i class="fas fa-check-circle"></i> 任务已完成
-                    </div>
-                    <div class="completion-duration">
-                        完成时间: ${timeString}<br>
-                        学习时长: ${duration}
-                    </div>
+        content.innerHTML = `
+            <div class="modal-task-header completed">
+                <h3>${task.name} <span class="status-badge completed">已完成</span></h3>
+                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
+            </div>
+            
+            <div class="modal-task-body">
+                <div class="detail-row">
+                    <label>学习内容:</label>
+                    <span>${task.description || ''}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">重复类型:</div>
-                    <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
+                <div class="detail-row">
+                    <label>计划时间:</label>
+                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">计划时间:</div>
-                    <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
+                <div class="detail-row highlight">
+                    <label>完成时间:</label>
+                    <span>${timeString}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">任务积分:</div>
-                    <div class="detail-value">${task.points || 10} 分</div>
+                <div class="detail-row highlight">
+                    <label>实际学习时长:</label>
+                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟'}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">预计时长:</div>
-                    <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+                <div class="detail-row">
+                    <label>获得积分:</label>
+                    <span>${task.points || 10} 分</span>
                 </div>
                 
                 ${task.completionNote ? `
-                <div class="detail-item">
-                    <div class="detail-label">完成备注:</div>
-                    <div class="detail-value">
-                        <div class="detail-note">${task.completionNote}</div>
-                    </div>
+                <div class="detail-row full-width">
+                    <label>学习心得:</label>
+                    <div class="completion-notes">${task.completionNote}</div>
                 </div>
                 ` : ''}
             </div>
         `;
     } else {
-        // 未完成的任务详情
-        modalHTML += `
-            <div class="modal-body-content">
-                <div class="detail-item">
-                    <div class="detail-label">重复类型:</div>
-                    <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
+        content.innerHTML = `
+            <div class="modal-task-header">
+                <h3>${task.name}</h3>
+                <span class="task-subject large ${getSubjectClass(task.subject)}">${task.subject}</span>
+            </div>
+            
+            <div class="modal-task-body">
+                <div class="detail-row">
+                    <label>学习内容:</label>
+                    <span>${task.description || ''}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">计划时间:</div>
-                    <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
+                <div class="detail-row">
+                    <label>计划时间:</label>
+                    <span>${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">任务积分:</div>
-                    <div class="detail-value">${task.points || 10} 分</div>
+                <div class="detail-row">
+                    <label>重复类型:</label>
+                    <span>${getRepeatTypeText(task.repeatType)}</span>
                 </div>
                 
-                <div class="detail-item">
-                    <div class="detail-label">预计时长:</div>
-                    <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+                <div class="detail-row">
+                    <label>预计时长:</label>
+                    <span>${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</span>
                 </div>
                 
-                ${task.description ? `
-                <div class="detail-item">
-                    <div class="detail-label">任务内容:</div>
-                    <div class="detail-value">${task.description}</div>
+                <div class="detail-row">
+                    <label>任务积分:</label>
+                    <span>${task.points || 10} 分</span>
                 </div>
-                ` : ''}
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="quickComplete('${task.id}')">
+                    <i class="fas fa-check"></i> 快速完成
+                </button>
+                <button class="btn btn-primary" onclick="startTimer('${task.id}')">
+                    <i class="fas fa-play"></i> 开始计时
+                </button>
             </div>
         `;
-    }
-    
-    content.innerHTML = modalHTML;
-
-       // 更新删除按钮文本
-    updateDeleteButtonText(task);
-    
-    // 设置删除按钮事件
-    const deleteBtn = document.getElementById('deleteTaskBtn');
-    if (deleteBtn) {
-        deleteBtn.onclick = function() {
-            openConfirmDeleteModal(taskId);
-        };
-    }
-    
-    // 设置编辑按钮事件
-    const editBtn = document.getElementById('editTaskBtn');
-    if (editBtn) {
-        editBtn.onclick = function() {
-            editTask(taskId);
-        };
     }
     
     modal.style.display = 'flex';
@@ -1064,32 +978,39 @@ function getNotificationColor(type) {
     return colors[type] || '#4a69bd';
 }
 // 获取所有科目类别（包括自定义类别）
-// 获取当天任务中的所有科目类别 v1.1
 function getAllSubjects() {
     const subjects = new Set();
     
-    // 获取当前选中的日期
-    const selectedDate = getSelectedDate();
-    
-    // 只从当天任务中提取科目
-    const todayTasks = tasks.filter(task => task.date === selectedDate);
-    todayTasks.forEach(task => {
+    // 从任务中提取所有科目
+    tasks.forEach(task => {
         if (task.subject) {
             subjects.add(task.subject);
         }
     });
     
-    // 如果没有任务，返回空数组而不是提示文字
-    // 这样筛选器会显示"全部科目"选项，但没有任何具体科目
-    // if (subjects.size === 0) {
-    //     return ['暂无任务'];
-    // }
+    // 从localStorage中获取已保存的自定义类别
+    try {
+        const savedCategories = localStorage.getItem('studyCategories');
+        if (savedCategories) {
+            const categories = JSON.parse(savedCategories);
+            categories.forEach(category => {
+                subjects.add(category);
+            });
+        }
+    } catch (e) {
+        console.error('加载自定义类别失败:', e);
+    }
+    
+    // 添加默认科目（确保基础科目存在）
+    const defaultSubjects = ['语文', '数学', '英语', '科学', '美术', '体育'];
+    defaultSubjects.forEach(subject => {
+        subjects.add(subject);
+    });
     
     return Array.from(subjects).sort();
 }
 
 // 更新科目筛选选项
-// 更新科目筛选选项（基于当天任务）
 function updateSubjectFilterOptions() {
     const subjectFilter = document.getElementById('subjectFilter');
     if (!subjectFilter) return;
@@ -1097,14 +1018,14 @@ function updateSubjectFilterOptions() {
     // 保存当前选中的值
     const currentValue = subjectFilter.value;
     
-    // 清空现有选项
+    // 清空现有选项（保留"全部科目"）
     subjectFilter.innerHTML = '<option value="all">全部科目</option>';
     
-    // 获取当天任务的所有科目
-    const todaySubjects = getAllSubjects();
+    // 获取所有科目
+    const allSubjects = getAllSubjects();
     
     // 添加科目选项
-    todaySubjects.forEach(subject => {
+    allSubjects.forEach(subject => {
         const option = document.createElement('option');
         option.value = subject;
         option.textContent = subject;
@@ -1112,30 +1033,8 @@ function updateSubjectFilterOptions() {
     });
     
     // 恢复之前选中的值（如果还存在）
-    if (currentValue && todaySubjects.includes(currentValue)) {
+    if (currentValue && allSubjects.includes(currentValue)) {
         subjectFilter.value = currentValue;
-    } else {
-        subjectFilter.value = 'all'; // 重置为全部
-    }
-    
-    // 更新筛选器状态显示
-    updateFilterBadge();
-}
-
-// 更新筛选器状态徽章
-function updateFilterBadge() {
-    const subjectFilter = document.getElementById('subjectFilter');
-    const filterInfo = document.querySelector('.filter-info');
-    
-    if (!subjectFilter || !filterInfo) return;
-    
-    const todaySubjects = getAllSubjects();
-    const subjectCount = todaySubjects.includes('暂无任务') ? 0 : todaySubjects.length;
-    
-    // 更新任务数量徽章
-    const countBadge = filterInfo.querySelector('.task-count-badge');
-    if (countBadge) {
-        countBadge.textContent = `${subjectCount} 个科目`;
     }
 }
 
@@ -1194,336 +1093,3 @@ function cleanupUnusedSubjects() {
     
     return unusedSubjects;
 }
-// 删除任务
-function deleteTask(taskId) {
-    if (!confirm('确定要删除这个学习计划吗？此操作不可恢复。')) {
-        return;
-    }
-    
-    try {
-        // 找到任务索引
-        const taskIndex = tasks.findIndex(t => t.id == taskId);
-        if (taskIndex === -1) {
-            showNotification('任务不存在或已被删除', 'error');
-            return;
-        }
-        
-        const taskName = tasks[taskIndex].name;
-        
-        // 从数组中删除任务
-        tasks.splice(taskIndex, 1);
-        
-        // 保存到localStorage
-        saveTasks();
-        
-        // 关闭模态框
-        closeModal();
-        
-        // 更新界面
-        renderWeekView();
-        renderTaskList();
-        updateStats();
-        
-        showNotification(`已删除学习计划: ${taskName}`, 'success');
-        
-    } catch (error) {
-        console.error('删除任务失败:', error);
-        showNotification('删除失败，请重试', 'error');
-    }
-}
-
-// 编辑任务（暂时跳转到添加计划页面）
-function editTask(taskId) {
-    // 这里可以跳转到编辑页面，或者在当前页面打开编辑表单
-    // 暂时先关闭模态框
-    closeModal();
-    showNotification('编辑功能开发中...', 'info');
-}
-let currentDeleteTaskId = null;
-
-// 初始化确认删除模态框
-function initializeConfirmDeleteModal() {
-    const modal = document.getElementById('confirmDeleteModal');
-    const cancelBtn = document.getElementById('cancelDeleteBtn');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeConfirmDeleteModal);
-    }
-    
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', confirmDeleteTask);
-    }
-    
-    if (modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                closeConfirmDeleteModal();
-            }
-        });
-    }
-}
-
-// 打开确认删除模态框
-// 打开确认删除模态框 - 支持批量删除
-function openConfirmDeleteModal(taskId) {
-    const task = tasks.find(t => t.id == taskId);
-    if (!task) {
-        console.error('任务不存在:', taskId);
-        return;
-    }
-    
-    currentDeleteTaskId = taskId;
-    currentDeleteTask = task;
-    
-    // 更新模态框内容
-    document.getElementById('deleteTaskName').textContent = task.name;
-    document.getElementById('deleteTaskSubject').textContent = task.subject;
-    document.getElementById('deleteTaskRepeatType').textContent = getRepeatTypeText(task.repeatType);
-    
-    // 设置模态框标题和模式
-    const isBatchDelete = task.repeatType !== 'once';
-    const modalTitle = document.getElementById('deleteModalTitle');
-    const modalSubtitle = document.getElementById('deleteModalSubtitle');
-    const batchOptions = document.getElementById('batchDeleteOptions');
-    const warningText = document.getElementById('deleteWarningText');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    
-    if (isBatchDelete) {
-        // 批量删除模式
-        modalTitle.innerHTML = '确认批量删除计划 <span class="delete-mode-indicator"><i class="fas fa-layer-group"></i> 批量删除</span>';
-        modalSubtitle.textContent = '此操作将删除多个重复任务';
-        batchOptions.style.display = 'block';
-        warningText.textContent = '删除后，从选定日期开始的所有重复任务都将被移除。';
-        confirmBtn.textContent = '确认批量删除';
-        
-        // 初始化日期选择器
-        initializeBatchDeleteOptions(task);
-    } else {
-        // 单次删除模式
-        modalTitle.textContent = '确认删除计划';
-        modalSubtitle.textContent = '此操作无法撤销';
-        batchOptions.style.display = 'none';
-        warningText.textContent = '删除后，此任务记录将被移除。';
-        confirmBtn.textContent = '确认删除';
-    }
-    
-    // 显示模态框
-    const modal = document.getElementById('confirmDeleteModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-// 初始化批量删除选项
-function initializeBatchDeleteOptions(task) {
-    const dateInput = document.getElementById('deleteStartDate');
-    const deleteSummary = document.getElementById('deleteSummary');
-    
-    if (!dateInput || !deleteSummary) return;
-    
-    // 设置默认日期为任务开始日期
-    const taskDate = new Date(task.date + 'T00:00:00');
-    dateInput.value = task.date;
-    
-    // 计算删除统计
-    updateDeleteSummary(task, task.date);
-    
-    // 监听日期变化
-    dateInput.addEventListener('change', function() {
-        updateDeleteSummary(task, this.value);
-    });
-}
-
-// 更新删除统计信息
-function updateDeleteSummary(task, startDate) {
-    const deleteSummary = document.getElementById('deleteSummary');
-    if (!deleteSummary) return;
-    
-    // 计算受影响的重复任务
-    const affectedTasks = getAffectedRepeatTasks(task, startDate);
-    const completedCount = affectedTasks.filter(t => t.completed).length;
-    const pendingCount = affectedTasks.length - completedCount;
-    
-    deleteSummary.innerHTML = `
-        <div class="delete-summary-item">
-            <span>受影响任务总数：</span>
-            <span>${affectedTasks.length} 个</span>
-        </div>
-        <div class="delete-summary-item">
-            <span>已完成任务：</span>
-            <span style="color: #2ed573;">${completedCount} 个</span>
-        </div>
-        <div class="delete-summary-item">
-            <span>未完成任务：</span>
-            <span style="color: #ff9f43;">${pendingCount} 个</span>
-        </div>
-        <div class="delete-summary-total">
-            <span>总计删除：</span>
-            <span>${affectedTasks.length} 个任务</span>
-        </div>
-    `;
-}
-
-// 获取受影响的重复任务
-function getAffectedRepeatTasks(originalTask, startDate) {
-    if (originalTask.repeatType === 'once') {
-        return [originalTask];
-    }
-    
-    // 找到所有相关的重复任务
-    const affectedTasks = tasks.filter(task => 
-        task.name === originalTask.name &&
-        task.subject === originalTask.subject &&
-        task.repeatType === originalTask.repeatType &&
-        task.date >= startDate
-    );
-    
-    return affectedTasks;
-}
-
-// 确认删除任务 - 支持批量删除
-function confirmDeleteTask() {
-    if (!currentDeleteTaskId || !currentDeleteTask) return;
-    
-    const taskId = currentDeleteTaskId;
-    const task = currentDeleteTask;
-    const isBatchDelete = task.repeatType !== 'once';
-    
-    try {
-        let deletedTasks = [];
-        
-        if (isBatchDelete) {
-            // 批量删除模式
-            const startDate = document.getElementById('deleteStartDate').value;
-            const affectedTasks = getAffectedRepeatTasks(task, startDate);
-            
-            // 从tasks数组中删除所有受影响的任务
-            affectedTasks.forEach(affectedTask => {
-                const taskIndex = tasks.findIndex(t => t.id === affectedTask.id);
-                if (taskIndex !== -1) {
-                    deletedTasks.push(tasks[taskIndex]);
-                    tasks.splice(taskIndex, 1);
-                }
-            });
-        } else {
-            // 单次删除模式
-            const taskIndex = tasks.findIndex(t => t.id == taskId);
-            if (taskIndex !== -1) {
-                deletedTasks.push(tasks[taskIndex]);
-                tasks.splice(taskIndex, 1);
-            }
-        }
-        
-        if (deletedTasks.length === 0) {
-            showNotification('没有找到要删除的任务', 'warning');
-            return;
-        }
-        
-        // 保存到localStorage
-        saveTasks();
-        
-        // 关闭所有模态框
-        closeConfirmDeleteModal();
-        closeModal();
-        
-        // 更新界面
-        renderWeekView();
-        renderTaskList();
-        updateStats();
-        
-        // 显示成功消息
-        if (isBatchDelete) {
-            showNotification(`已批量删除 ${deletedTasks.length} 个重复任务`, 'success');
-        } else {
-            showNotification(`已删除学习计划: ${task.name}`, 'success');
-        }
-        
-    } catch (error) {
-        console.error('删除任务失败:', error);
-        showNotification('删除失败，请重试', 'error');
-    }
-}
-
-// 修改删除按钮文本显示
-function updateDeleteButtonText(task) {
-    const deleteBtn = document.getElementById('deleteTaskBtn');
-    if (!deleteBtn) return;
-    
-    if (task.repeatType !== 'once') {
-        deleteBtn.innerHTML = '<i class="fas fa-layer-group"></i> 批量删除';
-    } else {
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 删除计划';
-    }
-}
-
-// 关闭确认删除模态框
-function closeConfirmDeleteModal() {
-    const modal = document.getElementById('confirmDeleteModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    currentDeleteTaskId = null;
-}
-
-// 在 index.js 中添加积分计算系统（与 add-plan.js 中相同）
-const PointsSystem = {
-    calculateTaskPoints: function(task) {
-        if (task.useCustomPoints && task.customPoints) {
-            return {
-                total: task.customPoints,
-                base: task.customPoints,
-                timeBonus: 0,
-                morningBonus: 0,
-                weekendBonus: 0,
-                isCustom: true
-            };
-        } else {
-            return this.calculateAutoPoints(task);
-        }
-    },
-    
-    calculateAutoPoints: function(task) {
-        // ... 与 add-plan.js 中相同的实现
-        let basePoints = 1;
-        const taskMinutes = task.time || 30;
-        const timeBonus = Math.floor(taskMinutes / 15);
-        
-        let morningBonus = 0;
-        const startHour = parseInt(task.startTime?.split(':')[0]) || 19;
-        if (startHour >= 6 && startHour < 8) {
-            morningBonus = 0.2;
-        }
-        
-        let weekendBonus = 0;
-        const taskDate = new Date(task.date + 'T00:00:00');
-        const dayOfWeek = taskDate.getDay();
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-            weekendBonus = 0.5;
-        }
-        
-        let totalPoints = basePoints + timeBonus;
-        totalPoints *= (1 + morningBonus + weekendBonus);
-        totalPoints = Math.round(totalPoints);
-        
-        return {
-            total: totalPoints,
-            base: basePoints,
-            timeBonus: timeBonus,
-            morningBonus: morningBonus,
-            weekendBonus: weekendBonus,
-            isCustom: false
-        };
-    },
-    
-    getBonusDescription: function(pointsBreakdown) {
-        // ... 与 add-plan.js 中相同的实现
-        if (pointsBreakdown.isCustom) return "自定义积分";
-        
-        let description = `基础${pointsBreakdown.base}分`;
-        if (pointsBreakdown.timeBonus > 0) description += ` + 时长${pointsBreakdown.timeBonus}分`;
-        if (pointsBreakdown.morningBonus > 0) description += ` + 早起×1.2`;
-        if (pointsBreakdown.weekendBonus > 0) description += ` + 周末×1.5`;
-        return description;
-    }
-};
