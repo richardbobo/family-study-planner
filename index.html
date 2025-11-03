@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/index.css">
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
             <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
         </header>
-        
+
         <!-- 统计卡片区域测试 -->
         <div class="stats-section">
             <div class="stat-card">
@@ -37,7 +39,7 @@
                 <div>学习积分</div>
             </div>
         </div>
-        
+
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
             <!-- 学习计划顶部按钮 -->
@@ -46,15 +48,18 @@
                     <h2>学习计划</h2>
                 </div>
                 <div class="plan-buttons">
-                    <button class="btn btn-batch">
-                        <i class="fas fa-layer-group"></i> 批量添加
-                    </button>
+                    <a href="ai-create.html" class="btn btn-ai">
+                        <i class="fas fa-robot"></i> AI智能创建
+                    </a>
+                    <a href="batch-add.html" class="btn btn-batch">
+                        <i class="fas fa-plus"></i> 批量添加
+                    </a>
                     <a href="add-plan.html" class="btn btn-primary">
                         <i class="fas fa-plus"></i> 添加计划
                     </a>
                 </div>
             </div>
-            
+
             <!-- 日历区域 -->
             <div class="calendar-section">
                 <div class="calendar-header">
@@ -72,12 +77,12 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="week-days" id="weekDays">
                     <!-- 日期卡片将通过JavaScript动态生成 -->
                 </div>
             </div>
-            
+
             <!-- 我的学习计划列表 -->
             <div class="plan-list-section">
                 <div class="plan-list-header">
@@ -87,146 +92,148 @@
                             <i class="fas fa-share"></i> 分享任务
                         </button>
                     </div>
- <div class="list-controls">
-    <select id="subjectFilter" class="filter-select">
-        <option value="all">全部科目</option>
-        <!-- 科目选项将通过JavaScript动态生成 -->
-    </select>
-    <select id="sortSelect" class="filter-select">
-        <option value="default">默认排序</option>
-        <option value="time">按时间排序</option>
-        <option value="subject">按科目排序</option>
-        <option value="status">按状态排序</option>
-    </select>
-</div>
+                    <div class="list-controls">
+                        <select id="subjectFilter" class="filter-select">
+                            <option value="all">全部科目</option>
+                            <!-- 科目选项将通过JavaScript动态生成 -->
+                        </select>
+                        <select id="sortSelect" class="filter-select">
+                            <option value="default">默认排序</option>
+                            <option value="time">按时间排序</option>
+                            <option value="subject">按科目排序</option>
+                            <option value="status">按状态排序</option>
+                        </select>
+                    </div>
                 </div>
-                
+
                 <div class="task-list" id="tasks-container">
                     <!-- 任务列表将通过JavaScript动态生成 -->
                 </div>
             </div>
         </div>
-        
+
         <footer>
             <p>© 2025 LHR学习计划管理 | 培养良好学习习惯，成就更好的自己！</p>
         </footer>
     </div>
 
-<!-- 任务详情模态框 - 修改这部分 -->
-<div class="modal" id="taskModal">
-    <div class="modal-content">
-        <!-- Header部分将通过JavaScript动态生成 -->
-        <div class="modal-body" id="taskDetailContent">
-            <!-- Body内容将通过JavaScript动态生成 -->
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-edit" id="editTaskBtn">
-                <i class="fas fa-edit"></i> 编辑计划
-            </button>
-            <button class="btn btn-delete" id="deleteTaskBtn">
-                <i class="fas fa-trash"></i> 删除计划
-            </button>
+    <!-- 任务详情模态框 - 修改这部分 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <!-- Header部分将通过JavaScript动态生成 -->
+            <div class="modal-body" id="taskDetailContent">
+                <!-- Body内容将通过JavaScript动态生成 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-edit" id="editTaskBtn">
+                    <i class="fas fa-edit"></i> 编辑计划
+                </button>
+                <button class="btn btn-delete" id="deleteTaskBtn">
+                    <i class="fas fa-trash"></i> 删除计划
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- 快速完成任务模态框 -->
-<div class="modal" id="quickCompleteModal">
-    <div class="modal-content quick-complete-modal">
-        <div class="modal-header">
-            <h3>快速完成任务</h3>
-            <button class="close-btn" id="closeQuickCompleteModal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="quickCompleteForm">
-                <div class="form-group">
-                    <label class="form-label">任务名称</label>
-                    <div class="task-name-display" id="quickCompleteTaskName">数学作业</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">耗时设置</label>
-                    <div class="time-inputs">
-                        <div class="time-input-group">
-                            <input type="number" id="hoursInput" min="0" max="23" value="1" class="time-input">
-                            <span class="time-label">小时</span>
+    <!-- 快速完成任务模态框 -->
+    <div class="modal" id="quickCompleteModal">
+        <div class="modal-content quick-complete-modal">
+            <div class="modal-header">
+                <h3>快速完成任务</h3>
+                <button class="close-btn" id="closeQuickCompleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="quickCompleteForm">
+                    <div class="form-group">
+                        <label class="form-label">任务名称</label>
+                        <div class="task-name-display" id="quickCompleteTaskName">数学作业</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">耗时设置</label>
+                        <div class="time-inputs">
+                            <div class="time-input-group">
+                                <input type="number" id="hoursInput" min="0" max="23" value="1" class="time-input">
+                                <span class="time-label">小时</span>
+                            </div>
+                            <div class="time-input-group">
+                                <input type="number" id="minutesInput" min="0" max="59" value="30" class="time-input">
+                                <span class="time-label">分钟</span>
+                            </div>
                         </div>
-                        <div class="time-input-group">
-                            <input type="number" id="minutesInput" min="0" max="59" value="30" class="time-input">
-                            <span class="time-label">分钟</span>
+                        <div class="total-minutes" id="totalMinutesDisplay">总计：90分钟</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">常用时长</label>
+                        <div class="quick-time-options">
+                            <button type="button" class="time-option" data-minutes="15">15分钟</button>
+                            <button type="button" class="time-option" data-minutes="30">30分钟</button>
+                            <button type="button" class="time-option" data-minutes="45">45分钟</button>
+                            <button type="button" class="time-option" data-minutes="60">1小时</button>
+                            <button type="button" class="time-option" data-minutes="90">1.5小时</button>
+                            <button type="button" class="time-option" data-minutes="120">2小时</button>
                         </div>
                     </div>
-                    <div class="total-minutes" id="totalMinutesDisplay">总计：90分钟</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">常用时长</label>
-                    <div class="quick-time-options">
-                        <button type="button" class="time-option" data-minutes="15">15分钟</button>
-                        <button type="button" class="time-option" data-minutes="30">30分钟</button>
-                        <button type="button" class="time-option" data-minutes="45">45分钟</button>
-                        <button type="button" class="time-option" data-minutes="60">1小时</button>
-                        <button type="button" class="time-option" data-minutes="90">1.5小时</button>
-                        <button type="button" class="time-option" data-minutes="120">2小时</button>
+
+                    <div class="form-group">
+                        <label class="form-label">学习心得/笔记</label>
+                        <textarea id="completionNote" class="note-textarea" placeholder="记录本次学习的心得体会..."
+                            rows="4"></textarea>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">学习心得/笔记</label>
-                    <textarea id="completionNote" class="note-textarea" placeholder="记录本次学习的心得体会..." rows="4"></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="btn btn-cancel" id="cancelQuickComplete">取消</button>
-            <button type="button" class="btn btn-confirm" id="confirmQuickComplete">
-                <i class="fas fa-check"></i> 确认完成
-            </button>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel" id="cancelQuickComplete">取消</button>
+                <button type="button" class="btn btn-confirm" id="confirmQuickComplete">
+                    <i class="fas fa-check"></i> 确认完成
+                </button>
+            </div>
         </div>
     </div>
-</div>
     <script src="js/index.js"></script>
     <!-- 确认删除模态框 -->
-<!-- 确认删除模态框 - 支持批量删除 -->
-<div class="confirm-modal" id="confirmDeleteModal">
-    <div class="confirm-modal-content">
-        <div class="confirm-modal-header">
-            <div class="delete-icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3 class="confirm-modal-title" id="deleteModalTitle">确认删除计划</h3>
-            <p class="confirm-modal-subtitle" id="deleteModalSubtitle">此操作无法撤销</p>
-        </div>
-        
-        <div class="confirm-modal-body">
-            <div class="task-to-delete">
-                <div class="task-to-delete-label">即将删除的计划</div>
-                <h4 class="task-to-delete-name" id="deleteTaskName">计划名称</h4>
-                <span class="task-to-delete-subject" id="deleteTaskSubject">科目</span>
-                <div class="repeat-type-badge" id="deleteTaskRepeatType">重复类型</div>
-            </div>
-            
-            <!-- 批量删除选项 - 默认隐藏 -->
-            <div class="batch-delete-options" id="batchDeleteOptions" style="display: none;">
-                <div class="date-selection">
-                    <label for="deleteStartDate">删除起始日期：</label>
-                    <input type="date" id="deleteStartDate" class="date-input">
+    <!-- 确认删除模态框 - 支持批量删除 -->
+    <div class="confirm-modal" id="confirmDeleteModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="delete-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="delete-summary" id="deleteSummary">
-                    <!-- 删除统计信息将动态生成 -->
-                </div>
+                <h3 class="confirm-modal-title" id="deleteModalTitle">确认删除计划</h3>
+                <p class="confirm-modal-subtitle" id="deleteModalSubtitle">此操作无法撤销</p>
             </div>
-            
-            <p class="warning-text" id="deleteWarningText">
-                删除后，与此计划相关的所有任务记录都将被移除。
-            </p>
-        </div>
-        
-        <div class="confirm-modal-actions">
-            <button class="confirm-btn-cancel" id="cancelDeleteBtn">取消</button>
-            <button class="confirm-btn-delete" id="confirmDeleteBtn">确认删除</button>
+
+            <div class="confirm-modal-body">
+                <div class="task-to-delete">
+                    <div class="task-to-delete-label">即将删除的计划</div>
+                    <h4 class="task-to-delete-name" id="deleteTaskName">计划名称</h4>
+                    <span class="task-to-delete-subject" id="deleteTaskSubject">科目</span>
+                    <div class="repeat-type-badge" id="deleteTaskRepeatType">重复类型</div>
+                </div>
+
+                <!-- 批量删除选项 - 默认隐藏 -->
+                <div class="batch-delete-options" id="batchDeleteOptions" style="display: none;">
+                    <div class="date-selection">
+                        <label for="deleteStartDate">删除起始日期：</label>
+                        <input type="date" id="deleteStartDate" class="date-input">
+                    </div>
+                    <div class="delete-summary" id="deleteSummary">
+                        <!-- 删除统计信息将动态生成 -->
+                    </div>
+                </div>
+
+                <p class="warning-text" id="deleteWarningText">
+                    删除后，与此计划相关的所有任务记录都将被移除。
+                </p>
+            </div>
+
+            <div class="confirm-modal-actions">
+                <button class="confirm-btn-cancel" id="cancelDeleteBtn">取消</button>
+                <button class="confirm-btn-delete" id="confirmDeleteBtn">确认删除</button>
+            </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>

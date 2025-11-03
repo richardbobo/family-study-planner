@@ -1,0 +1,404 @@
+/* 批量添加页面样式 */
+.batch-add-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.batch-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 15px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #4a69bd;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #f1f3f9;
+}
+
+.batch-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .batch-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.input-section, .preview-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.format-guide {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.format-guide h4 {
+    margin: 0 0 8px 0;
+    color: #495057;
+}
+
+.format-guide ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #6c757d;
+}
+
+.format-guide li {
+    margin-bottom: 4px;
+}
+
+.input-textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.input-textarea:focus {
+    outline: none;
+    border-color: #4a69bd;
+}
+
+.input-textarea::placeholder {
+    color: #adb5bd;
+}
+
+.settings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.batch-form-group {
+    margin-bottom: 20px;
+}
+
+.batch-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.batch-date-input, .batch-select-input, .batch-number-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.batch-date-input:focus, .batch-select-input:focus, .batch-number-input:focus {
+    outline: none;
+    border-color: #4a69bd;
+}
+
+.preview-content {
+    min-height: 300px;
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.preview-placeholder {
+    text-align: center;
+    color: #adb5bd;
+    padding: 60px 20px;
+}
+
+.preview-placeholder i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.preview-task {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.preview-task-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.preview-task-content {
+    flex: 1;
+}
+
+.preview-task-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #2d3748;
+}
+
+.preview-task-meta {
+    font-size: 12px;
+    color: #6c757d;
+    display: flex;
+    gap: 12px;
+}
+
+.batch-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.save-info {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+}
+
+.btn-save {
+    background: #4a69bd;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-save:hover {
+    background: #3c5aa8;
+}
+
+.btn-save:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* 科目颜色样式 */
+.subject-chinese { background-color: #ff6b6b; }
+.subject-math { background-color: #4ecdc4; }
+.subject-english { background-color: #45b7d1; }
+.subject-science { background-color: #96ceb4; }
+.subject-physics { background-color: #feca57; }
+.subject-chemistry { background-color: #ff9ff3; }
+.subject-history { background-color: #54a0ff; }
+.subject-geography { background-color: #5f27cd; }
+.subject-art { background-color: #00d2d3; }
+.subject-music { background-color: #ff9f43; }
+.subject-sports { background-color: #10ac84; }
+.subject-other { background-color: #8395a7; }
+
+/* 加载状态 */
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* 底部操作按钮样式修复 */
+.batch-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 0;
+    border-top: 1px solid #e9ecef;
+    margin-top: 20px;
+}
+
+.save-info {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.save-info span {
+    color: #4a69bd;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 取消按钮样式 */
+.batch-btn-cancel {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+}
+
+.batch-btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* 保存按钮样式 */
+.batch-btn-save {
+    background: #4a69bd;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.batch-btn-save:hover {
+    background: #3c5aa8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(74, 105, 189, 0.3);
+}
+
+.batch-btn-save:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.batch-btn-save:disabled:hover {
+    background: #adb5bd;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .batch-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .save-info {
+        text-align: center;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .batch-btn-cancel,
+    .batch-btn-save {
+        flex: 1;
+        min-width: auto;
+    }
+}
+
+/* 表单提示文字样式 */
+.form-hint {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 6px;
+    line-height: 1.4;
+}

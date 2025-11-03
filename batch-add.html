@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量添加学习计划 - 小学生学习计划管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="styles/batch-add.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="batch-add-container">
+            <!-- 头部 -->
+            <div class="batch-header">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1><i class="fas fa-layer-group"></i> 批量添加学习计划</h1>
+                    <p class="subtitle">快速添加多个学习任务</p>
+                </div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="batch-content">
+                <!-- 输入区域 -->
+                <div class="input-section">
+                    <div class="section-title">
+                        <i class="fas fa-edit"></i>
+                        <span>输入学习计划</span>
+                    </div>
+
+                    <div class="format-guide">
+                        <h4>输入格式说明：</h4>
+                        <ul>
+                            <li>第一行写类别名称（如：语文、数学，最多50字）</li>
+                            <li>接下来写任务列表，每行格式: 数字+标点+任务</li>
+                            <li>支持的标点: . . ，</li>
+                            <li>可以添加多个类别，空行会被忽略</li>
+                        </ul>
+                    </div>
+
+                    <textarea class="input-textarea" id="batchInput"
+                        placeholder="语文&#10;1. 修改《课堂笔记》28-36&#10;2. 预习单元正文同地&#10;&#10;数学&#10;3. 完成练习册第3章&#10;&#10;请按照格式输入学习计划..."></textarea>
+                </div>
+
+                <!-- 预览区域 -->
+                <div class="preview-section">
+                    <div class="section-title">
+                        <i class="fas fa-eye"></i>
+                        <span>预览 (<span id="previewCount">0</span> 个计划)</span>
+                    </div>
+                    <div class="preview-content" id="previewContent">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-list-alt"></i>
+                            <p>输入内容后会在这里显示预览</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统一设置区域 -->
+            <div class="settings-section">
+                <div class="section-title">
+                    <i class="fas fa-cog"></i>
+                    <span>统一设置（应用到所有计划）</span>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="batch-form-group">
+                        <label class="batch-form-label">起始日期（可选）</label>
+                        <input type="date" class="batch-date-input" id="startDate">
+                        <div class="form-hint">选择计划的起始日期，默认为今天。对于"仅当天"类型，任务将在此日期创建；对于重复类型，从此日期开始生成任务</div>
+                    </div>
+
+                    <div class="batch-form-group">
+                        <label class="batch-form-label">重复类型</label>
+                        <select class="batch-select-input" id="repeatType">
+                            <option value="once">仅当天</option>
+                            <option value="daily">每天</option>
+                            <option value="weekly">每周</option>
+                            <option value="biweekly">每两周</option>
+                        </select>
+                        <div class="form-hint" id="repeatTypeHint">该任务将只在今天这一天出现</div>
+                    </div>
+
+                    <div class="batch-form-group">
+                        <label class="batch-form-label">默认学习时长（分钟）</label>
+                        <input type="number" class="batch-number-input" id="defaultDuration" value="25" min="5"
+                            max="240">
+                        <div class="form-hint">为每个计划设置默认学习时长，在计时器页面可以调整</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作按钮 -->
+            <div class="batch-actions">
+                <div class="save-info">
+                    共 <span id="totalTasksCount">0</span> 个任务待保存
+                </div>
+                <div class="action-buttons">
+                    <button class="batch-btn-cancel" onclick="goBack()">取消</button>
+                    <button class="batch-btn-save" id="saveBtn" disabled onclick="saveBatchTasks()">
+                        <i class="fas fa-save"></i>
+                        保存 <span id="saveCount">0</span> 个计划
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/batch-add.js"></script>
+</body>
+
+</html>

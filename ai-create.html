@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能创建计划 - 小学生学习计划管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="styles/ai-create.css">
+</head>
+<body>
+    <div class="container">
+        <div class="ai-create-container">
+            <!-- 头部 -->
+            <div class="ai-header">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1><i class="fas fa-robot"></i> AI学习计划助手</h1>
+                    <p class="subtitle">智能对话，快速生成个性化学习计划</p>
+                </div>
+            </div>
+
+            <!-- AI对话界面 -->
+            <div class="ai-chat-container">
+                <!-- 聊天消息区域 -->
+                <div class="chat-messages" id="chatMessages">
+                    <!-- AI欢迎消息 -->
+                    <div class="message assistant">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <strong>你好！我是你的学习计划助手 🤖</strong><br>
+                                告诉我你的学习需求，比如：<br>
+                                • 年级和科目偏好<br>
+                                • 学习时间段<br>
+                                • 特别的学习目标<br>
+                                我会为你智能生成合适的学习计划！
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 聊天输入区域 -->
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            class="chat-input" 
+                            id="chatInput"
+                            placeholder="例如：请生成一份晚上7点到9点之间，包含英语、语文、数学及阅读的学习计划，小学5年级"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-button" id="sendButton" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI生成结果区域 -->
+                <div class="ai-actions-bottom" id="aiActionsBottom" style="display: none;">
+                    <button class="regenerate-button" onclick="regeneratePlan()">
+                        <i class="fas fa-refresh"></i>
+                        重新生成
+                    </button>
+                    <button class="confirm-button" id="confirmButton" onclick="confirmAIPlan()">
+                        <i class="fas fa-check"></i>
+                        确认创建 <span id="planCount">0</span> 个计划
+                    </button>
+                </div>
+            </div>
+
+            <!-- 使用提示 -->
+            <div class="examples-section">
+                <div class="examples-title">💡 试试这样说：</div>
+                <div class="example-item" onclick="fillExample(0)">
+                    "生成小学三年级周末的学习计划，包含数学、语文和美术"
+                </div>
+                <div class="example-item" onclick="fillExample(1)">
+                    "帮我制定周一至周五晚上7-9点的学习安排，重点英语和科学"
+                </div>
+                <div class="example-item" onclick="fillExample(2)">
+                    "需要每天1小时的阅读计划，适合四年级学生"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ai-create.js"></script>
+</body>
+</html>
