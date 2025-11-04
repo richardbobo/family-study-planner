@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/add-plan.css">
 </head>
+
 <body>
     <div class="container">
         <div class="add-plan-page">
@@ -16,11 +18,11 @@
                 </a>
                 <h1>添加学习计划</h1>
             </div>
-            
+
             <div class="current-date-info">
                 正在为 <span class="date-highlight">2025-10-29</span> 添加计划
             </div>
-            
+
             <form class="plan-form" id="planForm">
                 <!-- 起始日期 -->
                 <div class="form-section">
@@ -30,142 +32,145 @@
                     </p>
                     <input type="date" class="form-input" id="startDate" value="2025-10-29">
                 </div>
-                
-            
+
+
                 <!-- 类别标签 - 修改为下拉框自定义 -->
-<div class="form-section">
-    <h3 class="section-title">类别标签 <span class="required">*</span></h3>
-    <select class="form-select" id="categorySelect" required>
-        <option value="">请选择类别</option>
-        <option value="语文">语文</option>
-        <option value="数学">数学</option>
-        <option value="英语">英语</option>
-        <option value="科学">科学</option>
-        <option value="物理">物理</option>
-        <option value="化学">化学</option>
-        <option value="历史">历史</option>
-        <option value="地理">地理</option>
-        <option value="美术">美术</option>
-        <option value="音乐">音乐</option>
-        <option value="体育">体育</option>
-        <option value="custom">+ 自定义类别</option>
-    </select>
-    
-    <!-- 自定义类别输入框 -->
-    <div class="custom-category-input" id="customCategoryInput" style="display: none;">
-        <input type="text" class="form-input" id="newCategoryName" placeholder="请输入新类别名称" maxlength="10">
-        <div class="char-limit">限制 1-10 字</div>
-    </div>
-    
-    <!-- 最近使用类别 -->
-    <div class="recent-categories" id="recentCategories">
-        <div class="recent-title">最近使用：</div>
-        <div class="category-tags" id="categoryTags">
-            <!-- 最近使用的类别标签会动态生成在这里 -->
-        </div>
-    </div>
-</div>
-                
+                <div class="form-section">
+                    <h3 class="section-title">类别标签 <span class="required">*</span></h3>
+                    <select class="form-select" id="categorySelect" required>
+                        <option value="">请选择类别</option>
+                        <option value="语文">语文</option>
+                        <option value="数学">数学</option>
+                        <option value="英语">英语</option>
+                        <option value="科学">科学</option>
+                        <option value="物理">物理</option>
+                        <option value="化学">化学</option>
+                        <option value="历史">历史</option>
+                        <option value="地理">地理</option>
+                        <option value="美术">美术</option>
+                        <option value="音乐">音乐</option>
+                        <option value="体育">体育</option>
+                        <option value="custom">+ 自定义类别</option>
+                    </select>
+
+                    <!-- 自定义类别输入框 -->
+                    <div class="custom-category-input" id="customCategoryInput" style="display: none;">
+                        <input type="text" class="form-input" id="newCategoryName" placeholder="请输入新类别名称"
+                            maxlength="10">
+                        <div class="char-limit">限制 1-10 字</div>
+                    </div>
+
+                    <!-- 最近使用类别 -->
+                    <div class="recent-categories" id="recentCategories">
+                        <div class="recent-title">最近使用：</div>
+                        <div class="category-tags" id="categoryTags">
+                            <!-- 最近使用的类别标签会动态生成在这里 -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 计划名称 -->
                 <div class="form-section">
                     <h3 class="section-title">计划名称 <span class="required">*</span></h3>
-                    <input type="text" class="form-input" id="planName" placeholder="如：每天背10个英语单词" required maxlength="20">
+                    <input type="text" class="form-input" id="planName" placeholder="如：每天背10个英语单词" required
+                        maxlength="20">
                     <div class="char-limit">限制 1-20 字</div>
                 </div>
-                
+
                 <!-- 计划内容 -->
                 <div class="form-section">
                     <h3 class="section-title">计划内容（可选）</h3>
-                    <textarea class="form-textarea" id="planContent" placeholder="如：利用晨读时间，结合课本 Unit1 单词表" maxlength="500"></textarea>
+                    <textarea class="form-textarea" id="planContent" placeholder="如：利用晨读时间，结合课本 Unit1 单词表"
+                        maxlength="500"></textarea>
                     <div class="char-limit"><span id="contentCount">0</span>/500</div>
                 </div>
-                
 
-<!-- 重复类型 -->
-<div class="form-section">
-    <h3 class="section-title">重复类型 <span class="required">*</span></h3>
-    <div class="recurrence-options">
-        <div class="recurrence-option" data-value="once">
-            <div class="option-text">仅当天</div>
-        </div>
-        <div class="recurrence-option" data-value="daily">
-            <div class="option-text">每天</div>
-        </div>
-        <div class="recurrence-option" data-value="weekly">
-            <div class="option-text">每周</div>
-        </div>
-        <div class="recurrence-option" data-value="biweekly">
-            <div class="option-text">每两周</div>
-        </div>
-    </div>
-    
-    <!-- 重复选项详情 -->
-    <div class="recurrence-details" id="recurrenceDetails">
-        <!-- 每天重复 -->
-        <div class="detail-section daily-details">
-            <h4>重复设置</h4>
-            <div class="time-range">
-                <div class="form-group">
-                    <label>开始日期</label>
-                    <input type="date" class="form-input" id="dailyStartDate">
+
+                <!-- 重复类型 -->
+                <div class="form-section">
+                    <h3 class="section-title">重复类型 <span class="required">*</span></h3>
+                    <div class="recurrence-options">
+                        <div class="recurrence-option" data-value="once">
+                            <div class="option-text">仅当天</div>
+                        </div>
+                        <div class="recurrence-option" data-value="daily">
+                            <div class="option-text">每天</div>
+                        </div>
+                        <div class="recurrence-option" data-value="weekly">
+                            <div class="option-text">每周</div>
+                        </div>
+                        <div class="recurrence-option" data-value="biweekly">
+                            <div class="option-text">每两周</div>
+                        </div>
+                    </div>
+
+                    <!-- 重复选项详情 -->
+                    <div class="recurrence-details" id="recurrenceDetails">
+                        <!-- 每天重复 -->
+                        <div class="detail-section daily-details">
+                            <h4>重复设置</h4>
+                            <div class="time-range">
+                                <div class="form-group">
+                                    <label>开始日期</label>
+                                    <input type="date" class="form-input" id="dailyStartDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>结束日期</label>
+                                    <input type="date" class="form-input" id="dailyEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 每周重复 -->
+                        <div class="detail-section weekly-details">
+                            <h4>选择重复日期</h4>
+                            <div class="weekday-selector">
+                                <div class="weekday-option" data-day="1">周一</div>
+                                <div class="weekday-option" data-day="2">周二</div>
+                                <div class="weekday-option" data-day="3">周三</div>
+                                <div class="weekday-option" data-day="4">周四</div>
+                                <div class="weekday-option" data-day="5">周五</div>
+                                <div class="weekday-option" data-day="6">周六</div>
+                                <div class="weekday-option" data-day="0">周日</div>
+                            </div>
+                            <div class="time-range">
+                                <div class="form-group">
+                                    <label>开始日期</label>
+                                    <input type="date" class="form-input" id="weeklyStartDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>结束日期</label>
+                                    <input type="date" class="form-input" id="weeklyEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 每两周重复 -->
+                        <div class="detail-section biweekly-details">
+                            <h4>选择重复日期（每两周）</h4>
+                            <div class="weekday-selector">
+                                <div class="weekday-option" data-day="1">周一</div>
+                                <div class="weekday-option" data-day="2">周二</div>
+                                <div class="weekday-option" data-day="3">周三</div>
+                                <div class="weekday-option" data-day="4">周四</div>
+                                <div class="weekday-option" data-day="5">周五</div>
+                                <div class="weekday-option" data-day="6">周六</div>
+                                <div class="weekday-option" data-day="0">周日</div>
+                            </div>
+                            <div class="time-range">
+                                <div class="form-group">
+                                    <label>开始日期</label>
+                                    <input type="date" class="form-input" id="biweeklyStartDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>结束日期</label>
+                                    <input type="date" class="form-input" id="biweeklyEndDate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>结束日期</label>
-                    <input type="date" class="form-input" id="dailyEndDate">
-                </div>
-            </div>
-        </div>
-        
-        <!-- 每周重复 -->
-        <div class="detail-section weekly-details">
-            <h4>选择重复日期</h4>
-            <div class="weekday-selector">
-                <div class="weekday-option" data-day="1">周一</div>
-                <div class="weekday-option" data-day="2">周二</div>
-                <div class="weekday-option" data-day="3">周三</div>
-                <div class="weekday-option" data-day="4">周四</div>
-                <div class="weekday-option" data-day="5">周五</div>
-                <div class="weekday-option" data-day="6">周六</div>
-                <div class="weekday-option" data-day="0">周日</div>
-            </div>
-            <div class="time-range">
-                <div class="form-group">
-                    <label>开始日期</label>
-                    <input type="date" class="form-input" id="weeklyStartDate">
-                </div>
-                <div class="form-group">
-                    <label>结束日期</label>
-                    <input type="date" class="form-input" id="weeklyEndDate">
-                </div>
-            </div>
-        </div>
-        
-        <!-- 每两周重复 -->
-        <div class="detail-section biweekly-details">
-            <h4>选择重复日期（每两周）</h4>
-            <div class="weekday-selector">
-                <div class="weekday-option" data-day="1">周一</div>
-                <div class="weekday-option" data-day="2">周二</div>
-                <div class="weekday-option" data-day="3">周三</div>
-                <div class="weekday-option" data-day="4">周四</div>
-                <div class="weekday-option" data-day="5">周五</div>
-                <div class="weekday-option" data-day="6">周六</div>
-                <div class="weekday-option" data-day="0">周日</div>
-            </div>
-            <div class="time-range">
-                <div class="form-group">
-                    <label>开始日期</label>
-                    <input type="date" class="form-input" id="biweeklyStartDate">
-                </div>
-                <div class="form-group">
-                    <label>结束日期</label>
-                    <input type="date" class="form-input" id="biweeklyEndDate">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-                
+
                 <!-- 计划时间 -->
                 <div class="form-section">
                     <h3 class="section-title">计划时间（可选）</h3>
@@ -182,7 +187,7 @@
                     </div>
                     <p class="time-note">默认时间为 19:00 - 20:30，可根据需要调整</p>
                 </div>
-                
+
                 <!-- 积分设置 -->
                 <div class="form-section">
                     <h3 class="section-title">积分设置（可选）</h3>
@@ -193,7 +198,7 @@
                     <p class="section-description">
                         为任务设置固定积分数值，替代系统默认计算规则
                     </p>
-                    
+
                     <div class="points-rules">
                         <strong>系统默认规则</strong>
                         <ul>
@@ -204,7 +209,7 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 <!-- 表单操作 -->
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" id="cancelBtn">取消</button>
@@ -213,7 +218,12 @@
             </form>
         </div>
     </div>
-
+    <!-- 在原有的脚本之前添加 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <!-- 其他原有脚本 -->
     <script src="js/add-plan.js"></script>
 </body>
+
 </html>

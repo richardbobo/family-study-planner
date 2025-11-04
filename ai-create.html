@@ -85,8 +85,13 @@
             </div>
         </div>
     </div>
+
+    <!-- 其他原有脚本 -->
     <!-- 先引入配置文件 -->
+    <!-- 在原有的脚本之前添加 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
     <!-- 再引入业务逻辑 -->
     <script src="js/ai-create.js"></script>
 </body>
