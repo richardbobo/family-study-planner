@@ -73,43 +73,49 @@ class FamilyService {
         }
     }
 
-    // 加入现有家庭
-    async joinFamily(familyCode, userName, role = 'child') {
-        try {
-            if (!this.supabaseClient.isConnected) {
-                throw new Error('Supabase 未连接，无法加入家庭');
-            }
 
-            console.log(`🔗 加入家庭: ${familyCode}, 用户: ${userName}`);
-
-            // 在 Supabase 中加入家庭
-            const result = await this.supabaseClient.joinFamily(familyCode, userName, role);
-
-            // 设置当前家庭和成员
-            this.currentFamily = result.family;
-            this.currentMember = result.member;
-
-            // 保存到本地存储
-            await this.saveToLocalStorage();
-
-            // 触发家庭加入事件
-            this.emitFamilyEvent('familyJoined', {
-                family: this.currentFamily,
-                member: this.currentMember
-            });
-
-            console.log('✅ 加入家庭成功');
-            return {
-                family: this.currentFamily,
-                member: this.currentMember
-            };
-
-        } catch (error) {
-            console.error('❌ 加入家庭失败:', error);
-            throw error;
+   // 加入现有家庭（修复版本）
+async joinFamily(familyCode, userName, role = 'child') {
+    try {
+        if (!this.supabaseClient.isConnected) {
+            throw new Error('Supabase 未连接，无法加入家庭');
         }
+        
+        console.log(`🔗 加入家庭: ${familyCode}, 用户: ${userName}`);
+        
+        // 首先验证家庭码
+        const result = await this.supabaseClient.joinFamily(familyCode, userName, role);
+        
+        // 设置当前家庭和成员
+        this.currentFamily = result.family;
+        this.currentMember = result.member;
+        
+        // 保存到本地存储
+        await this.saveToLocalStorage();
+        
+        // 触发家庭加入事件
+        this.emitFamilyEvent('familyJoined', {
+            family: this.currentFamily,
+            member: this.currentMember
+        });
+        
+        console.log('✅ 加入家庭成功');
+        return {
+            family: this.currentFamily,
+            member: this.currentMember
+        };
+        
+    } catch (error) {
+        console.error('❌ 加入家庭失败:', error);
+        
+        // 如果是重复加入错误，提供更友好的错误信息
+        if (error.message.includes('duplicate key') || error.message.includes('唯一约束')) {
+            throw new Error(`用户 "${userName}" 已经在这个家庭中了`);
+        }
+        
+        throw error;
     }
-
+}
     // 退出家庭
     async leaveFamily() {
         try {
