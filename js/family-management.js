@@ -4,26 +4,26 @@ class FamilyManagement {
         this.familyService = getFamilyService();
         this.currentView = 'main';
         this.isLoading = false;
-        
+
         this.init();
     }
-    
+
     // 初始化页面
     async init() {
         console.log('🏠 家庭管理页面初始化');
-        
+
         // 绑定事件监听器
         this.bindEvents();
-        
+
         // 监听家庭服务事件
         this.bindFamilyEvents();
-        
+
         // 初始渲染
         await this.render();
-        
+
         console.log('✅ 家庭管理页面初始化完成');
     }
-    
+
     // 绑定DOM事件
     bindEvents() {
         // 页面加载完成后再绑定事件
@@ -35,7 +35,7 @@ class FamilyManagement {
             }
         });
     }
-    
+
     // 绑定家庭服务事件
     bindFamilyEvents() {
         // 家庭创建成功
@@ -44,21 +44,21 @@ class FamilyManagement {
             this.showSuccess('家庭创建成功！');
             this.render();
         });
-        
+
         // 家庭加入成功
         this.familyService.on('familyJoined', (data) => {
             console.log('🎉 家庭加入成功事件触发');
             this.showSuccess('成功加入家庭！');
             this.render();
         });
-        
+
         // 家庭退出成功
         this.familyService.on('familyLeft', () => {
             console.log('🚪 家庭退出成功事件触发');
             this.showSuccess('已退出家庭');
             this.render();
         });
-        
+
         // 数据迁移完成
         this.familyService.on('dataMigrated', (data) => {
             console.log('🔄 数据迁移完成事件触发', data);
@@ -66,27 +66,27 @@ class FamilyManagement {
             this.render();
         });
     }
-    
+
     // 渲染页面
     async render() {
         await this.renderFamilyStatus();
         await this.renderActionButtons();
-        
+
         if (this.familyService.hasJoinedFamily()) {
             await this.renderFamilyInfo();
             await this.renderMembersList();
         }
     }
-    
+
     // 渲染家庭状态
     async renderFamilyStatus() {
         const statusElement = document.getElementById('familyStatus');
         if (!statusElement) return;
-        
+
         if (this.familyService.hasJoinedFamily()) {
             const family = this.familyService.getCurrentFamily();
             const member = this.familyService.getCurrentMember();
-            
+
             statusElement.innerHTML = `
                 <i class="fas fa-check-circle" style="color: #2ed573;"></i>
                 <div>
@@ -110,12 +110,12 @@ class FamilyManagement {
             statusElement.className = 'family-status status-not-joined';
         }
     }
-    
+
     // 渲染操作按钮
     async renderActionButtons() {
         const buttonsElement = document.getElementById('actionButtons');
         if (!buttonsElement) return;
-        
+
         if (this.familyService.hasJoinedFamily()) {
             buttonsElement.innerHTML = `
                 <button class="btn-family btn-members" onclick="familyManagement.showMembers()">
@@ -139,36 +139,40 @@ class FamilyManagement {
             `;
         }
     }
-    
+
+
     // 渲染家庭信息
     async renderFamilyInfo() {
         const infoElement = document.getElementById('familyInfo');
         if (!infoElement || !this.familyService.hasJoinedFamily()) return;
-        
+
         const family = this.familyService.getCurrentFamily();
         const member = this.familyService.getCurrentMember();
-        
+
         document.getElementById('infoFamilyName').textContent = family.family_name;
-        document.getElementById('infoFamilyCode').innerHTML = 
+        document.getElementById('infoFamilyCode').innerHTML =
             `<span class="family-code">${family.family_code}</span>`;
-        document.getElementById('infoMemberRole').textContent = 
+        document.getElementById('infoMemberRole').textContent =
             member.role === 'parent' ? '家长' : '孩子';
-        document.getElementById('infoJoinTime').textContent = 
-            new Date(member.created_at).toLocaleDateString('zh-CN');
-        
+
+        // 使用 created_at 字段，因为 joined_at 可能不存在
+        const joinTime = member.joined_at || member.created_at;
+        document.getElementById('infoJoinTime').textContent =
+            new Date(joinTime).toLocaleDateString('zh-CN');
+
         infoElement.style.display = 'block';
     }
-    
+
     // 渲染成员列表
     async renderMembersList() {
         const membersElement = document.getElementById('membersList');
         const container = document.getElementById('membersContainer');
-        
+
         if (!membersElement || !container) return;
-        
+
         try {
             const members = await this.familyService.getFamilyMembers();
-            
+
             if (members && members.length > 0) {
                 container.innerHTML = members.map(member => `
                     <div class="member-item">
@@ -195,58 +199,58 @@ class FamilyManagement {
                         ` : ''}
                     </div>
                 `).join('');
-                
+
                 membersElement.style.display = 'block';
             } else {
                 membersElement.style.display = 'none';
             }
-            
+
         } catch (error) {
             console.error('❌ 渲染成员列表失败:', error);
             this.showError('获取成员列表失败: ' + error.message);
         }
     }
-    
+
     // === 表单处理 ===
-    
+
     // 显示创建家庭表单
     showCreateForm() {
         this.hideAllForms();
         document.getElementById('createFamilyForm').style.display = 'block';
         this.currentView = 'create';
-        
+
         // 自动聚焦到家庭名称输入框
         setTimeout(() => {
             const familyNameInput = document.getElementById('familyName');
             if (familyNameInput) familyNameInput.focus();
         }, 100);
     }
-    
+
     // 显示加入家庭表单
     showJoinForm() {
         this.hideAllForms();
         document.getElementById('joinFamilyForm').style.display = 'block';
         this.currentView = 'join';
-        
+
         // 自动聚焦到家庭码输入框
         setTimeout(() => {
             const familyCodeInput = document.getElementById('familyCode');
             if (familyCodeInput) familyCodeInput.focus();
         }, 100);
     }
-    
+
     // 显示主视图
     showMainView() {
         this.hideAllForms();
         this.currentView = 'main';
         this.render();
     }
-    
+
     // 显示成员列表
     showMembers() {
         this.renderMembersList();
     }
-    
+
     // 隐藏所有表单
     hideAllForms() {
         const forms = ['createFamilyForm', 'joinFamilyForm'];
@@ -255,27 +259,27 @@ class FamilyManagement {
             if (form) form.style.display = 'none';
         });
     }
-    
+
     // 处理创建家庭表单提交
     async handleCreateFamily(event) {
         event.preventDefault();
-        
+
         if (this.isLoading) return;
-        
+
         const familyName = document.getElementById('familyName').value.trim();
         const parentName = document.getElementById('parentName').value.trim();
-        
+
         if (!familyName || !parentName) {
             this.showError('请填写所有必填字段');
             return;
         }
-        
+
         await this.setLoading(true);
-        
+
         try {
             await this.familyService.createFamily(familyName, parentName);
             this.showMainView();
-            
+
         } catch (error) {
             console.error('❌ 创建家庭失败:', error);
             this.showError('创建家庭失败: ' + error.message);
@@ -283,33 +287,33 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
-    
+
     // 处理加入家庭表单提交
     async handleJoinFamily(event) {
         event.preventDefault();
-        
+
         if (this.isLoading) return;
-        
+
         const familyCode = document.getElementById('familyCode').value.trim().toUpperCase();
         const userName = document.getElementById('userName').value.trim();
         const userRole = document.getElementById('userRole').value;
-        
+
         if (!familyCode || !userName) {
             this.showError('请填写所有必填字段');
             return;
         }
-        
+
         if (familyCode.length !== 6) {
             this.showError('家庭码必须是6位字符');
             return;
         }
-        
+
         await this.setLoading(true);
-        
+
         try {
             await this.familyService.joinFamily(familyCode, userName, userRole);
             this.showMainView();
-            
+
         } catch (error) {
             console.error('❌ 加入家庭失败:', error);
             this.showError('加入家庭失败: ' + error.message);
@@ -317,19 +321,19 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
-    
+
     // 退出家庭
     async leaveFamily() {
         if (!confirm('确定要退出当前家庭吗？退出后需要重新加入才能访问家庭数据。')) {
             return;
         }
-        
+
         await this.setLoading(true);
-        
+
         try {
             await this.familyService.leaveFamily();
             this.showSuccess('已成功退出家庭');
-            
+
         } catch (error) {
             console.error('❌ 退出家庭失败:', error);
             this.showError('退出家庭失败: ' + error.message);
@@ -337,19 +341,19 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
-    
+
     // 迁移数据到家庭
     async migrateData() {
         if (!confirm('是否将本地数据迁移到当前家庭？迁移后数据将在家庭成员间共享。')) {
             return;
         }
-        
+
         await this.setLoading(true);
-        
+
         try {
             const result = await this.familyService.migrateLocalDataToFamily();
             console.log('✅ 数据迁移完成:', result);
-            
+
         } catch (error) {
             console.error('❌ 数据迁移失败:', error);
             this.showError('数据迁移失败: ' + error.message);
@@ -357,21 +361,21 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
-    
+
     // 移除家庭成员（家长权限）
     async removeMember(memberId) {
         if (!confirm('确定要移除此家庭成员吗？此操作不可撤销。')) {
             return;
         }
-        
+
         await this.setLoading(true);
-        
+
         try {
             // 注意：需要在 supabase-client.js 中实现 removeFamilyMember 方法
             await this.familyService.supabaseClient.removeFamilyMember(memberId);
             this.showSuccess('成员移除成功');
             await this.renderMembersList();
-            
+
         } catch (error) {
             console.error('❌ 移除成员失败:', error);
             this.showError('移除成员失败: ' + error.message);
@@ -379,13 +383,13 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
-    
+
     // === 工具方法 ===
-    
+
     // 设置加载状态
     async setLoading(loading) {
         this.isLoading = loading;
-        
+
         const buttons = document.querySelectorAll('.btn-family');
         buttons.forEach(button => {
             if (loading) {
@@ -397,22 +401,22 @@ class FamilyManagement {
             }
         });
     }
-    
+
     // 显示成功消息
     showSuccess(message) {
         this.showMessage(message, 'success');
     }
-    
+
     // 显示错误消息
     showError(message) {
         this.showMessage(message, 'error');
     }
-    
+
     // 显示警告消息
     showWarning(message) {
         this.showMessage(message, 'warning');
     }
-    
+
     // 显示消息
     showMessage(message, type = 'info') {
         // 移除现有的消息
@@ -420,7 +424,7 @@ class FamilyManagement {
         if (existingMessage) {
             existingMessage.remove();
         }
-        
+
         // 创建新消息
         const messageDiv = document.createElement('div');
         messageDiv.className = `message-container ${type}-message`;
@@ -428,13 +432,13 @@ class FamilyManagement {
             <i class="fas fa-${this.getMessageIcon(type)}"></i>
             <span>${message}</span>
         `;
-        
+
         // 添加到页面顶部
         const container = document.querySelector('.family-container');
         if (container) {
             container.insertBefore(messageDiv, container.firstChild);
         }
-        
+
         // 3秒后自动消失
         setTimeout(() => {
             if (messageDiv.parentNode) {
@@ -442,7 +446,7 @@ class FamilyManagement {
             }
         }, 3000);
     }
-    
+
     // 获取消息图标
     getMessageIcon(type) {
         const icons = {
@@ -453,7 +457,7 @@ class FamilyManagement {
         };
         return icons[type] || 'info-circle';
     }
-    
+
     // 返回上一页
     goBack() {
         if (this.currentView !== 'main') {
@@ -468,7 +472,7 @@ class FamilyManagement {
 let familyManagement = null;
 
 // 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     familyManagement = new FamilyManagement();
 });
 

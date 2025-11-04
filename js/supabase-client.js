@@ -160,6 +160,7 @@ class SupabaseClient {
         }
     }
 
+
     // 获取家庭成员列表
     async getFamilyMembers(familyId) {
         if (!this.isConnected) {
@@ -206,7 +207,6 @@ class SupabaseClient {
             throw error;
         }
     }
-
     // === 任务相关操作 ===
 
     // 获取任务列表
