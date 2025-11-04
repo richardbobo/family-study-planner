@@ -288,7 +288,8 @@ class FamilyManagement {
         }
     }
 
-    // 处理加入家庭表单提交
+
+    // 处理加入家庭表单提交（修复版本）
     async handleJoinFamily(event) {
         event.preventDefault();
 
@@ -316,7 +317,20 @@ class FamilyManagement {
 
         } catch (error) {
             console.error('❌ 加入家庭失败:', error);
-            this.showError('加入家庭失败: ' + error.message);
+
+            // 提供更友好的错误信息
+            let errorMessage = '加入家庭失败';
+            if (error.message.includes('已经在这个家庭中')) {
+                errorMessage = `用户 "${userName}" 已经在这个家庭中了，请使用其他姓名或联系家长`;
+            } else if (error.message.includes('家庭码无效')) {
+                errorMessage = '家庭码无效，请检查后重试';
+            } else if (error.message.includes('未连接')) {
+                errorMessage = '网络连接失败，请检查网络后重试';
+            } else {
+                errorMessage += ': ' + error.message;
+            }
+
+            this.showError(errorMessage);
         } finally {
             await this.setLoading(false);
         }
