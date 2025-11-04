@@ -106,5 +106,150 @@ function validateConfig() {
     };
 }
 
+
+
+// 应用配置文件 - 功能开关和常量定义
+const APP_CONFIG = {
+    // 功能开关 - 控制新功能逐步上线
+    FEATURE_FLAGS: {
+        // 数据源配置: 'localStorage' | 'supabase' | 'hybrid'
+        DATA_SOURCE: 'localStorage',
+        
+        // 家庭功能开关
+        ENABLE_FAMILY_FEATURES: false,
+        
+        // 数据同步开关
+        ENABLE_SYNC: false,
+        
+        // 显示同步状态
+        SHOW_SYNC_STATUS: false,
+        
+        // 启用冲突检测
+        ENABLE_CONFLICT_DETECTION: false
+    },
+    
+    // Supabase 配置
+    SUPABASE: {
+        // 这些配置需要你在Supabase创建项目后填写
+        URL: 'https://wentgqfihbifkxpinqyh.supabase.co',
+        ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbnRncWZpaGJpZmt4cGlucXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxNDUwMzksImV4cCI6MjA3NzcyMTAzOX0.lf-CUkvv6po8dB8tq_w0czQFCxKahxnljyiwB11T7KU',
+        
+        // 表名配置
+        TABLES: {
+            FAMILIES: 'families',
+            FAMILY_MEMBERS: 'family_members',
+            STUDY_TASKS: 'study_tasks',
+            COMPLETION_RECORDS: 'completion_records'
+        }
+    },
+    
+    // 应用常量
+    CONSTANTS: {
+        // 数据版本，用于迁移
+        DATA_VERSION: '1.0.0',
+        
+        // 同步间隔（毫秒）
+        SYNC_INTERVAL: 30000,
+        
+        // 重试配置
+        MAX_RETRY_ATTEMPTS: 3,
+        RETRY_DELAY: 1000,
+        
+        // 本地存储键名
+        STORAGE_KEYS: {
+            TASKS: 'studyTasks',
+            FAMILY_INFO: 'familyInfo',
+            SYNC_STATUS: 'syncStatus',
+            LAST_SYNC: 'lastSyncTime'
+        }
+    },
+    
+    // 默认值
+    DEFAULTS: {
+        TASK_DURATION: 30,
+        TASK_POINTS: 10,
+        START_TIME: '19:00',
+        END_TIME: '20:00'
+    }
+};
+
+// 配置验证函数
+function validateConfig() {
+    const errors = [];
+    const warnings = [];
+    
+    // 检查Supabase配置（仅提示，不阻止运行）
+    if (APP_CONFIG.SUPABASE.URL.includes('your-project') || 
+        APP_CONFIG.SUPABASE.ANON_KEY.includes('your-anon-key')) {
+        warnings.push('Supabase配置未完成，家庭功能将不可用');
+    }
+    
+    // 检查功能开关合理性
+    if (APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE === 'supabase' && 
+        APP_CONFIG.SUPABASE.URL.includes('your-project')) {
+        errors.push('配置冲突：已启用Supabase数据源但未配置Supabase连接');
+    }
+    
+    if (APP_CONFIG.FEATURE_FLAGS.ENABLE_FAMILY_FEATURES && 
+        APP_CONFIG.SUPABASE.URL.includes('your-project')) {
+        errors.push('配置冲突：已启用家庭功能但未配置Supabase连接');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors,
+        warnings: warnings
+    };
+}
+
+// 配置更新函数
+function updateFeatureFlag(flag, value) {
+    if (flag in APP_CONFIG.FEATURE_FLAGS) {
+        APP_CONFIG.FEATURE_FLAGS[flag] = value;
+        console.log(`功能开关更新: ${flag} = ${value}`);
+        
+        // 触发配置变更事件
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('configChanged', {
+                detail: { flag, value }
+            }));
+        }
+    } else {
+        console.warn(`未知的功能开关: ${flag}`);
+    }
+}
+
+// 获取当前数据源
+function getCurrentDataSource() {
+    return APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE;
+}
+
+// 初始化配置检查
+document.addEventListener('DOMContentLoaded', function() {
+    const configCheck = validateConfig();
+    
+    if (configCheck.errors.length > 0) {
+        console.error('❌ 配置错误:', configCheck.errors);
+        if (typeof showNotification === 'function') {
+            showNotification('系统配置异常，请联系管理员', 'error');
+        }
+    }
+    
+    if (configCheck.warnings.length > 0) {
+        console.warn('⚠️ 配置警告:', configCheck.warnings);
+    }
+    
+    if (configCheck.isValid && configCheck.warnings.length === 0) {
+        console.log('✅ 配置检查通过');
+    }
+    
+    console.log('📝 当前数据源:', APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE);
+    console.log('🏠 家庭功能:', APP_CONFIG.FEATURE_FLAGS.ENABLE_FAMILY_FEATURES ? '启用' : '禁用');
+});
+
+// 导出配置（用于模块化）
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
+}
 // 初始化时验证配置
 validateConfig();
