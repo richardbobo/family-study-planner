@@ -129,6 +129,7 @@ class FamilyManagement {
         }
         return '';
     }
+
     // 渲染操作按钮
     async renderActionButtons() {
         const buttonsElement = document.getElementById('actionButtons');
@@ -136,28 +137,27 @@ class FamilyManagement {
 
         if (this.familyService.hasJoinedFamily()) {
             buttonsElement.innerHTML = `
-                <button class="btn-family btn-members" onclick="familyManagement.showMembers()">
-                    <i class="fas fa-users"></i> 家庭成员
-                </button>
-                <button class="btn-family btn-migrate" onclick="familyManagement.migrateData()">
-                    <i class="fas fa-sync"></i> 迁移数据
-                </button>
-                <button class="btn-family btn-leave" onclick="familyManagement.leaveFamily()">
-                    <i class="fas fa-sign-out-alt"></i> 退出家庭
-                </button>
-            `;
+            <button class="btn-family btn-members" onclick="familyManagement.showMembers()">
+                <i class="fas fa-users"></i> 家庭成员
+            </button>
+            <button class="btn-family btn-migrate" onclick="familyManagement.migrateData()">
+                <i class="fas fa-sync"></i> 迁移数据
+            </button>
+            <button class="btn-family btn-leave" onclick="familyManagement.leaveFamily()">
+                <i class="fas fa-sign-out-alt"></i> 退出家庭
+            </button>
+        `;
         } else {
             buttonsElement.innerHTML = `
-                <button class="btn-family btn-create" onclick="familyManagement.showCreateForm()">
-                    <i class="fas fa-plus-circle"></i> 创建家庭
-                </button>
-                <button class="btn-family btn-join" onclick="familyManagement.showJoinForm()">
-                    <i class="fas fa-user-plus"></i> 加入家庭
-                </button>
-            `;
+            <button class="btn-family btn-create" onclick="familyManagement.showCreateForm()">
+                <i class="fas fa-plus-circle"></i> 创建家庭
+            </button>
+            <button class="btn-family btn-join" onclick="familyManagement.showJoinForm()">
+                <i class="fas fa-user-plus"></i> 加入家庭
+            </button>
+        `;
         }
     }
-
 
     // 渲染家庭信息
     async renderFamilyInfo() {
@@ -512,6 +512,14 @@ class FamilyManagement {
                 this.hideLeaveFamilyConfirm();
             };
 
+            // 点击外部关闭
+            const outsideClickHandler = (event) => {
+                if (event.target === modal) {
+                    this.hideLeaveFamilyConfirm();
+                    modal.removeEventListener('click', outsideClickHandler);
+                }
+            };
+
             // 移除旧的事件监听器，避免重复绑定
             confirmBtn.replaceWith(confirmBtn.cloneNode(true));
             cancelBtn.replaceWith(cancelBtn.cloneNode(true));
@@ -519,6 +527,7 @@ class FamilyManagement {
             // 重新获取元素并绑定事件
             document.getElementById('confirmLeaveBtn').addEventListener('click', confirmHandler);
             document.getElementById('cancelLeaveBtn').addEventListener('click', cancelHandler);
+            modal.addEventListener('click', outsideClickHandler);
 
             // ESC键关闭
             const escHandler = (event) => {
