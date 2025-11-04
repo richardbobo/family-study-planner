@@ -728,10 +728,9 @@ function getSubjectIcon(subject) {
 
 // 打开模态框 - 修正版本
 function openModal(taskId) {
-    const task = tasks.find(t => t.id == taskId);
+        const task = tasks.find(t => t.id == taskId);
     if (!task) return;
     
- 
     const modal = document.getElementById('taskModal');
     const content = document.getElementById('taskDetailContent');
     
@@ -741,7 +740,6 @@ function openModal(taskId) {
     const subjectIcon = getSubjectIcon(task.subject);
     const iconClass = `icon-${task.subject.toLowerCase()}`;
     
-    // 构建完整的模态框内容（包括header和body）
     let modalHTML = `
         <div class="modal-header">
             <div class="modal-header-content">
@@ -775,95 +773,65 @@ function openModal(taskId) {
         </div>
     `;
     
-    // 构建body内容
-    if (task.completed) {
-        // 已完成的任务详情
-        const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
-        const timeString = completionTime.toLocaleString();
-        const duration = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '15分钟';
-        
+    // Body内容
+    modalHTML += `
+        <div class="modal-body-content">
+    `;
+    
+    // 显示具体内容（如果有的话）
+    if (task.detailedContent) {
         modalHTML += `
-            <div class="modal-body-content">
-                <div class="completion-info">
-                    <div class="completion-time">
-                        <i class="fas fa-check-circle"></i> 任务已完成
-                    </div>
-                    <div class="completion-duration">
-                        完成时间: ${timeString}<br>
-                        学习时长: ${duration}
+            <div class="detail-item full-width">
+                <div class="detail-label">学习内容：</div>
+                <div class="detail-value">
+                    <div class="task-content-box">
+                        <pre class="content-text">${escapeHtml(task.detailedContent)}</pre>
                     </div>
                 </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">重复类型:</div>
-                    <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">计划时间:</div>
-                    <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">任务积分:</div>
-                    <div class="detail-value">${task.points || 10} 分</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">预计时长:</div>
-                    <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
-                </div>
-                
-                ${task.completionNote ? `
-                <div class="detail-item">
-                    <div class="detail-label">完成备注:</div>
-                    <div class="detail-value">
-                        <div class="detail-note">${task.completionNote}</div>
-                    </div>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    } else {
-        // 未完成的任务详情
-        modalHTML += `
-            <div class="modal-body-content">
-                <div class="detail-item">
-                    <div class="detail-label">重复类型:</div>
-                    <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">计划时间:</div>
-                    <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">任务积分:</div>
-                    <div class="detail-value">${task.points || 10} 分</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">预计时长:</div>
-                    <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
-                </div>
-                
-                ${task.description ? `
-                <div class="detail-item">
-                    <div class="detail-label">任务内容:</div>
-                    <div class="detail-value">${task.description}</div>
-                </div>
-                ` : ''}
             </div>
         `;
     }
     
+    // 原有的任务信息
+    modalHTML += `
+            <div class="detail-item">
+                <div class="detail-label">重复类型:</div>
+                <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">计划时间:</div>
+                <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">任务积分:</div>
+                <div class="detail-value">${task.points || 10} 分</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">预计时长:</div>
+                <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+            </div>
+    `;
+    
+    if (task.description && !task.detailedContent) {
+        modalHTML += `
+            <div class="detail-item">
+                <div class="detail-label">任务描述:</div>
+                <div class="detail-value">${task.description}</div>
+            </div>
+        `;
+    }
+    
+    modalHTML += `</div>`;
+    
     content.innerHTML = modalHTML;
 
-       // 更新删除按钮文本
+    // 更新删除按钮文本
     updateDeleteButtonText(task);
     
-    // 设置删除按钮事件
+    // 设置按钮事件
     const deleteBtn = document.getElementById('deleteTaskBtn');
     if (deleteBtn) {
         deleteBtn.onclick = function() {
@@ -871,7 +839,6 @@ function openModal(taskId) {
         };
     }
     
-    // 设置编辑按钮事件
     const editBtn = document.getElementById('editTaskBtn');
     if (editBtn) {
         editBtn.onclick = function() {
@@ -880,6 +847,18 @@ function openModal(taskId) {
     }
     
     modal.style.display = 'flex';
+}
+
+// HTML转义函数
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, '<br>')
+        .replace(/ /g, '&nbsp;');
 }
 
 // 关闭模态框

@@ -1,5 +1,5 @@
-// AI智能对话创建计划功能 - 根据DeepSeek官方文档优化
-console.log('ai-create.js 已加载 - 优化版');
+// AI智能对话创建计划功能
+console.log('ai-create.js 已加载');
 
 let chatHistory = [];
 let currentAITasks = [];
@@ -7,17 +7,7 @@ let isAIThinking = false;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('AI对话页面初始化 - 优化版');
-    
-    const configCheck = validateConfig();
-    if (configCheck.isValid) {
-        console.log('✅ 使用模型:', APP_CONFIG.DEEPSEEK.MODEL);
-        console.log('🌐 API端点:', APP_CONFIG.DEEPSEEK.BASE_URL + '/chat/completions');
-    } else {
-        console.error('❌ 配置错误:', configCheck.errors);
-        showNotification('AI功能配置异常，请联系管理员', 'error');
-    }
-    
+    console.log('AI对话页面初始化');
     initializeChat();
 });
 
@@ -26,6 +16,7 @@ function initializeChat() {
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendButton');
     
+    // 输入框自动调整高度
     if (chatInput) {
         chatInput.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -33,17 +24,14 @@ function initializeChat() {
             updateSendButton();
         });
         
+        // 支持按Enter发送，Ctrl+Enter换行
         chatInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         });
-        
-        chatInput.focus();
     }
-    
-    updateSendButton();
 }
 
 // 更新发送按钮状态
@@ -57,14 +45,14 @@ function updateSendButton() {
     }
 }
 
-// 发送消息到DeepSeek - 根据官方文档优化
-async function sendMessage() {
+// 发送消息
+function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const message = chatInput.value.trim();
     
     if (!message || isAIThinking) return;
     
-    // 添加用户消息到界面
+    // 添加用户消息
     addMessage('user', message);
     chatInput.value = '';
     chatInput.style.height = 'auto';
@@ -73,212 +61,10 @@ async function sendMessage() {
     // 显示AI思考状态
     showTypingIndicator();
     
-    try {
-        // 调用DeepSeek API - 使用官方推荐的格式
-        const aiResponse = await callDeepSeekAPI(message);
-        
-        // 处理AI回复
-        processAIResponse(aiResponse);
-        
-    } catch (error) {
-        console.error('DeepSeek API调用失败:', error);
-        handleAPIError(error);
-    }
-}
-
-// 调用DeepSeek API - 根据官方文档完全重写
-async function callDeepSeekAPI(userMessage) {
-    const config = APP_CONFIG.DEEPSEEK;
-    const behavior = APP_CONFIG.AI_BEHAVIOR;
-    
-    // 验证配置
-    if (!config.API_KEY || config.API_KEY === '你的_DeepSeek_API_密钥') {
-        throw new Error('未配置有效的API密钥');
-    }
-    
-    if (!config.BASE_URL) {
-        throw new Error('API基础URL未配置');
-    }
-    
-    const apiUrl = `${config.BASE_URL}/chat/completions`;
-    
-    console.log('🚀 调用DeepSeek API:', {
-        url: apiUrl,
-        model: config.MODEL,
-        stream: behavior.STREAM
-    });
-    
-    const requestBody = {
-        model: config.MODEL,
-        messages: [
-            {
-                role: "system",
-                content: behavior.SYSTEM_PROMPT
-            },
-            {
-                role: "user", 
-                content: userMessage
-            }
-        ],
-        temperature: behavior.TEMPERATURE,
-        max_tokens: behavior.MAX_TOKENS,
-        stream: behavior.STREAM,
-        top_p: behavior.TOP_P
-    };
-    
-    const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.API_KEY}`
-        },
-        body: JSON.stringify(requestBody)
-    });
-    
-    if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-            const errorData = await response.json();
-            errorMessage = errorData.error?.message || errorMessage;
-        } catch (e) {
-            // 忽略JSON解析错误
-        }
-        throw new Error(`API请求失败: ${errorMessage}`);
-    }
-    
-    const data = await response.json();
-    
-    // 验证响应格式
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('API响应格式异常');
-    }
-    
-    return data.choices[0].message.content;
-}
-
-// 处理AI回复 - 优化JSON解析
-function processAIResponse(aiResponse) {
-    removeTypingIndicator();
-    
-    try {
-        // 首先尝试直接解析JSON
-        const parsedResponse = JSON.parse(aiResponse);
-        
-        if (parsedResponse.tasks && Array.isArray(parsedResponse.tasks)) {
-            // 成功解析JSON格式
-            currentAITasks = parsedResponse.tasks.map((task, index) => ({
-                id: Date.now() + index,
-                subject: task.subject || '通用',
-                name: task.name || `${task.subject}学习任务`,
-                description: task.description || '',
-                duration: task.duration || 30,
-                suggestedTime: task.suggestedTime || '19:00-19:30'
-            }));
-            
-            // 构建用户友好的显示消息
-            let displayMessage = `🎯 已为你生成 ${currentAITasks.length} 个学习计划：\n\n`;
-            currentAITasks.forEach((task, index) => {
-                displayMessage += `${index + 1}. **${task.subject}** - ${task.name} (${task.duration}分钟)\n`;
-            });
-            displayMessage += `\n📊 总时长: ${parsedResponse.totalDuration || currentAITasks.reduce((sum, task) => sum + task.duration, 0)}分钟`;
-            if (parsedResponse.summary) {
-                displayMessage += `\n\n${parsedResponse.summary}`;
-            }
-            
-            addMessage('assistant', displayMessage);
-            showActionButtons(currentAITasks.length);
-            showNotification(`成功生成 ${currentAITasks.length} 个学习计划`, 'success');
-            
-        } else {
-            throw new Error('JSON格式不符合预期');
-        }
-        
-    } catch (jsonError) {
-        console.log('JSON解析失败，使用文本回复:', jsonError);
-        
-        // JSON解析失败，使用原始文本回复
-        addMessage('assistant', aiResponse);
-        
-        // 仍然尝试从文本中提取任务
-        const extractedTasks = extractTasksFromResponse(aiResponse);
-        if (extractedTasks.length > 0) {
-            currentAITasks = extractedTasks;
-            showActionButtons(extractedTasks.length);
-            showNotification(`从回复中识别出 ${extractedTasks.length} 个学习计划`, 'info');
-        } else {
-            hideActionButtons();
-            showNotification('AI已回复，但未识别出结构化计划', 'info');
-        }
-    }
-}
-
-// 从文本回复中提取任务信息
-function extractTasksFromResponse(response) {
-    const tasks = [];
-    
-    // 多种模式尝试匹配任务
-    const patterns = [
-        // 模式1: 数字. 科目 - 任务名称 (时长分钟)
-        /\d+\.\s*([^—]+?)\s*[—\-]\s*([^(]+?)\s*[（(](\d+)\s*分钟[）)]/g,
-        // 模式2: **科目** - 任务描述
-        /\*\*([^*]+)\*\*\s*[—\-]\s*([^\n]+)/g,
-        // 模式3: 科目: 任务描述 (时长)
-        /([^:：]+)[:：]\s*([^(]+?)\s*[（(](\d+)\s*分钟[）)]/g
-    ];
-    
-    for (const pattern of patterns) {
-        const matches = response.matchAll(pattern);
-        for (const match of matches) {
-            const subject = match[1].trim();
-            const name = match[2].trim();
-            const duration = match[3] ? parseInt(match[3]) : 30;
-            
-            if (subject && name) {
-                tasks.push({
-                    id: Date.now() + tasks.length,
-                    subject: subject,
-                    name: name,
-                    duration: duration,
-                    description: `${name} - ${subject}学习任务`,
-                    suggestedTime: '19:00-19:30'
-                });
-            }
-        }
-        
-        if (tasks.length > 0) break; // 找到任务就停止
-    }
-    
-    return tasks;
-}
-
-// 其他函数保持不变（错误处理、UI交互等）
-// [handleAPIError, addMessage, showTypingIndicator, removeTypingIndicator, 
-//  showActionButtons, hideActionButtons, regeneratePlan, confirmAIPlan 等函数]
-// ... 保持原有代码不变
-
-// 处理API错误
-function handleAPIError(error) {
-    removeTypingIndicator();
-    
-    let errorMessage = 'AI服务暂时不可用，请稍后重试';
-    let userMessage = `抱歉，我遇到了一些技术问题：${errorMessage}`;
-    
-    if (error.message.includes('API密钥')) {
-        errorMessage = 'API密钥配置错误，请联系管理员';
-        userMessage = `配置错误：${errorMessage}`;
-    } else if (error.message.includes('401')) {
-        errorMessage = 'API密钥无效，请联系管理员';
-        userMessage = `认证失败：${errorMessage}`;
-    } else if (error.message.includes('429')) {
-        errorMessage = '请求过于频繁，请稍后重试';
-        userMessage = `请求限制：${errorMessage}`;
-    } else if (error.message.includes('500')) {
-        errorMessage = 'AI服务内部错误，请稍后重试';
-        userMessage = `服务异常：${errorMessage}`;
-    }
-    
-    addMessage('assistant', userMessage);
-    showNotification(errorMessage, 'error');
+    // 模拟AI处理
+    setTimeout(() => {
+        processAIMessage(message);
+    }, 1500);
 }
 
 // 添加消息到聊天界面
@@ -286,26 +72,29 @@ function addMessage(role, content) {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
     
+    // 移除打字指示器
+    removeTypingIndicator();
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
     const avatarIcon = role === 'user' ? 'fa-user' : 'fa-robot';
     const avatarClass = role === 'user' ? 'user' : 'assistant';
     
-    // 处理换行和基本格式化
-    const formattedContent = content.replace(/\n/g, '<br>');
-    
     messageDiv.innerHTML = `
         <div class="message-avatar ${avatarClass}">
             <i class="fas ${avatarIcon}"></i>
         </div>
         <div class="message-content">
-            <div class="message-text">${formattedContent}</div>
+            <div class="message-text">${content}</div>
         </div>
     `;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // 保存到历史
+    chatHistory.push({ role, content });
 }
 
 // 显示打字指示器
@@ -347,6 +136,209 @@ function removeTypingIndicator() {
     updateSendButton();
 }
 
+// 处理AI消息
+function processAIMessage(userMessage) {
+    try {
+        // 解析用户需求
+        const userRequirements = parseUserRequirements(userMessage);
+        
+        // 生成学习计划
+        const generatedTasks = generateLearningPlan(userRequirements);
+        currentAITasks = generatedTasks;
+        
+        // 构建AI回复
+        const aiResponse = buildAIResponse(generatedTasks, userRequirements);
+        
+        // 添加AI回复
+        addMessage('assistant', aiResponse);
+        
+        // 显示操作按钮
+        showActionButtons(generatedTasks.length);
+        
+    } catch (error) {
+        console.error('AI处理失败:', error);
+        addMessage('assistant', '抱歉，我遇到了一些问题。请重新描述你的学习需求，我会再试一次。');
+    }
+}
+
+// 解析用户需求
+function parseUserRequirements(message) {
+    const requirements = {
+        grade: '通用',
+        subjects: [],
+        timeRange: '晚上',
+        duration: 120, // 默认2小时
+        specialRequirements: []
+    };
+    
+    // 年级检测
+    if (message.includes('一年级')) requirements.grade = '一年级';
+    else if (message.includes('二年级')) requirements.grade = '二年级';
+    else if (message.includes('三年级')) requirements.grade = '三年级';
+    else if (message.includes('四年级')) requirements.grade = '四年级';
+    else if (message.includes('五年级')) requirements.grade = '五年级';
+    else if (message.includes('六年级')) requirements.grade = '六年级';
+    
+    // 科目检测
+    if (message.includes('数学') || message.includes('算术')) requirements.subjects.push('数学');
+    if (message.includes('语文') || message.includes('中文')) requirements.subjects.push('语文');
+    if (message.includes('英语') || message.includes('英文')) requirements.subjects.push('英语');
+    if (message.includes('科学')) requirements.subjects.push('科学');
+    if (message.includes('阅读') || message.includes('读书')) requirements.subjects.push('阅读');
+    if (message.includes('美术') || message.includes('画画')) requirements.subjects.push('美术');
+    if (message.includes('音乐')) requirements.subjects.push('音乐');
+    if (message.includes('体育') || message.includes('运动')) requirements.subjects.push('体育');
+    
+    // 如果没有指定科目，使用默认科目
+    if (requirements.subjects.length === 0) {
+        requirements.subjects = ['数学', '语文', '英语', '阅读'];
+    }
+    
+    // 时间检测
+    if (message.includes('早上') || message.includes('早晨')) requirements.timeRange = '早上';
+    else if (message.includes('下午')) requirements.timeRange = '下午';
+    else if (message.includes('晚上') || message.includes('晚间')) requirements.timeRange = '晚上';
+    
+    // 时间段检测
+    if (message.includes('7点') && message.includes('9点')) {
+        requirements.timeRange = '晚上7点-9点';
+        requirements.duration = 120;
+    } else if (message.includes('1小时')) {
+        requirements.duration = 60;
+    }
+    
+    // 特殊要求
+    if (message.includes('周末')) requirements.specialRequirements.push('周末');
+    if (message.includes('工作日') || message.includes('周一至周五')) {
+        requirements.specialRequirements.push('工作日');
+    }
+    if (message.includes('重点') || message.includes('加强')) {
+        requirements.specialRequirements.push('重点学习');
+    }
+    
+    return requirements;
+}
+
+// 生成学习计划
+function generateLearningPlan(requirements) {
+    const tasks = [];
+    const totalDuration = requirements.duration;
+    const subjectCount = requirements.subjects.length;
+    const baseDuration = Math.floor(totalDuration / subjectCount);
+    
+    requirements.subjects.forEach((subject, index) => {
+        // 为每个科目分配时间（最后一个科目可能时间稍长）
+        const duration = index === subjectCount - 1 ? 
+            totalDuration - (baseDuration * (subjectCount - 1)) : baseDuration;
+        
+        const task = createTaskForSubject(subject, duration, requirements);
+        tasks.push(task);
+    });
+    
+    return tasks;
+}
+
+// 为科目创建任务
+function createTaskForSubject(subject, duration, requirements) {
+    const taskTemplates = {
+        '数学': [
+            `完成${requirements.grade}数学练习册`,
+            `数学应用题训练`,
+            `口算和心算练习`,
+            `几何图形学习`
+        ],
+        '语文': [
+            `${requirements.grade}语文课文预习`,
+            `生字词学习和默写`,
+            `阅读理解练习`,
+            `作文写作训练`
+        ],
+        '英语': [
+            `英语单词记忆和拼写`,
+            `英语听力练习`,
+            `口语对话训练`,
+            `英语阅读理解`
+        ],
+        '阅读': [
+            `课外阅读时间`,
+            `名著阅读和分享`,
+            `阅读理解训练`,
+            `读书笔记撰写`
+        ],
+        '科学': [
+            `科学实验观察`,
+            `自然科学知识学习`,
+            `科学小制作`,
+            `科学探索活动`
+        ],
+        '美术': [
+            `绘画技巧练习`,
+            `手工制作活动`,
+            `艺术欣赏学习`,
+            `创意美术作品`
+        ],
+        '音乐': [
+            `音乐基础知识学习`,
+            `乐器练习`,
+            `歌曲演唱练习`,
+            `音乐欣赏`
+        ],
+        '体育': [
+            `基础体能训练`,
+            `运动技能练习`,
+            `体育游戏活动`,
+            `健康知识学习`
+        ]
+    };
+    
+    const descriptions = {
+        '数学': '巩固数学基础，提高计算能力',
+        '语文': '提升阅读理解能力和写作水平',
+        '英语': '加强英语听说读写综合能力',
+        '阅读': '培养阅读习惯，扩展知识面',
+        '科学': '探索科学世界，培养科学思维',
+        '美术': '发展艺术创造力，提高审美能力',
+        '音乐': '培养音乐素养，享受艺术之美',
+        '体育': '增强体质，培养运动习惯'
+    };
+    
+    const templates = taskTemplates[subject] || [`${subject}学习任务`];
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    
+    return {
+        id: Date.now() + Math.random(),
+        name: randomTemplate,
+        subject: subject,
+        description: descriptions[subject] || `${subject}科目学习`,
+        duration: duration,
+        time: `${requirements.timeRange}`,
+        grade: requirements.grade
+    };
+}
+
+// 构建AI回复
+function buildAIResponse(tasks, requirements) {
+    let response = `太棒了！我根据你的需求为你生成了 ${tasks.length} 个学习计划：\n\n`;
+    
+    tasks.forEach((task, index) => {
+        response += `${index + 1}. **${task.subject}** - ${task.name}\n`;
+        response += `   ${task.description}\n\n`;
+    });
+    
+    response += `📚 **安排说明**：\n`;
+    response += `• 适合${requirements.grade}学生\n`;
+    response += `• 学习时段：${requirements.timeRange}\n`;
+    response += `• 总时长：${requirements.duration}分钟\n`;
+    
+    if (requirements.specialRequirements.length > 0) {
+        response += `• 特别安排：${requirements.specialRequirements.join('、')}\n`;
+    }
+    
+    response += `\n你可以点击"确认创建"来保存这些计划，或者"重新生成"来调整安排。`;
+    
+    return response;
+}
+
 // 显示操作按钮
 function showActionButtons(taskCount) {
     const actionsBottom = document.getElementById('aiActionsBottom');
@@ -358,30 +350,17 @@ function showActionButtons(taskCount) {
     }
 }
 
-// 隐藏操作按钮
-function hideActionButtons() {
-    const actionsBottom = document.getElementById('aiActionsBottom');
-    if (actionsBottom) {
-        actionsBottom.style.display = 'none';
-    }
-}
-
 // 重新生成计划
-async function regeneratePlan() {
+function regeneratePlan() {
     const lastUserMessage = chatHistory.filter(msg => msg.role === 'user').pop();
     if (lastUserMessage) {
-        // 添加重新生成提示
-        addMessage('user', '请重新生成学习计划，可以调整一下科目和时长安排');
-        chatHistory.push({ role: 'user', content: '请重新生成学习计划，可以调整一下科目和时长安排' });
-        
+        // 显示重新生成提示
+        addMessage('user', '请重新生成学习计划');
         showTypingIndicator();
         
-        try {
-            const aiResponse = await callDeepSeekAPI('请重新生成学习计划，可以调整一下科目和时长安排');
-            processAIResponse(aiResponse);
-        } catch (error) {
-            handleAPIError(error);
-        }
+        setTimeout(() => {
+            processAIMessage(lastUserMessage.content);
+        }, 1500);
     }
 }
 
@@ -402,7 +381,8 @@ function confirmAIPlan() {
             maxId++;
             
             // 解析时间安排
-            const [startTime, endTime] = parseSuggestedTime(task.suggestedTime);
+            const timeSlots = allocateTimeSlots(currentAITasks);
+            const taskTime = timeSlots.find(slot => slot.subject === task.subject);
             
             return {
                 id: maxId,
@@ -410,8 +390,8 @@ function confirmAIPlan() {
                 subject: task.subject,
                 description: task.description,
                 date: getDefaultStartDate(),
-                startTime: startTime,
-                endTime: endTime,
+                startTime: taskTime ? taskTime.startTime : '19:00',
+                endTime: taskTime ? taskTime.endTime : '20:00',
                 time: task.duration,
                 points: calculatePoints(task.duration),
                 completed: false,
@@ -440,15 +420,34 @@ function confirmAIPlan() {
     }
 }
 
-// 解析建议时间段
-function parseSuggestedTime(suggestedTime) {
-    if (suggestedTime && suggestedTime.includes('-')) {
-        const times = suggestedTime.split('-');
-        if (times.length === 2) {
-            return [times[0].trim(), times[1].trim()];
-        }
-    }
-    return ['19:00', '19:30']; // 默认时间
+// 分配时间段
+function allocateTimeSlots(tasks) {
+    const slots = [];
+    let currentTime = '19:00';
+    
+    tasks.forEach(task => {
+        const startTime = currentTime;
+        const endTime = addMinutesToTime(currentTime, task.duration);
+        
+        slots.push({
+            subject: task.subject,
+            startTime: startTime,
+            endTime: endTime
+        });
+        
+        currentTime = endTime;
+    });
+    
+    return slots;
+}
+
+// 时间计算辅助函数
+function addMinutesToTime(time, minutes) {
+    const [hours, mins] = time.split(':').map(Number);
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
 }
 
 // 显示成功消息
@@ -467,7 +466,10 @@ function showSuccessMessage() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     // 隐藏操作按钮
-    hideActionButtons();
+    const actionsBottom = document.getElementById('aiActionsBottom');
+    if (actionsBottom) {
+        actionsBottom.style.display = 'none';
+    }
     
     // 延迟返回主页
     setTimeout(() => {
