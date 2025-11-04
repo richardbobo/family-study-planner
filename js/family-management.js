@@ -373,7 +373,22 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
+    // 确认退出家庭
+    async leaveFamilyConfirmed() {
+        await this.setLoading(true);
 
+        try {
+            await this.familyService.leaveFamily();
+            this.showSuccessToast('退出成功', '已成功退出家庭');
+            await this.render();
+
+        } catch (error) {
+            console.error('❌ 退出家庭失败:', error);
+            this.showErrorToast('退出失败', error.message);
+        } finally {
+            await this.setLoading(false);
+        }
+    }
     // 迁移数据到家庭
     async migrateData() {
         if (!confirm('是否将本地数据迁移到当前家庭？迁移后数据将在家庭成员间共享。')) {
@@ -477,6 +492,101 @@ class FamilyManagement {
                 messageDiv.remove();
             }
         }, 3000);
+    }
+    // 弹窗管理方法
+    showLeaveFamilyConfirm() {
+        const modal = document.getElementById('leaveFamilyModal');
+        if (modal) {
+            modal.classList.add('show');
+
+            // 绑定确认按钮事件
+            const confirmBtn = document.getElementById('confirmLeaveBtn');
+            const cancelBtn = document.getElementById('cancelLeaveBtn');
+
+            const confirmHandler = () => {
+                this.leaveFamilyConfirmed();
+                this.hideLeaveFamilyConfirm();
+            };
+
+            const cancelHandler = () => {
+                this.hideLeaveFamilyConfirm();
+            };
+
+            // 移除旧的事件监听器，避免重复绑定
+            confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+            cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+
+            // 重新获取元素并绑定事件
+            document.getElementById('confirmLeaveBtn').addEventListener('click', confirmHandler);
+            document.getElementById('cancelLeaveBtn').addEventListener('click', cancelHandler);
+
+            // ESC键关闭
+            const escHandler = (event) => {
+                if (event.key === 'Escape') {
+                    this.hideLeaveFamilyConfirm();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+    }
+
+    hideLeaveFamilyConfirm() {
+        const modal = document.getElementById('leaveFamilyModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+
+
+    // Toast 提示方法
+    showSuccessToast(title, description) {
+        this.showToast('success', title, description);
+    }
+
+    showErrorToast(title, description) {
+        this.showToast('error', title, description);
+    }
+
+    showWarningToast(title, description) {
+        this.showToast('warning', title, description);
+    }
+
+    showToast(type, title, description) {
+        const toast = document.getElementById('successToast');
+        if (!toast) return;
+
+        // 更新内容和样式
+        toast.className = `toast-message toast-${type} show`;
+        document.getElementById('toastTitle').textContent = title;
+        document.getElementById('toastDesc').textContent = description;
+
+        // 更新图标
+        const icon = toast.querySelector('.toast-icon i');
+        const icons = {
+            success: 'fa-check',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+        icon.className = `fas ${icons[type] || 'fa-info-circle'}`;
+
+        // 自动隐藏
+        setTimeout(() => {
+            this.hideToast();
+        }, 3000);
+    }
+
+    hideToast() {
+        const toast = document.getElementById('successToast');
+        if (toast) {
+            toast.classList.remove('show');
+        }
+    }
+
+    // 更新退出家庭方法
+    async leaveFamily() {
+        this.showLeaveFamilyConfirm();
     }
 
     // 获取消息图标
