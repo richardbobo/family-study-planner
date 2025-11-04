@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="styles/index.css">
     <link rel="stylesheet" href="styles/family-management.css">
 </head>
+
 <body>
     <div class="container">
         <div class="family-container">
@@ -69,13 +71,11 @@
                 <form class="family-form" onsubmit="handleCreateFamily(event)">
                     <div class="form-group">
                         <label class="form-label">家庭名称</label>
-                        <input type="text" class="form-input" id="familyName" 
-                               placeholder="例如：张小明一家" required>
+                        <input type="text" class="form-input" id="familyName" placeholder="例如：张小明一家" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">你的姓名（家长）</label>
-                        <input type="text" class="form-input" id="parentName" 
-                               placeholder="例如：张爸爸" required>
+                        <input type="text" class="form-input" id="parentName" placeholder="例如：张爸爸" required>
                     </div>
                     <div class="action-buttons">
                         <button type="button" class="btn-family btn-back" onclick="showMainView()">
@@ -94,13 +94,12 @@
                 <form class="family-form" onsubmit="handleJoinFamily(event)">
                     <div class="form-group">
                         <label class="form-label">家庭码</label>
-                        <input type="text" class="form-input" id="familyCode" 
-                               placeholder="输入6位家庭码" required maxlength="6">
+                        <input type="text" class="form-input" id="familyCode" placeholder="输入6位家庭码" required
+                            maxlength="6">
                     </div>
                     <div class="form-group">
                         <label class="form-label">你的姓名</label>
-                        <input type="text" class="form-input" id="userName" 
-                               placeholder="例如：张小明" required>
+                        <input type="text" class="form-input" id="userName" placeholder="例如：张小明" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">角色</label>
@@ -121,7 +120,47 @@
             </div>
         </div>
     </div>
+    <!-- 退出家庭确认弹窗 -->
+    <div class="confirm-modal" id="leaveFamilyModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <h3 class="confirm-modal-title">退出家庭</h3>
+                <p class="confirm-modal-subtitle">请确认您的操作</p>
+            </div>
+            <div class="confirm-modal-body">
+                <p class="confirm-modal-message">确定要退出当前家庭吗？</p>
+                <div class="confirm-modal-warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    退出后需要重新加入才能访问家庭数据
+                </div>
+            </div>
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" id="cancelLeaveBtn">
+                    取消
+                </button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm" id="confirmLeaveBtn">
+                    <i class="fas fa-sign-out-alt"></i> 确认退出
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <!-- 成功提示 Toast -->
+    <div class="toast-message" id="successToast">
+        <div class="toast-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle">操作成功</div>
+            <div class="toast-desc" id="toastDesc">操作已完成</div>
+        </div>
+        <button class="toast-close" onclick="familyManagement.hideToast()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
     <!-- 引入必要的脚本 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
@@ -130,4 +169,5 @@
     <script src="js/family-service.js"></script>
     <script src="js/family-management.js"></script>
 </body>
+
 </html>
