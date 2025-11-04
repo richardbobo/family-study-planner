@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭管理 - 学习计划管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles/index.css">
+    <style>
+        .family-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .family-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .family-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .status-joined { border-left: 4px solid #2ed573; }
+        .status-not-joined { border-left: 4px solid #ff9f43; }
+        .family-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #4a69bd;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-family {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-create {
+            background: #4a69bd;
+            color: white;
+        }
+        .btn-join {
+            background: #2ed573;
+            color: white;
+        }
+        .btn-leave {
+            background: #ff6b6b;
+            color: white;
+        }
+        .btn-migrate {
+            background: #ff9f43;
+            color: white;
+        }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-family:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .family-info {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a69bd;
+        }
+        .members-list {
+            margin-top: 20px;
+        }
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4a69bd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .member-info {
+            flex: 1;
+        }
+        .member-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .member-role {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: capitalize;
+        }
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .role-parent {
+            background: #ffeaa7;
+            color: #e17055;
+        }
+        .role-child {
+            background: #a29bfe;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="family-container">
+            <!-- 头部 -->
+            <div class="ai-header">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1><i class="fas fa-home"></i> 家庭管理</h1>
+                    <p class="subtitle">创建或加入家庭，与家人共享学习计划</p>
+                </div>
+            </div>
+
+            <!-- 家庭状态 -->
+            <div class="family-card">
+                <div class="family-status" id="familyStatus">
+                    <!-- 状态内容由JavaScript动态生成 -->
+                </div>
+
+                <!-- 已加入家庭时的信息 -->
+                <div class="family-info" id="familyInfo" style="display: none;">
+                    <h3>家庭信息</h3>
+                    <div class="info-item">
+                        <span class="info-label">家庭名称:</span>
+                        <span id="infoFamilyName">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">家庭码:</span>
+                        <span id="infoFamilyCode">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">你的角色:</span>
+                        <span id="infoMemberRole">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">加入时间:</span>
+                        <span id="infoJoinTime">-</span>
+                    </div>
+                </div>
+
+                <!-- 家庭成员列表 -->
+                <div class="members-list" id="membersList" style="display: none;">
+                    <h3>家庭成员</h3>
+                    <div id="membersContainer">
+                        <!-- 成员列表由JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-buttons" id="actionButtons">
+                    <!-- 按钮由JavaScript根据状态动态生成 -->
+                </div>
+            </div>
+
+            <!-- 创建家庭表单 -->
+            <div class="family-card" id="createFamilyForm" style="display: none;">
+                <h3><i class="fas fa-plus-circle"></i> 创建新家庭</h3>
+                <form class="family-form" onsubmit="handleCreateFamily(event)">
+                    <div class="form-group">
+                        <label class="form-label">家庭名称</label>
+                        <input type="text" class="form-input" id="familyName" 
+                               placeholder="例如：张小明一家" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">你的姓名（家长）</label>
+                        <input type="text" class="form-input" id="parentName" 
+                               placeholder="例如：张爸爸" required>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-family btn-back" onclick="showMainView()">
+                            取消
+                        </button>
+                        <button type="submit" class="btn-family btn-create">
+                            <i class="fas fa-home"></i> 创建家庭
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 加入家庭表单 -->
+            <div class="family-card" id="joinFamilyForm" style="display: none;">
+                <h3><i class="fas fa-user-plus"></i> 加入现有家庭</h3>
+                <form class="family-form" onsubmit="handleJoinFamily(event)">
+                    <div class="form-group">
+                        <label class="form-label">家庭码</label>
+                        <input type="text" class="form-input" id="familyCode" 
+                               placeholder="输入6位家庭码" required maxlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">你的姓名</label>
+                        <input type="text" class="form-input" id="userName" 
+                               placeholder="例如：张小明" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select class="form-input" id="userRole">
+                            <option value="child">孩子</option>
+                            <option value="parent">家长</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-family btn-back" onclick="showMainView()">
+                            取消
+                        </button>
+                        <button type="submit" class="btn-family btn-join">
+                            <i class="fas fa-sign-in-alt"></i> 加入家庭
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入必要的脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/family-service.js"></script>
+    <script src="js/family-management.js"></script>
+</body>
+</html>
