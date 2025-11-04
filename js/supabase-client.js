@@ -115,13 +115,16 @@ class SupabaseClient {
         }
     }
 
-    // 加入家庭
+
+    // 加入家庭（修复版本）
     async joinFamily(familyCode, userName, role = 'child') {
         if (!this.isConnected) {
             throw new Error('Supabase未连接');
         }
 
         try {
+            console.log('🔍 验证家庭码:', familyCode);
+
             // 首先验证家庭码
             const { data: family, error: familyError } = await this.client
                 .from(APP_CONFIG.SUPABASE.TABLES.FAMILIES)
@@ -130,10 +133,33 @@ class SupabaseClient {
                 .single();
 
             if (familyError || !family) {
-                throw new Error('家庭码无效');
+                throw new Error('家庭码无效或不存在');
             }
 
-            // 添加家庭成员
+            console.log('✅ 家庭验证成功:', family.id);
+
+            // 检查用户是否已经是家庭成员
+            const { data: existingMember, error: checkError } = await this.client
+                .from(APP_CONFIG.SUPABASE.TABLES.FAMILY_MEMBERS)
+                .select('*')
+                .eq('family_id', family.id)
+                .eq('user_name', userName)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 表示没有找到记录
+                console.error('❌ 检查成员存在失败:', checkError);
+            }
+
+            if (existingMember) {
+                console.log('ℹ️ 用户已是家庭成员，直接返回现有成员');
+                return {
+                    family: family,
+                    member: existingMember
+                };
+            }
+
+            // 添加新的家庭成员
+            console.log('📝 添加新的家庭成员:', { userName, role });
             const { data, error } = await this.client
                 .from(APP_CONFIG.SUPABASE.TABLES.FAMILY_MEMBERS)
                 .insert([
@@ -141,12 +167,20 @@ class SupabaseClient {
                         family_id: family.id,
                         user_name: userName,
                         role: role,
+                        created_at: new Date().toISOString(),
                         joined_at: new Date().toISOString()
                     }
                 ])
                 .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ 添加成员失败:', error);
+                throw new Error('加入家庭失败: ' + error.message);
+            }
+
+            if (!data || data.length === 0) {
+                throw new Error('加入家庭失败：未返回成员数据');
+            }
 
             console.log('✅ 加入家庭成功:', data[0]);
             return {
@@ -155,7 +189,7 @@ class SupabaseClient {
             };
 
         } catch (error) {
-            console.error('❌ 加入家庭失败:', error);
+            console.error('❌ 加入家庭失败 - Supabase 客户端错误:', error);
             throw error;
         }
     }
