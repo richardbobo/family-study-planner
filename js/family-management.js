@@ -79,6 +79,7 @@ class FamilyManagement {
     }
 
     // 渲染家庭状态
+    // 在 renderFamilyStatus 方法中添加重新加入提示
     async renderFamilyStatus() {
         const statusElement = document.getElementById('familyStatus');
         if (!statusElement) return;
@@ -88,29 +89,46 @@ class FamilyManagement {
             const member = this.familyService.getCurrentMember();
 
             statusElement.innerHTML = `
-                <i class="fas fa-check-circle" style="color: #2ed573;"></i>
-                <div>
-                    <strong>已加入家庭</strong>
-                    <div style="font-size: 14px; color: #6c757d;">
-                        ${family.family_name} • ${member.user_name} (${member.role})
-                    </div>
+            <i class="fas fa-check-circle" style="color: #2ed573;"></i>
+            <div>
+                <strong>已加入家庭</strong>
+                <div style="font-size: 14px; color: #6c757d;">
+                    ${family.family_name} • ${member.user_name} (${member.role})
                 </div>
-            `;
+            </div>
+        `;
             statusElement.className = 'family-status status-joined';
         } else {
             statusElement.innerHTML = `
-                <i class="fas fa-home" style="color: #ff9f43;"></i>
-                <div>
-                    <strong>尚未加入家庭</strong>
-                    <div style="font-size: 14px; color: #6c757d;">
-                        创建或加入家庭以享受数据同步功能
-                    </div>
+            <i class="fas fa-home" style="color: #ff9f43;"></i>
+            <div>
+                <strong>尚未加入家庭</strong>
+                <div style="font-size: 14px; color: #6c757d;">
+                    创建或加入家庭以享受数据同步功能
                 </div>
-            `;
+                ${this.getRejoinHint()}
+            </div>
+        `;
             statusElement.className = 'family-status status-not-joined';
         }
     }
 
+    // 获取重新加入的提示
+    getRejoinHint() {
+        // 检查本地是否有之前的家庭信息
+        try {
+            const saved = localStorage.getItem(APP_CONFIG.CONSTANTS.STORAGE_KEYS.FAMILY_INFO);
+            if (saved) {
+                const familyInfo = JSON.parse(saved);
+                return `<div style="font-size: 12px; color: #ff9f43; margin-top: 5px;">
+                提示：你之前加入过家庭 "${familyInfo.family.family_name}"，可以使用相同信息重新加入
+            </div>`;
+            }
+        } catch (error) {
+            // 忽略错误
+        }
+        return '';
+    }
     // 渲染操作按钮
     async renderActionButtons() {
         const buttonsElement = document.getElementById('actionButtons');
