@@ -106,8 +106,8 @@ const APP_CONFIG = {
     FEATURE_FLAGS: {
         DATA_SOURCE: 'localStorage',
         ENABLE_FAMILY_FEATURES: false,
-        ENABLE_SYNC: false,           // 同步功能总开关
-        SHOW_SYNC_STATUS: false,      // 同步状态显示
+        ENABLE_SYNC: true,           // 同步功能总开关
+        SHOW_SYNC_STATUS: true,      // 同步状态显示
         ENABLE_CONFLICT_DETECTION: false
     },
 

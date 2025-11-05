@@ -1,4 +1,4 @@
-// 统一数据服务层 - 支持多数据源
+// 统一数据服务层 - 支持多数据源和同步功能
 class DataService {
     constructor() {
         this.currentDataSource = APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE;
@@ -38,7 +38,7 @@ class DataService {
         }
     }
     
-    // === 任务管理方法 ===
+    // === 任务管理方法 - 集成同步功能 ===
     
     // 获取任务列表
     async getTasks(date = null) {
@@ -59,22 +59,39 @@ class DataService {
         }
     }
     
-    // 创建任务
+    // 创建任务 - 添加同步支持
     async createTask(taskData) {
         try {
             let result;
             
+            // 生成任务ID和基础字段
+            const taskWithId = {
+                ...taskData,
+                id: taskData.id || this.generateTaskId(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
             switch (this.currentDataSource) {
                 case 'supabase':
-                    result = await this.createTaskInSupabase(taskData);
+                    result = await this.createTaskInSupabase(taskWithId);
                     break;
                 case 'hybrid':
-                    result = await this.createTaskHybrid(taskData);
+                    result = await this.createTaskHybrid(taskWithId);
                     break;
                 case 'localStorage':
                 default:
-                    result = this.createTaskInLocalStorage(taskData);
+                    result = this.createTaskInLocalStorage(taskWithId);
                     break;
+            }
+            
+            // 添加到同步队列（如果同步服务可用）
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'create',
+                    table: 'tasks',
+                    data: result
+                });
             }
             
             // 触发任务创建事件
@@ -83,26 +100,57 @@ class DataService {
             
         } catch (error) {
             console.error('❌ 创建任务失败:', error);
+            
+            // 即使失败也尝试添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                const failedTask = {
+                    ...taskData,
+                    id: taskData.id || this.generateTaskId(),
+                    created_at: new Date().toISOString(),
+                    _isFailed: true
+                };
+                
+                await window.syncService.addToSyncQueue({
+                    type: 'create',
+                    table: 'tasks',
+                    data: failedTask
+                });
+            }
+            
             throw error;
         }
     }
     
-    // 更新任务
+    // 更新任务 - 添加同步支持
     async updateTask(taskId, updates) {
         try {
             let result;
             
+            const updatesWithTimestamp = {
+                ...updates,
+                updated_at: new Date().toISOString()
+            };
+            
             switch (this.currentDataSource) {
                 case 'supabase':
-                    result = await this.updateTaskInSupabase(taskId, updates);
+                    result = await this.updateTaskInSupabase(taskId, updatesWithTimestamp);
                     break;
                 case 'hybrid':
-                    result = await this.updateTaskHybrid(taskId, updates);
+                    result = await this.updateTaskHybrid(taskId, updatesWithTimestamp);
                     break;
                 case 'localStorage':
                 default:
-                    result = this.updateTaskInLocalStorage(taskId, updates);
+                    result = this.updateTaskInLocalStorage(taskId, updatesWithTimestamp);
                     break;
+            }
+            
+            // 添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'update',
+                    table: 'tasks',
+                    data: { ...result, id: taskId }
+                });
             }
             
             // 触发任务更新事件
@@ -111,11 +159,21 @@ class DataService {
             
         } catch (error) {
             console.error('❌ 更新任务失败:', error);
+            
+            // 即使失败也尝试添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'update',
+                    table: 'tasks',
+                    data: { ...updates, id: taskId, updated_at: new Date().toISOString(), _isFailed: true }
+                });
+            }
+            
             throw error;
         }
     }
     
-    // 删除任务
+    // 删除任务 - 添加同步支持
     async deleteTask(taskId) {
         try {
             let result;
@@ -133,32 +191,68 @@ class DataService {
                     break;
             }
             
+            // 添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'delete',
+                    table: 'tasks',
+                    data: { id: taskId }
+                });
+            }
+            
             // 触发任务删除事件
             this.emitTaskEvent('taskDeleted', { id: taskId });
             return result;
             
         } catch (error) {
             console.error('❌ 删除任务失败:', error);
+            
+            // 即使失败也尝试添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'delete',
+                    table: 'tasks',
+                    data: { id: taskId, _isFailed: true }
+                });
+            }
+            
             throw error;
         }
     }
     
-    // 完成任务
+    // 完成任务 - 添加同步支持
     async completeTask(taskId, completionData = {}) {
         try {
             let result;
             
+            const completionUpdates = {
+                completed: true,
+                completionTime: new Date().toISOString(),
+                actualCompletionDate: new Date().toISOString().split('T')[0],
+                ...completionData,
+                updated_at: new Date().toISOString()
+            };
+            
             switch (this.currentDataSource) {
                 case 'supabase':
-                    result = await this.completeTaskInSupabase(taskId, completionData);
+                    result = await this.completeTaskInSupabase(taskId, completionUpdates);
                     break;
                 case 'hybrid':
-                    result = await this.completeTaskHybrid(taskId, completionData);
+                    result = await this.completeTaskHybrid(taskId, completionUpdates);
                     break;
                 case 'localStorage':
                 default:
-                    result = this.completeTaskInLocalStorage(taskId, completionData);
+                    result = this.completeTaskInLocalStorage(taskId, completionUpdates);
                     break;
+            }
+            
+            // 添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'update',
+                    table: 'tasks',
+                    data: { ...result, id: taskId }
+                });
             }
             
             // 触发任务完成事件
@@ -167,6 +261,21 @@ class DataService {
             
         } catch (error) {
             console.error('❌ 完成任务失败:', error);
+            
+            // 即使失败也尝试添加到同步队列
+            if (window.syncService && APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC) {
+                await window.syncService.addToSyncQueue({
+                    type: 'update',
+                    table: 'tasks',
+                    data: { 
+                        id: taskId, 
+                        completed: true,
+                        completionTime: new Date().toISOString(),
+                        _isFailed: true 
+                    }
+                });
+            }
+            
             throw error;
         }
     }
@@ -195,7 +304,7 @@ class DataService {
             const tasks = this.getTasksFromLocalStorage();
             const newTask = {
                 ...taskData,
-                id: this.generateLocalId(tasks),
+                id: taskData.id || this.generateLocalId(tasks),
                 createdAt: new Date().toISOString()
             };
             
@@ -261,14 +370,7 @@ class DataService {
     
     // 在 localStorage 完成任务
     completeTaskInLocalStorage(taskId, completionData) {
-        const updates = {
-            completed: true,
-            completionTime: new Date().toISOString(),
-            actualCompletionDate: new Date().toISOString().split('T')[0],
-            ...completionData
-        };
-        
-        return this.updateTaskInLocalStorage(taskId, updates);
+        return this.updateTaskInLocalStorage(taskId, completionData);
     }
     
     // === Supabase 实现 ===
@@ -397,6 +499,51 @@ class DataService {
         return localTask;
     }
     
+    // === 同步相关方法 ===
+    
+    // 获取本地任务（供同步服务使用）
+    getLocalTasks() {
+        return this.getTasksFromLocalStorage();
+    }
+    
+    // 保存本地任务（供同步服务使用）
+    saveLocalTasks(tasks) {
+        this.saveTasksToLocalStorage(tasks);
+    }
+    
+    // 统一的创建项目方法（供同步服务使用）
+    async createItem(table, data) {
+        switch (table) {
+            case 'tasks':
+                return await this.createTask(data);
+            // 可以添加其他表的处理
+            default:
+                throw new Error(`未知的表: ${table}`);
+        }
+    }
+    
+    // 统一的更新项目方法（供同步服务使用）
+    async updateItem(table, id, data) {
+        switch (table) {
+            case 'tasks':
+                return await this.updateTask(id, data);
+            // 可以添加其他表的处理
+            default:
+                throw new Error(`未知的表: ${table}`);
+        }
+    }
+    
+    // 统一的删除项目方法（供同步服务使用）
+    async deleteItem(table, id) {
+        switch (table) {
+            case 'tasks':
+                return await this.deleteTask(id);
+            // 可以添加其他表的处理
+            default:
+                throw new Error(`未知的表: ${table}`);
+        }
+    }
+    
     // === 工具方法 ===
     
     // 保存任务到 localStorage
@@ -409,6 +556,11 @@ class DataService {
         if (tasks.length === 0) return 1;
         const maxId = Math.max(...tasks.map(task => task.id));
         return maxId + 1;
+    }
+    
+    // 生成任务ID（同步兼容）
+    generateTaskId() {
+        return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
     
     // 触发任务事件
