@@ -102,6 +102,25 @@ const APP_CONFIG = {
             '体育': '#10ac84'
         }
     },
+    // 功能开关 - 添加同步相关开关
+    FEATURE_FLAGS: {
+        DATA_SOURCE: 'localStorage',
+        ENABLE_FAMILY_FEATURES: false,
+        ENABLE_SYNC: false,           // 同步功能总开关
+        SHOW_SYNC_STATUS: false,      // 同步状态显示
+        ENABLE_CONFLICT_DETECTION: false
+    },
+
+    // 新增同步配置
+    SYNC_CONFIG: {
+        // 同步间隔（毫秒）
+        SYNC_INTERVAL: 30000,         // 30秒
+        MAX_RETRY_ATTEMPTS: 3,        // 最大重试次数
+        RETRY_DELAY: 1000,            // 重试延迟
+        CONFLICT_RESOLUTION: 'timestamp', // 冲突解决策略
+        QUEUE_SIZE_LIMIT: 100,        // 队列大小限制
+        AUTO_SYNC: true               // 自动同步
+    },
 
     // 应用常量
     CONSTANTS: {
@@ -254,7 +273,7 @@ window.CONFIG_LOADED = true;
 console.log('✅ config.js 加载完成');
 
 // 配置检查函数
-window.checkConfigLoaded = function() {
+window.checkConfigLoaded = function () {
     if (!window.CONFIG_LOADED) {
         console.error('❌ config.js 未正确加载');
         return false;
