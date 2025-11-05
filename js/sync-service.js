@@ -1,34 +1,48 @@
 // js/sync-service.js
 /**
- * 数据同步服务 - 实现本地与云端数据同步
- * 支持离线操作、冲突解决和实时同步
+ * 数据同步服务 - 基于APP_CONFIG配置
  */
 
 class SyncService {
     constructor() {
         this.isOnline = navigator.onLine;
-        this.syncQueue = [];
         this.isSyncing = false;
+        this.syncQueue = [];
         this.lastSyncTime = null;
-        
-        this.init();
+        this.retryCount = 0;
+
+        // 从配置获取设置
+        this.syncConfig = APP_CONFIG.SYNC_CONFIG;
+        this.isEnabled = APP_CONFIG.FEATURE_FLAGS.ENABLE_SYNC;
+
+        if (this.isEnabled) {
+            this.init();
+        }
     }
 
     /**
      * 初始化同步服务
      */
     init() {
-        // 监听网络状态变化
+        if (!this.isEnabled) {
+            console.log('🔄 同步服务已禁用');
+            return;
+        }
+
+        // 监听网络状态
         window.addEventListener('online', () => this.handleOnline());
         window.addEventListener('offline', () => this.handleOffline());
         
-        // 加载同步队列
+        // 加载待同步队列
         this.loadSyncQueue();
         
         // 启动定期同步
         this.startPeriodicSync();
         
-        console.log('🔄 同步服务已初始化');
+        console.log('🔄 同步服务已初始化', {
+            interval: this.syncConfig.SYNC_INTERVAL,
+            maxRetries: this.syncConfig.MAX_RETRY_ATTEMPTS
+        });
     }
 
     /**
@@ -36,12 +50,13 @@ class SyncService {
      */
     handleOnline() {
         this.isOnline = true;
-        console.log('🌐 网络已连接，开始同步数据...');
+        console.log('🌐 网络已连接');
         
-        // 显示网络恢复提示
-        this.showToast('网络已恢复，正在同步数据...', 'success');
+        if (typeof showToast === 'function') {
+            showToast('网络已恢复，正在同步数据...', 'success');
+        }
         
-        // 执行待处理的同步操作
+        // 处理待同步队列
         this.processSyncQueue();
     }
 
@@ -50,40 +65,56 @@ class SyncService {
      */
     handleOffline() {
         this.isOnline = false;
-        console.log('📵 网络已断开，进入离线模式');
+        console.log('📵 网络已断开');
         
-        this.showToast('网络已断开，进入离线模式', 'warning');
+        if (typeof showToast === 'function') {
+            showToast('网络已断开，进入离线模式', 'warning');
+        }
     }
 
     /**
      * 启动定期同步
      */
     startPeriodicSync() {
-        // 每5分钟同步一次
+        if (!this.syncConfig.AUTO_SYNC) return;
+
         setInterval(() => {
-            if (this.isOnline && !this.isSyncing) {
-                this.syncAllData();
+            if (this.isOnline && !this.isSyncing && this.syncQueue.length > 0) {
+                this.processSyncQueue();
             }
-        }, 5 * 60 * 1000);
+        }, this.syncConfig.SYNC_INTERVAL);
     }
 
     /**
-     * 添加同步操作到队列
+     * 添加操作到同步队列
      */
     async addToSyncQueue(operation) {
+        if (!this.isEnabled) {
+            console.log('同步服务已禁用，跳过队列操作');
+            return;
+        }
+
         const syncItem = {
             id: this.generateId(),
-            type: operation.type, // 'create', 'update', 'delete'
+            type: operation.type, // 'create' | 'update' | 'delete'
             table: operation.table,
             data: operation.data,
             timestamp: new Date().toISOString(),
             retryCount: 0
         };
 
+        // 检查队列大小限制
+        if (this.syncQueue.length >= this.syncConfig.QUEUE_SIZE_LIMIT) {
+            console.warn('同步队列已满，移除最旧的操作');
+            this.syncQueue.shift();
+        }
+
         this.syncQueue.push(syncItem);
         await this.saveSyncQueue();
 
-        // 如果在线，立即执行同步
+        console.log(`📝 添加到同步队列: ${operation.type} ${operation.table}`, syncItem);
+
+        // 如果在线，立即尝试同步
         if (this.isOnline) {
             this.processSyncQueue();
         }
@@ -93,10 +124,13 @@ class SyncService {
      * 处理同步队列
      */
     async processSyncQueue() {
-        if (this.isSyncing || this.syncQueue.length === 0) return;
+        if (!this.isEnabled || this.isSyncing || this.syncQueue.length === 0 || !this.isOnline) {
+            return;
+        }
 
         this.isSyncing = true;
-        
+        console.log(`🔄 开始处理同步队列，剩余 ${this.syncQueue.length} 个操作`);
+
         try {
             while (this.syncQueue.length > 0) {
                 const syncItem = this.syncQueue[0];
@@ -108,13 +142,15 @@ class SyncService {
                     this.syncQueue.shift();
                     await this.saveSyncQueue();
                     
+                    console.log(`✅ 同步成功: ${syncItem.type} ${syncItem.table}`);
+                    
                 } catch (error) {
-                    console.error(`同步操作失败:`, syncItem, error);
+                    console.error(`❌ 同步操作失败:`, syncItem, error);
                     
                     // 重试逻辑
                     syncItem.retryCount++;
-                    if (syncItem.retryCount >= 3) {
-                        console.error(`同步操作重试次数超限，移至失败队列:`, syncItem);
+                    if (syncItem.retryCount >= this.syncConfig.MAX_RETRY_ATTEMPTS) {
+                        console.error(`🔄 重试次数超限，移至失败队列:`, syncItem);
                         this.moveToFailedQueue(syncItem);
                         this.syncQueue.shift();
                     }
@@ -138,6 +174,7 @@ class SyncService {
     async executeSyncOperation(syncItem) {
         const { type, table, data } = syncItem;
 
+        // 使用统一的数据服务
         switch (type) {
             case 'create':
                 return await window.dataService.createItem(table, data);
@@ -151,31 +188,51 @@ class SyncService {
     }
 
     /**
-     * 同步所有数据
+     * 手动触发全量同步
      */
     async syncAllData() {
+        if (!this.isEnabled) {
+            console.log('同步服务已禁用');
+            return;
+        }
+
         if (!this.isOnline) {
             console.log('网络未连接，跳过全量同步');
+            if (typeof showToast === 'function') {
+                showToast('网络未连接，无法同步', 'warning');
+            }
             return;
         }
 
         try {
-            this.showToast('正在同步数据...', 'info');
+            console.log('🔄 开始全量数据同步');
             
+            if (typeof showToast === 'function') {
+                showToast('正在同步数据...', 'info');
+            }
+
             // 同步任务数据
             await this.syncTasks();
             
-            // 同步家庭数据
-            await this.syncFamilyData();
-            
+            // 同步家庭数据（如果启用）
+            if (APP_CONFIG.FEATURE_FLAGS.ENABLE_FAMILY_FEATURES) {
+                await this.syncFamilyData();
+            }
+
             this.lastSyncTime = new Date();
             this.updateSyncStatus();
             
-            this.showToast('数据同步完成', 'success');
+            console.log('✅ 全量数据同步完成');
+            
+            if (typeof showToast === 'function') {
+                showToast('数据同步完成', 'success');
+            }
             
         } catch (error) {
-            console.error('全量同步失败:', error);
-            this.showToast('同步失败，请检查网络连接', 'error');
+            console.error('❌ 全量同步失败:', error);
+            if (typeof showToast === 'function') {
+                showToast('同步失败，请检查网络连接', 'error');
+            }
         }
     }
 
@@ -183,66 +240,77 @@ class SyncService {
      * 同步任务数据
      */
     async syncTasks() {
-        const localTasks = window.dataService.getLocalTasks();
-        const cloudTasks = await window.dataService.getTasks();
+        try {
+            const localTasks = window.dataService.getLocalTasks();
+            const cloudTasks = await window.dataService.getTasks();
 
-        // 冲突解决：以最新修改时间为准
-        const mergedTasks = this.mergeData(localTasks, cloudTasks, 'tasks');
-        
-        // 更新到云端
-        for (const task of mergedTasks) {
-            if (task.id.startsWith('local-')) {
-                // 本地新增的任务
-                const newTask = { ...task };
-                delete newTask.id;
-                await window.dataService.createTask(newTask);
-            } else {
-                await window.dataService.updateTask(task.id, task);
+            // 简单的合并策略 - 在实际应用中可能需要更复杂的冲突解决
+            const mergedTasks = this.mergeTasks(localTasks, cloudTasks);
+            
+            // 更新到云端
+            for (const task of mergedTasks) {
+                if (task.id && task.id.startsWith('local-')) {
+                    // 本地新增的任务
+                    const newTask = { ...task };
+                    delete newTask.id;
+                    await window.dataService.createTask(newTask);
+                } else if (task._isDirty) {
+                    // 标记为脏数据的任务
+                    await window.dataService.updateTask(task.id, task);
+                }
             }
-        }
 
-        // 更新本地存储
-        window.dataService.saveLocalTasks(mergedTasks);
+            // 更新本地存储
+            window.dataService.saveLocalTasks(mergedTasks);
+            
+        } catch (error) {
+            console.error('任务数据同步失败:', error);
+            throw error;
+        }
     }
 
     /**
      * 同步家庭数据
      */
     async syncFamilyData() {
-        // 家庭数据通常较小，直接使用云端版本
-        const familyData = await window.dataService.getFamilyData();
-        if (familyData) {
-            window.dataService.saveLocalFamilyData(familyData);
+        try {
+            const familyData = await window.dataService.getFamilyData();
+            if (familyData) {
+                window.dataService.saveLocalFamilyData(familyData);
+            }
+        } catch (error) {
+            console.error('家庭数据同步失败:', error);
+            // 家庭数据同步失败不影响主要功能
         }
     }
 
     /**
-     * 数据合并与冲突解决
+     * 合并任务数据（简化版冲突解决）
      */
-    mergeData(localData, cloudData, dataType) {
+    mergeTasks(localTasks, cloudTasks) {
         const merged = [];
         const allIds = new Set([
-            ...localData.map(item => item.id),
-            ...cloudData.map(item => item.id)
+            ...localTasks.map(item => item.id),
+            ...cloudTasks.map(item => item.id)
         ]);
 
         for (const id of allIds) {
-            const localItem = localData.find(item => item.id === id);
-            const cloudItem = cloudData.find(item => item.id === id);
+            const localItem = localTasks.find(item => item.id === id);
+            const cloudItem = cloudTasks.find(item => item.id === id);
 
             if (!localItem) {
                 // 只有云端有
                 merged.push(cloudItem);
             } else if (!cloudItem) {
                 // 只有本地有
-                merged.push(localItem);
+                merged.push({ ...localItem, _isDirty: true });
             } else {
                 // 冲突解决：选择最新修改的版本
                 const localTime = new Date(localItem.updated_at || localItem.created_at);
                 const cloudTime = new Date(cloudItem.updated_at || cloudItem.created_at);
                 
                 if (localTime > cloudTime) {
-                    merged.push(localItem);
+                    merged.push({ ...localItem, _isDirty: true });
                 } else {
                     merged.push(cloudItem);
                 }
@@ -257,6 +325,7 @@ class SyncService {
      */
     getSyncStatus() {
         return {
+            isEnabled: this.isEnabled,
             isOnline: this.isOnline,
             isSyncing: this.isSyncing,
             queueLength: this.syncQueue.length,
@@ -271,55 +340,63 @@ class SyncService {
     updateSyncStatus() {
         const status = this.getSyncStatus();
         
-        // 更新主页面状态指示器
+        // 更新UI状态指示器
         if (window.updateSyncIndicator) {
             window.updateSyncIndicator(status);
         }
         
-        // 存储状态到 localStorage
-        localStorage.setItem('syncStatus', JSON.stringify(status));
+        // 存储状态
+        localStorage.setItem(APP_CONFIG.CONSTANTS.STORAGE_KEYS.SYNC_STATUS, JSON.stringify(status));
+        localStorage.setItem(APP_CONFIG.CONSTANTS.STORAGE_KEYS.LAST_SYNC, this.lastSyncTime.toISOString());
     }
 
     /**
-     * 保存同步队列
+     * 保存同步队列到本地存储
      */
     async saveSyncQueue() {
         localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
     }
 
     /**
-     * 加载同步队列
+     * 从本地存储加载同步队列
      */
     loadSyncQueue() {
-        const queue = localStorage.getItem('syncQueue');
-        this.syncQueue = queue ? JSON.parse(queue) : [];
+        try {
+            const queue = localStorage.getItem('syncQueue');
+            this.syncQueue = queue ? JSON.parse(queue) : [];
+            console.log(`📋 加载同步队列: ${this.syncQueue.length} 个待处理操作`);
+        } catch (error) {
+            console.error('加载同步队列失败:', error);
+            this.syncQueue = [];
+        }
     }
 
     /**
      * 移动到失败队列
      */
     moveToFailedQueue(syncItem) {
-        const failedQueue = this.getFailedQueue();
-        failedQueue.push(syncItem);
-        localStorage.setItem('failedSyncQueue', JSON.stringify(failedQueue));
+        try {
+            const failedQueue = this.getFailedQueue();
+            failedQueue.push({
+                ...syncItem,
+                failedAt: new Date().toISOString()
+            });
+            localStorage.setItem('failedSyncQueue', JSON.stringify(failedQueue));
+        } catch (error) {
+            console.error('移动到失败队列失败:', error);
+        }
     }
 
     /**
      * 获取失败队列
      */
     getFailedQueue() {
-        const failed = localStorage.getItem('failedSyncQueue');
-        return failed ? JSON.parse(failed) : [];
-    }
-
-    /**
-     * 显示Toast提示
-     */
-    showToast(message, type = 'info') {
-        if (window.showToast) {
-            window.showToast(message, type);
-        } else {
-            console.log(`[${type}] ${message}`);
+        try {
+            const failed = localStorage.getItem('failedSyncQueue');
+            return failed ? JSON.parse(failed) : [];
+        } catch (error) {
+            console.error('获取失败队列失败:', error);
+            return [];
         }
     }
 
@@ -328,6 +405,16 @@ class SyncService {
      */
     generateId() {
         return `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    /**
+     * 启用/禁用同步服务
+     */
+    setEnabled(enabled) {
+        this.isEnabled = enabled;
+        if (enabled && !this.initialized) {
+            this.init();
+        }
     }
 }
 
