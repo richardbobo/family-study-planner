@@ -1444,3 +1444,162 @@ function closeConfirmDeleteModal() {
     }
     currentDeleteTaskId = null;
 }
+
+/**
+ * 初始化家庭功能
+ */
+async function initializeFamilyFeatures() {
+    const familyService = getFamilyService();
+    
+    // 等待家庭服务初始化完成
+    setTimeout(async () => {
+        await updateFamilyStatusDisplay();
+        await loadFamilyTasksIfJoined();
+    }, 1000);
+}
+
+/**
+ * 更新家庭状态显示
+ */
+async function updateFamilyStatusDisplay() {
+    const familyService = getFamilyService();
+    const familyStatusBar = document.getElementById('familyStatusBar');
+    
+    if (!familyStatusBar) return;
+    
+    if (familyService.hasJoinedFamily()) {
+        const family = familyService.getCurrentFamily();
+        const member = familyService.getCurrentMember();
+        
+        // 显示家庭状态栏
+        familyStatusBar.style.display = 'flex';
+        document.getElementById('familyName').textContent = family.family_name;
+        document.getElementById('memberRole').textContent = 
+            member.role === 'parent' ? '家长' : '孩子';
+        
+        // 获取成员数量
+        try {
+            const members = await familyService.getFamilyMembers();
+            document.getElementById('memberCount').textContent = 
+                `${members.length}名成员`;
+        } catch (error) {
+            console.error('获取成员数量失败:', error);
+            document.getElementById('memberCount').textContent = '成员加载中';
+        }
+        
+        // 绑定按钮事件
+        bindFamilyButtonEvents();
+        
+    } else {
+        familyStatusBar.style.display = 'none';
+    }
+}
+
+/**
+ * 绑定家庭按钮事件
+ */
+function bindFamilyButtonEvents() {
+    const viewFamilyTasksBtn = document.getElementById('viewFamilyTasks');
+    const manageFamilyBtn = document.getElementById('manageFamily');
+    
+    if (viewFamilyTasksBtn) {
+        viewFamilyTasksBtn.addEventListener('click', toggleFamilyTasksView);
+    }
+    
+    if (manageFamilyBtn) {
+        manageFamilyBtn.addEventListener('click', () => {
+            window.location.href = 'family-management.html';
+        });
+    }
+}
+
+/**
+ * 切换家庭任务视图
+ */
+function toggleFamilyTasksView() {
+    const viewBtn = document.getElementById('viewFamilyTasks');
+    const isShowingFamilyTasks = viewBtn.classList.contains('active');
+    
+    if (isShowingFamilyTasks) {
+        // 显示所有任务
+        showAllTasks();
+        viewBtn.textContent = '只看家庭任务';
+        viewBtn.classList.remove('active');
+    } else {
+        // 只显示家庭任务
+        showFamilyTasksOnly();
+        viewBtn.textContent = '显示所有任务';
+        viewBtn.classList.add('active');
+    }
+}
+
+/**
+ * 显示所有任务
+ */
+function showAllTasks() {
+    const allTasks = document.querySelectorAll('.task-item');
+    allTasks.forEach(task => {
+        task.style.display = 'flex';
+    });
+}
+
+/**
+ * 只显示家庭任务
+ */
+function showFamilyTasksOnly() {
+    const allTasks = document.querySelectorAll('.task-item');
+    allTasks.forEach(task => {
+        if (task.classList.contains('family-task')) {
+            task.style.display = 'flex';
+        } else {
+            task.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * 如果已加入家庭，加载家庭任务
+ */
+async function loadFamilyTasksIfJoined() {
+    const familyService = getFamilyService();
+    
+    if (familyService.hasJoinedFamily()) {
+        await markFamilyTasks();
+    }
+}
+
+/**
+ * 标记家庭任务
+ */
+async function markFamilyTasks() {
+    const familyService = getFamilyService();
+    
+    try {
+        // 获取家庭任务（需要先在family-service中实现此方法）
+        const familyTasks = await familyService.getFamilyTasks();
+        
+        // 标记家庭任务
+        familyTasks.forEach(task => {
+            const taskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+            if (taskElement) {
+                taskElement.classList.add('family-task');
+                
+                // 添加家庭任务标识
+                if (!taskElement.querySelector('.family-badge')) {
+                    const familyBadge = document.createElement('span');
+                    familyBadge.className = 'family-badge';
+                    familyBadge.textContent = '👨‍👩‍👧‍👦 家庭任务';
+                    taskElement.querySelector('.task-content').prepend(familyBadge);
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('标记家庭任务失败:', error);
+    }
+}
+
+// 监听家庭状态变化
+window.addEventListener('family:familyCreated', updateFamilyStatusDisplay);
+window.addEventListener('family:familyJoined', updateFamilyStatusDisplay);
+window.addEventListener('family:familyLeft', updateFamilyStatusDisplay);

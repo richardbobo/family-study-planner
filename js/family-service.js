@@ -350,7 +350,47 @@ async joinFamily(familyCode, userName, role = 'child') {
     }
 }
 
-// 创建全局实例
+// // 创建全局实例
+// let familyServiceInstance = null;
+
+// // 获取家庭服务实例
+// function getFamilyService() {
+//     if (!familyServiceInstance) {
+//         familyServiceInstance = new FamilyService();
+//     }
+//     return familyServiceInstance;
+// }
+
+// 导出
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { FamilyService, getFamilyService };
+}
+// 在 FamilyService 类中添加
+
+/**
+ * 获取家庭任务
+ */
+async getFamilyTasks() {
+    try {
+        if (!this.hasJoinedFamily()) {
+            return [];
+        }
+
+        if (!this.supabaseClient.isConnected) {
+            throw new Error('Supabase 未连接');
+        }
+
+        // 调用 Supabase 获取家庭任务
+        const tasks = await this.supabaseClient.getFamilyTasks(this.currentFamily.id);
+        
+        return tasks || [];
+
+    } catch (error) {
+        console.error('❌ 获取家庭任务失败:', error);
+        return [];
+    }
+}
+// // 创建全局实例
 let familyServiceInstance = null;
 
 // 获取家庭服务实例
@@ -361,7 +401,8 @@ function getFamilyService() {
     return familyServiceInstance;
 }
 
-// 导出
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FamilyService, getFamilyService };
+// 确保在浏览器环境中可用
+if (typeof window !== 'undefined') {
+    window.getFamilyService = getFamilyService;
+    window.FamilyService = FamilyService; // 也导出类，以备不时之需
 }
