@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/index.css">
     <link rel="stylesheet" href="styles/sync-ui.css">
+    <!-- 新增：家庭管理入口 -->
+    <div class="family-nav">
+        <a href="family-management.html" class="family-btn">
+            <i class="fas fa-users"></i> 家庭管理
+        </a>
+    </div>
 </head>
 
 <body>
@@ -202,6 +208,8 @@
     <script src="js/family-service.js"></script>
     <script src="js/sync-service.js"></script>
     <script src="js/sync-ui.js"></script>
+    <!-- 新增家庭管理 -->
+    <script src="js/family-management.js"></script>
     <script src="js/index.js"></script>
     <!-- 确认删除模态框 - 支持批量删除 -->
     <div class="confirm-modal" id="confirmDeleteModal">
@@ -241,6 +249,70 @@
             <div class="confirm-modal-actions">
                 <button class="confirm-btn-cancel" id="cancelDeleteBtn">取消</button>
                 <button class="confirm-btn-delete" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+    <!-- 家庭管理模态框 -->
+    <div class="modal" id="familyManagementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> 家庭管理</h3>
+                <button class="close-btn" id="closeFamilyModal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- 家庭信息面板 -->
+                <div id="familyInfoPanel" class="family-panel" style="display: none;">
+                    <div class="panel-header">
+                        <h4>我的家庭</h4>
+                        <span class="family-badge">👨‍👩‍👧‍👦 家庭模式</span>
+                    </div>
+                    <div class="family-details">
+                        <div class="family-card">
+                            <h5 id="familyNameDisplay">家庭名称</h5>
+                            <div class="family-meta">
+                                <span><i class="fas fa-code"></i> 邀请码: <code id="familyInviteCode">XXXXXX</code></span>
+                                <span><i class="fas fa-user-friends"></i> 成员: <span
+                                        id="familyMemberCount">1</span>人</span>
+                            </div>
+                        </div>
+
+                        <!-- 成员列表 -->
+                        <div class="members-section">
+                            <h6>家庭成员</h6>
+                            <div id="membersList" class="members-list">
+                                <!-- 成员列表动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 创建家庭面板 -->
+                <div id="createFamilyPanel" class="family-panel">
+                    <div class="panel-header">
+                        <h4>创建新家庭</h4>
+                        <span class="create-badge">新建</span>
+                    </div>
+                    <form id="createFamilyForm" class="family-form">
+                        <div class="form-group">
+                            <label for="familyNameInput" class="form-label">家庭名称</label>
+                            <input type="text" id="familyNameInput" class="form-input" placeholder="例如：张小明家庭" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 创建家庭
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="family-actions">
+                    <button id="inviteMemberBtn" class="btn btn-secondary" style="display: none;">
+                        <i class="fas fa-share-alt"></i> 邀请成员
+                    </button>
+                    <button id="leaveFamilyBtn" class="btn btn-warning" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> 退出家庭
+                    </button>
+                </div>
             </div>
         </div>
     </div>
