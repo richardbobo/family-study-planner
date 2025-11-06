@@ -105,7 +105,7 @@ const APP_CONFIG = {
     // 功能开关 - 添加同步相关开关
     FEATURE_FLAGS: {
         DATA_SOURCE: 'localStorage',
-        ENABLE_FAMILY_FEATURES: false,
+        ENABLE_FAMILY_FEATURES: true,// 家庭功能总开关
         ENABLE_SYNC: true,           // 同步功能总开关
         SHOW_SYNC_STATUS: true,      // 同步状态显示
         ENABLE_CONFLICT_DETECTION: false
@@ -118,7 +118,7 @@ const APP_CONFIG = {
         MAX_RETRY_ATTEMPTS: 3,        // 最大重试次数
         RETRY_DELAY: 1000,            // 重试延迟
         CONFLICT_RESOLUTION: 'timestamp', // 冲突解决策略
-        QUEUE_SIZE_LIMIT: 100,        // 队列大小限制
+        QUEUE_SIZE_LIMIT: 50,        // 队列大小限制
         AUTO_SYNC: true               // 自动同步
     },
 
@@ -285,7 +285,19 @@ window.checkConfigLoaded = function () {
     return true;
 };
 
-// 导出配置（用于模块化）
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
+// 在 config.js 文件末尾添加这些行
+// 确保全局变量正确暴露
+if (typeof window !== 'undefined') {
+    window.APP_CONFIG = APP_CONFIG;
+    window.CONFIG_LOADED = true;
+    console.log('✅ config.js: 全局变量已暴露');
 }
+
+// 移除或注释掉模块导出（如果存在）
+// if (typeof module !== 'undefined' && module.exports) {
+//     module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
+// }
+// 导出配置（用于模块化）
+// if (typeof module !== 'undefined' && module.exports) {
+//     module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
+// }
