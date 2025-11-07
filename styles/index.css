@@ -2582,14 +2582,6 @@ footer {
     border-bottom: 2px solid #e9ecef;
 }
 
-.family-badge {
-    background: #4CAF50;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-}
 
 .create-badge {
     background: #FF9800;
@@ -2806,6 +2798,7 @@ footer {
     font-size: 0.7em;
     margin-right: 8px;
     font-weight: 500;
+    display: inline-block;
 }
 
 /* 家庭按钮样式 */

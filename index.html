@@ -22,7 +22,7 @@
             <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
         </header>
 
-        <!-- 统计卡片区域测试 -->
+        <!-- 统计卡片区域 -->
         <div class="stats-section">
             <div class="stat-card">
                 <i class="fas fa-check-circle"></i>
@@ -46,21 +46,21 @@
             </div>
 
         </div>
-                    <!-- 家庭状态栏 -->
-            <div id="familyStatusBar" class="family-status-bar" style="display: none;">
-                <div class="family-info">
-                    <span class="family-icon">👨‍👩‍👧‍👦</span>
-                    <div class="family-details">
-                        <span id="familyName" class="family-name"></span>
-                        <span id="memberRole" class="member-role"></span>
-                    </div>
-                    <span id="memberCount" class="member-count"></span>
+        <!-- 家庭状态栏 -->
+        <div id="familyStatusBar" class="family-status-bar" style="display: none;">
+            <div class="family-info">
+                <span class="family-icon">👨‍👩‍👧‍👦</span>
+                <div class="family-details">
+                    <span id="familyName" class="family-name"></span>
+                    <span id="memberRole" class="member-role"></span>
                 </div>
-                <div class="family-actions">
-                    <button id="viewFamilyTasks" class="btn btn-outline btn-small">只看家庭任务</button>
-                    <button id="manageFamily" class="btn btn-secondary btn-small">管理家庭</button>
-                </div>
+                <span id="memberCount" class="member-count"></span>
             </div>
+            <div class="family-actions">
+                <button id="viewFamilyTasks" class="btn btn-outline btn-small">只看家庭任务</button>
+                <button id="manageFamily" class="btn btn-secondary btn-small">管理家庭</button>
+            </div>
+        </div>
 
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
@@ -223,9 +223,11 @@
     <!-- <script src="js/sync-service-disabled.js"></script> -->
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/data-service.js"></script>
     <script src="js/family-service.js"></script>
     <script src="js/sync-service.js"></script>
+    <script src="js/data-service.js"></script>
+
+
     <script src="js/sync-ui.js"></script>
     <!-- 新增家庭管理 -->
     <script src="js/family-management.js"></script>

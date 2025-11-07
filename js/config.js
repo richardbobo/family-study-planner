@@ -3,16 +3,16 @@ const APP_CONFIG = {
     // 功能开关 - 控制新功能逐步上线
     FEATURE_FLAGS: {
         // 数据源配置: 'localStorage' | 'supabase' | 'hybrid'
-        DATA_SOURCE: 'localStorage',
+        DATA_SOURCE: 'hybrid',
 
         // 家庭功能开关
-        ENABLE_FAMILY_FEATURES: false,
+        ENABLE_FAMILY_FEATURES: true,
 
         // 数据同步开关
-        ENABLE_SYNC: false,
+        ENABLE_SYNC: true,
 
         // 显示同步状态
-        SHOW_SYNC_STATUS: false,
+        SHOW_SYNC_STATUS: true,
 
         // 启用冲突检测
         ENABLE_CONFLICT_DETECTION: false
@@ -103,13 +103,13 @@ const APP_CONFIG = {
         }
     },
     // 功能开关 - 添加同步相关开关
-    FEATURE_FLAGS: {
-        DATA_SOURCE: 'localStorage',
-        ENABLE_FAMILY_FEATURES: true,// 家庭功能总开关
-        ENABLE_SYNC: true,           // 同步功能总开关
-        SHOW_SYNC_STATUS: true,      // 同步状态显示
-        ENABLE_CONFLICT_DETECTION: false
-    },
+    // FEATURE_FLAGS: {
+    //     DATA_SOURCE: 'hybrid',
+    //     ENABLE_FAMILY_FEATURES: true,// 家庭功能总开关
+    //     ENABLE_SYNC: true,           // 同步功能总开关
+    //     SHOW_SYNC_STATUS: true,      // 同步状态显示
+    //     ENABLE_CONFLICT_DETECTION: false
+    // },
 
     // 新增同步配置
     SYNC_CONFIG: {

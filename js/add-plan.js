@@ -297,7 +297,37 @@ function initializeCustomCategories() {
 }
 
 // 表单提交处理
-function handleFormSubmit(event) {
+// function handleFormSubmit(event) {
+//     event.preventDefault();
+    
+//     const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
+    
+//     // 显示加载状态
+//     showLoadingState(saveBtn, true);
+    
+//     // 获取表单数据
+//     const formData = getFormData();
+    
+//     if (validateForm(formData)) {
+//         // 添加延时动画
+//         setTimeout(() => {
+//             const tasks = generateTasks(formData);
+//             saveAllTasks(tasks);
+//             showLoadingState(saveBtn, false);
+//             showSuccessNotification(`学习计划添加成功！共创建 ${tasks.length} 个任务`);
+            
+//             // 2秒后跳转回首页
+//             setTimeout(() => {
+//                 window.location.href = 'index.html';
+//             }, 2000);
+            
+//         }, 1500);
+//     } else {
+//         showLoadingState(saveBtn, false);
+//     }
+// }
+// 修改表单提交处理
+async function handleFormSubmit(event) {
     event.preventDefault();
     
     const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
@@ -309,24 +339,36 @@ function handleFormSubmit(event) {
     const formData = getFormData();
     
     if (validateForm(formData)) {
-        // 添加延时动画
-        setTimeout(() => {
-            const tasks = generateTasks(formData);
-            saveAllTasks(tasks);
+        try {
+            // 添加延时动画
+            setTimeout(async () => {
+                const tasks = generateTasks(formData);
+                
+                // 使用修复后的保存函数
+                const result = await saveAllTasks(tasks);
+                
+                showLoadingState(saveBtn, false);
+                
+                if (result.errorCount === 0) {
+                    showSuccessNotification(`学习计划添加成功！共创建 ${result.successCount} 个任务`);
+                } else {
+                    showSuccessNotification(`学习计划部分成功！${result.successCount} 个成功，${result.errorCount} 个失败`);
+                }
+                
+                // 2秒后跳转回首页
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                
+            }, 1500);
+        } catch (error) {
             showLoadingState(saveBtn, false);
-            showSuccessNotification(`学习计划添加成功！共创建 ${tasks.length} 个任务`);
-            
-            // 2秒后跳转回首页
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 2000);
-            
-        }, 1500);
+            alert('保存失败: ' + error.message);
+        }
     } else {
         showLoadingState(saveBtn, false);
     }
 }
-
 // 显示/隐藏加载状态
 function showLoadingState(button, isLoading) {
     if (!button) return;
@@ -617,14 +659,86 @@ function calculateDuration(startTime, endTime) {
 }
 
 // 保存所有任务到localStorage
-function saveAllTasks(tasks) {
-    let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+// 修复的 saveAllTasks 函数 - 完整版本
+async function saveAllTasks(tasks) {
+    console.log('🔄 开始保存任务到本地和云端...');
+    console.log('任务数量:', tasks.length);
     
-    // 添加新任务
-    tasks.forEach(task => {
-        existingTasks.push(task);
+    const dataService = getDataService();
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // 检查数据服务状态
+    console.log('📊 数据服务状态:', {
+        currentDataSource: dataService.currentDataSource,
+        syncService: !!dataService.syncService,
+        supabaseConnected: dataService.supabaseClient.isConnected
     });
     
-    localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
-    console.log(`成功保存 ${tasks.length} 个任务`);
+    for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        console.log(`📦 处理任务 ${i + 1}/${tasks.length}: ${task.name}`);
+        
+        try {
+            // 准备任务数据
+            const taskData = {
+                name: task.name,
+                subject: task.subject,
+                date: task.date,
+                start_time: task.startTime,
+                end_time: task.endTime,
+                description: task.description || '',
+                duration: task.time || 30,
+                repeat_type: task.repeatType || 'once',
+                points: task.points || 10,
+                completed: task.completed || false
+            };
+            
+            // 使用数据服务创建任务
+            const result = await dataService.createTask(taskData);
+            console.log(`✅ 任务创建成功: ${task.name}`);
+            successCount++;
+            
+        } catch (error) {
+            console.error(`❌ 任务创建失败: ${task.name}`, error.message);
+            errorCount++;
+            
+            // 即使云端失败，也保存到本地
+            try {
+                saveTaskToLocalStorage(task);
+                console.log('📝 任务已保存到本地作为备份');
+            } catch (localError) {
+                console.error('💥 连本地保存也失败了:', localError);
+            }
+        }
+        
+        // 添加小延迟，避免请求过于频繁
+        if (i < tasks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
+    console.log(`🎉 所有任务处理完成: ${successCount} 成功, ${errorCount} 失败`);
+    
+    return {
+        successCount,
+        errorCount,
+        total: tasks.length
+    };
+}
+
+// 保存任务到本地存储（备用）
+function saveTaskToLocalStorage(task) {
+    try {
+        let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+        
+        // 检查是否已存在
+        if (!existingTasks.some(t => t.id === task.id)) {
+            existingTasks.push(task);
+            localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
+        }
+    } catch (error) {
+        console.error('保存到本地存储失败:', error);
+        throw error;
+    }
 }

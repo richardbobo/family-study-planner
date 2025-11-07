@@ -115,7 +115,6 @@ class SupabaseClient {
         }
     }
 
-
     // 加入家庭（修复版本）
     async joinFamily(familyCode, userName, role = 'child') {
         if (!this.isConnected) {
@@ -194,7 +193,6 @@ class SupabaseClient {
         }
     }
 
-
     // 获取家庭成员列表
     async getFamilyMembers(familyId) {
         if (!this.isConnected) {
@@ -241,9 +239,10 @@ class SupabaseClient {
             throw error;
         }
     }
+
     // === 任务相关操作 ===
 
-    // 获取任务列表
+    // 获取任务列表 - 修改为更灵活的版本
     async getTasks(familyId, date = null) {
         if (!this.isConnected) {
             throw new Error('Supabase未连接');
@@ -255,14 +254,16 @@ class SupabaseClient {
                 .select('*')
                 .eq('family_id', familyId);
 
+            // 如果提供了日期，就按日期筛选；如果不提供，就获取所有任务
             if (date) {
                 query = query.eq('date', date);
             }
 
-            const { data, error } = await query.order('start_time');
+            const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error) throw error;
 
+            console.log(`✅ 获取任务成功: ${data?.length || 0} 个任务`);
             return data || [];
 
         } catch (error) {

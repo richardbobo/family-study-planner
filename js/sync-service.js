@@ -44,51 +44,64 @@ class SyncService {
     }
     
     // 安全添加到同步队列
-    async addToSyncQueue(operation) {
-        if (!this.isEnabled) {
-            console.log('同步服务已禁用，跳过队列操作');
-            return;
-        }
-        
-        // 安全防护：频率限制
-        const now = Date.now();
-        this.operationTimestamps = this.operationTimestamps.filter(
-            time => now - time < 60000
-        );
-        
-        if (this.operationTimestamps.length >= this.maxOperationsPerMinute) {
-            console.warn('🚨 同步操作频率超限，已阻止');
-            return;
-        }
-        
-        this.operationTimestamps.push(now);
-        this.operationCount++;
-        
-        const syncItem = {
-            id: `sync_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-            type: operation.type,
-            table: operation.table,
-            data: operation.data,
-            timestamp: new Date().toISOString(),
-            retryCount: 0
-        };
-        
-        // 队列大小限制
-        if (this.syncQueue.length >= (this.syncConfig.QUEUE_SIZE_LIMIT || 50)) {
-            console.warn('同步队列已满，移除最旧的操作');
-            this.syncQueue.shift();
-        }
-        
-        this.syncQueue.push(syncItem);
-        await this.saveSyncQueue();
-        
-        console.log(`📝 安全添加到同步队列: ${operation.type} ${operation.table} (${this.operationCount}次操作)`);
-        
-        // 安全处理队列
-        if (this.isOnline) {
-            this.safeProcessSyncQueue();
-        }
+// sync-service.js - 必须修改为这样！3个参数版本的
+async addToSyncQueue(operation, table, data) {
+    console.log('📝 addToSyncQueue 被调用，完整参数:', { 
+        operation, 
+        table, 
+        data: { id: data?.id, name: data?.name } 
+    });
+    
+    if (!this.isEnabled) {
+        console.log('同步服务已禁用，跳过队列操作');
+        return;
     }
+    
+    // 参数验证
+    if (!operation || !table || !data) {
+        console.error('❌ 同步队列参数无效:', { operation, table, data });
+        return;
+    }
+    
+    // 安全防护：频率限制
+    const now = Date.now();
+    this.operationTimestamps = this.operationTimestamps.filter(
+        time => now - time < 60000
+    );
+    
+    if (this.operationTimestamps.length >= this.maxOperationsPerMinute) {
+        console.warn('🚨 同步操作频率超限，已阻止');
+        return;
+    }
+    
+    this.operationTimestamps.push(now);
+    this.operationCount++;
+    
+    const syncItem = {
+        id: `sync_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        type: operation,    // 使用第一个参数
+        table: table,       // 使用第二个参数  
+        data: data,         // 使用第三个参数
+        timestamp: new Date().toISOString(),
+        retryCount: 0
+    };
+    
+    // 队列大小限制
+    if (this.syncQueue.length >= (this.syncConfig.QUEUE_SIZE_LIMIT || 50)) {
+        console.warn('同步队列已满，移除最旧的操作');
+        this.syncQueue.shift();
+    }
+    
+    this.syncQueue.push(syncItem);
+    await this.saveSyncQueue();
+    
+    console.log(`📝 安全添加到同步队列: ${operation} ${table} (${this.syncQueue.length}个待同步)`);
+    
+    // 安全处理队列
+    if (this.isOnline) {
+        this.safeProcessSyncQueue();
+    }
+}
     
     // 安全处理同步队列
     async safeProcessSyncQueue() {
@@ -140,32 +153,58 @@ class SyncService {
     }
     
     // 安全执行同步操作
-    async safeExecuteSyncOperation(syncItem) {
-        const { type, table, data } = syncItem;
+async safeExecuteSyncOperation(syncItem) {
+    const { type, table, data } = syncItem;
+    
+    console.log(`🔄 执行同步操作: ${type} ${table}`, { 
+        id: data?.id, 
+        name: data?.name 
+    });
+    
+    try {
+        // 🔧 关键修复：使用正确的数据服务获取方式
+        const dataService = getDataService();
         
-        try {
-            switch (type) {
-                case 'create':
-                    return await window.dataService.createItem(table, data);
-                case 'update':
-                    return await window.dataService.updateItem(table, data.id, data);
-                case 'delete':
-                    // 安全删除：即使失败也返回成功
-                    try {
-                        return await window.dataService.deleteItem(table, data.id);
-                    } catch (deleteError) {
-                        console.warn(`⚠️ 删除操作失败但标记为成功: ${data.id}`, deleteError);
-                        return true;
-                    }
-                default:
-                    console.warn(`未知的同步操作类型: ${type}`);
-                    return null;
-            }
-        } catch (error) {
-            console.error(`同步操作失败 ${type} ${table}:`, error);
-            throw error;
+        if (!dataService) {
+            console.error('❌ 无法获取数据服务实例');
+            return null;
         }
+        
+        switch (type) {
+            case 'CREATE':
+                if (table === 'study_tasks') {
+                    console.log('📤 创建任务到数据库...');
+                    return await dataService.supabaseClient.createTask(data);
+                }
+                break;
+                
+            case 'UPDATE':
+                if (table === 'study_tasks') {
+                    console.log('📝 更新任务...');
+                    return await dataService.supabaseClient.updateTask(data.id, data.family_id, data);
+                }
+                break;
+                
+            case 'DELETE':
+                if (table === 'study_tasks') {
+                    console.log('🗑️ 删除任务...');
+                    return await dataService.supabaseClient.deleteTask(data.id, data.family_id);
+                }
+                break;
+                
+            default:
+                console.warn(`未知的同步操作类型: ${type}`);
+                return null;
+        }
+        
+        console.warn(`未知的表名: ${table}`);
+        return null;
+        
+    } catch (error) {
+        console.error(`❌ 同步操作失败 ${type} ${table}:`, error);
+        throw error;
     }
+}
     
     // 安全全量同步
     async syncAllData() {
