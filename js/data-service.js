@@ -1,13 +1,23 @@
 // 统一数据服务层 - 简化稳定版本
 class DataService {
     constructor() {
-        this.currentDataSource = APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE;
+        // 🔥 修复：确保 featureFlags 正确初始化
+        this.featureFlags = window.APP_CONFIG?.FEATURE_FLAGS || {
+            DATA_SOURCE: 'hybrid',
+            ENABLE_FAMILY_FEATURES: true,
+            ENABLE_SYNC: true,
+            SHOW_SYNC_STATUS: true,
+            ENABLE_CONFLICT_DETECTION: false
+        };
+
+        // this.currentDataSource = APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE;
+        this.currentDataSource = this.featureFlags.DATA_SOURCE;
         this.supabaseClient = getSupabaseClient();
         this.isInitialized = false;
         this.taskCreationInProgress = false;
         this.recentOperations = [];
         console.log('🔧 DataService 构造函数开始');
-        console.log('📊 配置数据源:', APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE);
+        console.log('📊 配置数据源:', this.featureFlags.DATA_SOURCE);
         console.log('🔌 Supabase 连接状态:', this.supabaseClient.isConnected);
         console.log('🔄 全局 syncService:', typeof window !== 'undefined' ? window.syncService : 'undefined');
         // 🔧 新增：同步服务集成
@@ -27,7 +37,7 @@ class DataService {
         console.log('✅ 数据服务初始化完成');
     }
 
-  
+
     // 修复的同步服务初始化
     initSyncService() {
         try {
@@ -477,8 +487,65 @@ class DataService {
     }
 
     // 删除任务
+    // async deleteTask(taskId) {
+    //     try {
+    //         let result;
+
+    //         switch (this.currentDataSource) {
+    //             case 'supabase':
+    //                 try {
+    //                     const familyService = getFamilyService();
+    //                     if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+    //                         result = await this.supabaseClient.deleteTask(
+    //                             taskId,
+    //                             familyService.getCurrentFamily().id
+    //                         );
+    //                     }
+    //                 } catch (error) {
+    //                     console.error('❌ 云端删除失败:', error);
+    //                     throw error;
+    //                 }
+    //                 break;
+
+    //             case 'hybrid':
+    //                 // 先删除本地
+    //                 result = this.deleteTaskInLocalStorage(taskId);
+
+    //                 // 同时删除云端
+    //                 try {
+    //                     const familyService = getFamilyService();
+    //                     if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily() && this.supabaseClient.isConnected) {
+    //                         await this.supabaseClient.deleteTask(
+    //                             taskId,
+    //                             familyService.getCurrentFamily().id
+    //                         );
+    //                     }
+    //                 } catch (cloudError) {
+    //                     console.warn('⚠️ 云端删除失败，但本地删除成功');
+    //                 }
+    //                 break;
+
+    //             case 'localStorage':
+    //             default:
+    //                 result = this.deleteTaskInLocalStorage(taskId);
+    //                 break;
+    //         }
+
+    //         return result;
+
+    //     } catch (error) {
+    //         console.error('❌ 删除任务失败:', error);
+    //         throw error;
+    //     }
+    // }
     async deleteTask(taskId) {
         try {
+            // 🔥 新增：参数验证和日志
+            if (!taskId) {
+                throw new Error('任务ID不能为空');
+            }
+            console.log(`[DataService] 删除任务: ${taskId}, 模式: ${this.currentDataSource}`);
+
             let result;
 
             switch (this.currentDataSource) {
@@ -490,6 +557,9 @@ class DataService {
                                 taskId,
                                 familyService.getCurrentFamily().id
                             );
+                            console.log(`✅ 云端删除成功: ${taskId}`);
+                        } else {
+                            throw new Error('未加入家庭，无法使用云端模式');
                         }
                     } catch (error) {
                         console.error('❌ 云端删除失败:', error);
@@ -498,37 +568,101 @@ class DataService {
                     break;
 
                 case 'hybrid':
-                    // 先删除本地
+                    // 1. 先删除本地
                     result = this.deleteTaskInLocalStorage(taskId);
 
-                    // 同时删除云端
+                    // 2. 🔥 修复：添加第三个参数（表名）
+                    if (this.featureFlags.ENABLE_SYNC && this.syncService) {
+                        // 构造完整的同步数据
+                        const syncData = {
+                            id: taskId,
+                            // 如果有家庭信息，添加家庭ID
+                            ...(this.familyService && this.familyService.hasJoinedFamily && this.familyService.hasJoinedFamily() && {
+                                family_id: this.familyService.getCurrentFamily().id
+                            })
+                        };
+
+                        console.log('🔄 添加到同步队列:', {
+                            operation: 'delete',
+                            data: syncData,
+                            table: 'study_tasks'
+                        });
+
+                        try {
+                            // 🔥 修复：添加第三个参数
+                            await this.syncService.addToSyncQueue('delete', 'study_tasks',syncData);
+                            console.log(`✅ 本地删除成功，已加入同步队列: ${taskId}`);
+
+                            // 立即尝试同步
+                            setTimeout(() => {
+                                if (this.syncService && this.syncService.safeExecuteSyncOperation) {
+                                    this.syncService.safeExecuteSyncOperation().catch(err => {
+                                        console.warn('同步执行失败，但会在下次重试:', err);
+                                    });
+                                }
+                            }, 100);
+                        } catch (syncError) {
+                            console.error('❌ 添加到同步队列失败:', syncError);
+                        }
+                    } else {
+                        console.log(`✅ 本地删除成功: ${taskId} (同步${this.featureFlags.ENABLE_SYNC ? '服务未就绪' : '已禁用'})`);
+                    }
+
+                    // 3. 同时尝试直接删除云端
                     try {
                         const familyService = getFamilyService();
-                        if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily() && this.supabaseClient.isConnected) {
+                        if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily() && this.supabaseClient?.isConnected) {
                             await this.supabaseClient.deleteTask(
                                 taskId,
                                 familyService.getCurrentFamily().id
                             );
+                            console.log(`✅ 云端直接删除成功: ${taskId}`);
                         }
                     } catch (cloudError) {
-                        console.warn('⚠️ 云端删除失败，但本地删除成功');
+                        console.warn('⚠️ 云端直接删除失败，但已加入同步队列会重试');
                     }
                     break;
-
                 case 'localStorage':
                 default:
                     result = this.deleteTaskInLocalStorage(taskId);
+                    console.log(`✅ 本地删除成功: ${taskId}`);
                     break;
             }
 
-            return result;
+            // 🔥 修复：确保返回统一格式
+            return {
+                success: true,
+                taskId: taskId,
+                dataSource: this.currentDataSource
+            };
 
         } catch (error) {
             console.error('❌ 删除任务失败:', error);
-            throw error;
+
+            // 🔥 修复：返回统一错误格式
+            return {
+                success: false,
+                error: error.message,
+                taskId: taskId
+            };
         }
     }
 
+    // 🔥 新增：确保本地删除方法存在且正确
+    deleteTaskInLocalStorage(taskId) {
+        try {
+            const tasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+            const updatedTasks = tasks.filter(task => task.id != taskId);
+            localStorage.setItem('studyTasks', JSON.stringify(updatedTasks));
+
+            console.log(`✅ 本地存储删除成功: ${taskId}`);
+            return { success: true, taskId };
+
+        } catch (error) {
+            console.error('❌ 本地存储删除失败:', error);
+            throw error;
+        }
+    }
     // 在localStorage更新任务
     updateTaskInLocalStorage(taskId, updates) {
         try {
@@ -635,7 +769,7 @@ function getDataService() {
     return dataServiceInstance;
 }
 
-// 全局暴露
+// 全局暴露 这里好像还有点问题
 if (typeof window !== 'undefined') {
     window.DataService = DataService;
     window.getDataService = getDataService;

@@ -323,27 +323,56 @@ class SupabaseClient {
     }
 
     // 删除任务
-    async deleteTask(taskId) {
-        if (!this.isConnected) {
-            throw new Error('Supabase未连接');
+    // async deleteTask(taskId) {
+    //     if (!this.isConnected) {
+    //         throw new Error('Supabase未连接');
+    //     }
+
+    //     try {
+    //         const { error } = await this.client
+    //             .from(APP_CONFIG.SUPABASE.TABLES.STUDY_TASKS)
+    //             .delete()
+    //             .eq('id', taskId);
+
+    //         if (error) throw error;
+
+    //         console.log('✅ 任务删除成功:', taskId);
+    //         return true;
+
+    //     } catch (error) {
+    //         console.error('❌ 删除任务失败:', error);
+    //         throw error;
+    //     }
+    // }
+    async deleteTask(taskId, familyId = null) {
+    try {
+        console.log(`[Supabase] 删除任务: ${taskId}, 家庭: ${familyId}`);
+        
+        let query = this.client
+            .from('study_tasks')
+            .delete()
+            .eq('id', taskId);
+
+        // 如果有家庭ID，确保只删除该家庭的任务
+        if (familyId) {
+            query = query.eq('family_id', familyId);
         }
 
-        try {
-            const { error } = await this.client
-                .from(APP_CONFIG.SUPABASE.TABLES.STUDY_TASKS)
-                .delete()
-                .eq('id', taskId);
+        const { data, error } = await query;
 
-            if (error) throw error;
-
-            console.log('✅ 任务删除成功:', taskId);
-            return true;
-
-        } catch (error) {
-            console.error('❌ 删除任务失败:', error);
+        if (error) {
+            console.error('❌ Supabase删除失败:', error);
             throw error;
         }
+
+        console.log(`✅ Supabase删除成功: ${taskId}`);
+        return { success: true, data };
+        
+    } catch (error) {
+        console.error('❌ Supabase删除任务失败:', error);
+        throw error;
     }
+}
 
     // === 工具方法 ===
 

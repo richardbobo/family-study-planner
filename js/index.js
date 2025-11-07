@@ -285,7 +285,7 @@ function openQuickCompleteModal(taskId) {
         defaultOption.classList.add('active');
     }
 
-    const defaultMinutes = task.time || 30;
+    const defaultMinutes = task.duration || 30;
     setTimeFromMinutes(defaultMinutes);
 
     isSubmittingCompletion = false;
@@ -377,7 +377,7 @@ function confirmQuickComplete() {
     setTimeout(() => {
         try {
             task.completed = true;
-            task.time = totalMinutes;
+            task.duration = totalMinutes;
             task.completionNote = completionNote;
             task.completionTime = new Date().toISOString();
             task.actualCompletionDate = getCurrentDate();
@@ -507,7 +507,7 @@ function renderTaskList() {
                 // 已完成的任务
                 const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
                 const timeString = completionTime.toTimeString().substring(0, 5);
-                const duration = task.time ? `${task.time}分钟` : '15分钟';
+                const duration = task.duration ? `${task.duration}分钟` : '15分钟';
 
                 html += `
                     <div class="task-item completed" data-task-id="${task.id}" onclick="openModal('${task.id}')">
@@ -522,7 +522,7 @@ function renderTaskList() {
                             <div class="task-header">
                                 <h3 class="task-name">${task.name}</h3>
                                 <div class="task-meta-info">
-                                    <span class="repeat-type">${getRepeatTypeText(task.repeatType)}</span>
+                                    <span class="repeat-type">${getRepeatTypeText(task.repeat_type)}</span>
                                     <span class="plan-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
                                 </div>
                             </div>
@@ -549,7 +549,7 @@ function renderTaskList() {
                 `;
             } else {
                 // 未完成的任务
-                const timeDisplay = task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置';
+                const timeDisplay = task.duration ? `${Math.floor(task.duration / 60)}小时${task.duration % 60}分钟` : '未设置';
 
                 html += `
                     <div class="task-item" data-task-id="${task.id}" onclick="openModal('${task.id}')">
@@ -564,7 +564,7 @@ function renderTaskList() {
                             <div class="task-header">
                                 <h3 class="task-name">${task.name}</h3>
                                 <div class="task-meta-info">
-                                    <span class="repeat-type">${getRepeatTypeText(task.repeatType)}</span>
+                                    <span class="repeat-type">${getRepeatTypeText(task.repeat_type)}</span>
                                     <span class="plan-time">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</span>
                                 </div>
                             </div>
@@ -799,7 +799,7 @@ function openModal(taskId) {
     modalHTML += `
             <div class="detail-item">
                 <div class="detail-label">重复类型:</div>
-                <div class="detail-value">${getRepeatTypeText(task.repeatType)}</div>
+                <div class="detail-value">${getRepeatTypeText(task.repeat_type)}</div>
             </div>
             
             <div class="detail-item">
@@ -814,7 +814,7 @@ function openModal(taskId) {
             
             <div class="detail-item">
                 <div class="detail-label">预计时长:</div>
-                <div class="detail-value">${task.time ? `${Math.floor(task.time / 60)}小时${task.time % 60}分钟` : '未设置'}</div>
+                <div class="detail-value">${task.duration ? `${Math.floor(task.duration / 60)}小时${task.duration % 60}分钟` : '未设置'}</div>
             </div>
     `;
 
@@ -946,7 +946,7 @@ function updateStats() {
     const completedTasks = tasks.filter(task => task.completed).length;
     const totalTasks = tasks.length;
     const totalStudyTime = tasks.reduce((total, task) => {
-        return total + (task.completed ? (task.time || 0) : 0);
+        return total + (task.completed ? (task.duration || 0) : 0);
     }, 0);
 
     const streak = localStorage.getItem('studyStreak') || '0';
@@ -1246,7 +1246,6 @@ function initializeConfirmDeleteModal() {
     }
 }
 
-// 打开确认删除模态框
 // 打开确认删除模态框 - 支持批量删除
 function openConfirmDeleteModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
@@ -1261,10 +1260,10 @@ function openConfirmDeleteModal(taskId) {
     // 更新模态框内容
     document.getElementById('deleteTaskName').textContent = task.name;
     document.getElementById('deleteTaskSubject').textContent = task.subject;
-    document.getElementById('deleteTaskRepeatType').textContent = getRepeatTypeText(task.repeatType);
+    document.getElementById('deleteTaskRepeatType').textContent = getRepeatTypeText(task.repeat_type);
 
     // 设置模态框标题和模式
-    const isBatchDelete = task.repeatType !== 'once';
+    const isBatchDelete = task.repeat_type !== 'once';
     const modalTitle = document.getElementById('deleteModalTitle');
     const modalSubtitle = document.getElementById('deleteModalSubtitle');
     const batchOptions = document.getElementById('batchDeleteOptions');
@@ -1349,7 +1348,7 @@ function updateDeleteSummary(task, startDate) {
 
 // 获取受影响的重复任务
 function getAffectedRepeatTasks(originalTask, startDate) {
-    if (originalTask.repeatType === 'once') {
+    if (originalTask.repeat_type === 'once') {
         return [originalTask];
     }
 
@@ -1357,7 +1356,7 @@ function getAffectedRepeatTasks(originalTask, startDate) {
     const affectedTasks = tasks.filter(task =>
         task.name === originalTask.name &&
         task.subject === originalTask.subject &&
-        task.repeatType === originalTask.repeatType &&
+        task.repeat_type === originalTask.repeat_type &&
         task.date >= startDate
     );
 
@@ -1365,12 +1364,74 @@ function getAffectedRepeatTasks(originalTask, startDate) {
 }
 
 // 确认删除任务 - 支持批量删除
-function confirmDeleteTask() {
+// function confirmDeleteTask() {
+//     if (!currentDeleteTaskId || !currentDeleteTask) return;
+
+//     const taskId = currentDeleteTaskId;
+//     const task = currentDeleteTask;
+//     const isBatchDelete = task.repeatType !== 'once';
+
+//     try {
+//         let deletedTasks = [];
+
+//         if (isBatchDelete) {
+//             // 批量删除模式
+//             const startDate = document.getElementById('deleteStartDate').value;
+//             const affectedTasks = getAffectedRepeatTasks(task, startDate);
+
+//             // 从tasks数组中删除所有受影响的任务
+//             affectedTasks.forEach(affectedTask => {
+//                 const taskIndex = tasks.findIndex(t => t.id === affectedTask.id);
+//                 if (taskIndex !== -1) {
+//                     deletedTasks.push(tasks[taskIndex]);
+//                     tasks.splice(taskIndex, 1);
+//                 }
+//             });
+//         } else {
+//             // 单次删除模式
+//             const taskIndex = tasks.findIndex(t => t.id == taskId);
+//             if (taskIndex !== -1) {
+//                 deletedTasks.push(tasks[taskIndex]);
+//                 tasks.splice(taskIndex, 1);
+//             }
+//         }
+
+//         if (deletedTasks.length === 0) {
+//             showNotification('没有找到要删除的任务', 'warning');
+//             return;
+//         }
+
+//         // 保存到localStorage
+//         saveTasks();
+
+//         // 关闭所有模态框
+//         closeConfirmDeleteModal();
+//         closeModal();
+
+//         // 更新界面
+//         renderWeekView();
+//         renderTaskList();
+//         updateStats();
+
+//         // 显示成功消息
+//         if (isBatchDelete) {
+//             showNotification(`已批量删除 ${deletedTasks.length} 个重复任务`, 'success');
+//         } else {
+//             showNotification(`已删除学习计划: ${task.name}`, 'success');
+//         }
+
+//     } catch (error) {
+//         console.error('删除任务失败:', error);
+//         showNotification('删除失败，请重试', 'error');
+//     }
+// }
+// 确认删除任务 - 支持批量删除 - 修复版本
+async function confirmDeleteTask() {
     if (!currentDeleteTaskId || !currentDeleteTask) return;
 
     const taskId = currentDeleteTaskId;
     const task = currentDeleteTask;
-    const isBatchDelete = task.repeatType !== 'once';
+    const isBatchDelete = task.repeat_type !== 'once';
 
     try {
         let deletedTasks = [];
@@ -1402,6 +1463,9 @@ function confirmDeleteTask() {
             return;
         }
 
+        // 🔥 修复关键：调用数据服务删除任务（同步到云端）
+        await deleteTasksWithSync(deletedTasks);
+
         // 保存到localStorage
         saveTasks();
 
@@ -1427,12 +1491,87 @@ function confirmDeleteTask() {
     }
 }
 
+// 🔥 新增：使用数据服务删除任务（支持同步到云端）
+async function deleteTasksWithSync(tasksToDelete) {
+    const dataService = getDataService();
+     // 🔥 添加防御性检查
+    if (!dataService) {
+        console.error('❌ 数据服务不可用');
+        showNotification('系统服务未就绪，请刷新页面重试', 'error');
+        return;
+    }
+
+    // 逐个删除任务
+    for (const task of tasksToDelete) {
+        try {
+            console.log(`正在删除任务: ${task.name} (ID: ${task.id})`);
+            
+            // 使用数据服务删除（这会同时处理本地和云端）
+            const result = await dataService.deleteTask(task.id);
+            
+            if (result.success) {
+                console.log(`✅ 任务删除成功: ${task.name}`);
+            } else {
+                console.warn(`⚠️ 任务删除可能未完全同步: ${task.name}`, result.error);
+                // 即使云端删除失败，本地删除仍然继续
+            }
+        } catch (error) {
+            console.error(`❌ 删除任务失败 ${task.name}:`, error);
+            // 继续删除其他任务，不中断流程
+        }
+    }
+    
+    // 强制触发同步
+    const syncService = getSyncService();
+    if (syncService && typeof syncService.forceSync === 'function') {
+        setTimeout(() => {
+            syncService.forceSync().catch(console.error);
+        }, 500);
+    }
+}
+
+// 🔥 新增：获取数据服务实例
+function getDataService() {
+    if (window.dataService) {
+        return window.dataService;
+    }
+    
+    // 如果全局实例不存在，创建临时实例
+    console.warn('数据服务全局实例未找到，创建临时实例');
+    const { DataService } = require('./js/services/data-service');
+    return new DataService();
+}
+
+// 🔥 新增：获取同步服务实例
+function getSyncService() {
+    if (window.syncService) {
+        return window.syncService;
+    }
+    
+    // 如果全局实例不存在，创建临时实例
+    console.warn('同步服务全局实例未找到，创建临时实例');
+    const { SyncService } = require('./js/services/sync-service');
+    return new SyncService();
+}
+
+// 修改保存任务函数，确保数据服务可用
+function saveTasks() {
+    localStorage.setItem('studyTasks', JSON.stringify(tasks));
+    // 保存后更新科目选项
+    updateSubjectFilterOptions();
+    
+    // 🔥 新增：确保数据服务知道本地变更
+    const dataService = getDataService();
+    if (dataService && typeof dataService.notifyLocalChange === 'function') {
+        dataService.notifyLocalChange();
+    }
+}
 // 修改删除按钮文本显示
 function updateDeleteButtonText(task) {
     const deleteBtn = document.getElementById('deleteTaskBtn');
     if (!deleteBtn) return;
-
-    if (task.repeatType !== 'once') {
+console.log('更新删除按钮文本，任务重复类型:', task.repeat_type);
+    if (task.repeat_type !== 'once') {
         deleteBtn.innerHTML = '<i class="fas fa-layer-group"></i> 批量删除';
     } else {
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 删除计划';

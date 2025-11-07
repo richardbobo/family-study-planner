@@ -661,8 +661,8 @@ function calculateDuration(startTime, endTime) {
 // 保存所有任务到localStorage
 // 修复的 saveAllTasks 函数 - 完整版本
 async function saveAllTasks(tasks) {
-    console.log('🔄 开始保存任务到本地和云端...');
-    console.log('任务数量:', tasks.length);
+    // console.log('🔄 开始保存任务到本地和云端...');
+    // console.log('任务数量:', tasks.length);
     
     const dataService = getDataService();
     let successCount = 0;
@@ -728,17 +728,17 @@ async function saveAllTasks(tasks) {
 }
 
 // 保存任务到本地存储（备用）
-function saveTaskToLocalStorage(task) {
-    try {
-        let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
+// function saveTaskToLocalStorage(task) {
+//     try {
+//         let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
         
-        // 检查是否已存在
-        if (!existingTasks.some(t => t.id === task.id)) {
-            existingTasks.push(task);
-            localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
-        }
-    } catch (error) {
-        console.error('保存到本地存储失败:', error);
-        throw error;
-    }
-}
+//         // 检查是否已存在
+//         if (!existingTasks.some(t => t.id === task.id)) {
+//             existingTasks.push(task);
+//             localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
+//         }
+//     } catch (error) {
+//         console.error('保存到本地存储失败:', error);
+//         throw error;
+//     }
+// }
