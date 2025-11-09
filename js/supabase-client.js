@@ -77,9 +77,9 @@ class SupabaseClient {
     }
 
     // 健康检查
-    async healthCheck() {
-        return await this.testConnection();
-    }
+    // async healthCheck() {
+    //     return await this.testConnection();
+    // }
 
     // === 家庭相关操作 ===
 

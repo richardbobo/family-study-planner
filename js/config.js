@@ -3,16 +3,16 @@ const APP_CONFIG = {
     // 功能开关 - 控制新功能逐步上线
     FEATURE_FLAGS: {
         // 数据源配置: 'localStorage' | 'supabase' | 'hybrid'
-        DATA_SOURCE: 'hybrid',
+        DATA_SOURCE: 'supabase',
 
         // 家庭功能开关
-        ENABLE_FAMILY_FEATURES: true,
+        ENABLE_FAMILY_FEATURES: true, 
 
         // 数据同步开关
-        ENABLE_SYNC: true,
+        ENABLE_SYNC: false,// 关闭同步功能
 
         // 显示同步状态
-        SHOW_SYNC_STATUS: true,
+        SHOW_SYNC_STATUS: false, // 隐藏同步状态
 
         // 启用冲突检测
         ENABLE_CONFLICT_DETECTION: false
@@ -102,16 +102,11 @@ const APP_CONFIG = {
             '体育': '#10ac84'
         }
     },
-    // 功能开关 - 添加同步相关开关
-    // FEATURE_FLAGS: {
-    //     DATA_SOURCE: 'hybrid',
-    //     ENABLE_FAMILY_FEATURES: true,// 家庭功能总开关
-    //     ENABLE_SYNC: true,           // 同步功能总开关
-    //     SHOW_SYNC_STATUS: true,      // 同步状态显示
-    //     ENABLE_CONFLICT_DETECTION: false
-    // },
 
-    // 新增同步配置
+
+    // 新增同步配置    
+    // 注意：SYNC_CONFIG 和 CONSTANTS 中的同步相关配置可以保留
+    // 因为它们不会影响实际功能，只是配置常量
     SYNC_CONFIG: {
         // 同步间隔（毫秒）
         SYNC_INTERVAL: 30000,         // 30秒
@@ -160,18 +155,20 @@ function validateConfig() {
     // === 检查 Supabase 配置 ===
     if (APP_CONFIG.SUPABASE.URL.includes('your-project') ||
         APP_CONFIG.SUPABASE.ANON_KEY.includes('your-anon-key')) {
-        warnings.push('Supabase配置未完成，家庭功能将不可用');
+        warnings.push('Supabase ANON_KEY未正确配置');
     }
 
-    // 检查功能开关合理性
-    if (APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE === 'supabase' &&
-        (APP_CONFIG.SUPABASE.URL.includes('your-project') || !APP_CONFIG.SUPABASE.URL)) {
-        errors.push('配置冲突：已启用Supabase数据源但未配置Supabase连接');
+    // 检查功能开关合理性 - 更新逻辑
+    if (APP_CONFIG.FEATURE_FLAGS.DATA_SOURCE === 'supabase') {
+        if (!APP_CONFIG.SUPABASE.URL || APP_CONFIG.SUPABASE.URL.includes('your-project')) {
+            errors.push('配置冲突：已启用Supabase数据源但Supabase连接配置不完整');
+        }
     }
 
-    if (APP_CONFIG.FEATURE_FLAGS.ENABLE_FAMILY_FEATURES &&
-        (APP_CONFIG.SUPABASE.URL.includes('your-project') || !APP_CONFIG.SUPABASE.URL)) {
-        errors.push('配置冲突：已启用家庭功能但未配置Supabase连接');
+    if (APP_CONFIG.FEATURE_FLAGS.ENABLE_FAMILY_FEATURES) {
+        if (!APP_CONFIG.SUPABASE.URL || APP_CONFIG.SUPABASE.URL.includes('your-project')) {
+            errors.push('配置冲突：已启用家庭功能但Supabase连接配置不完整');
+        }
     }
 
     // === 检查 DeepSeek AI 配置 ===

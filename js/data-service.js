@@ -583,14 +583,14 @@ class DataService {
                         };
 
                         console.log('🔄 添加到同步队列:', {
-                            operation: 'delete',
+                            operation: 'DELETE',
                             data: syncData,
                             table: 'study_tasks'
                         });
 
                         try {
                             // 🔥 修复：添加第三个参数
-                            await this.syncService.addToSyncQueue('delete', 'study_tasks',syncData);
+                            await this.syncService.addToSyncQueue('DELETE', 'study_tasks',syncData);
                             console.log(`✅ 本地删除成功，已加入同步队列: ${taskId}`);
 
                             // 立即尝试同步
