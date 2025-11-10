@@ -2728,7 +2728,7 @@ footer {
     margin-top: 10px;
 }
 /* 家庭状态栏样式 */
-.family-status-bar {
+/* .family-status-bar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 16px 20px;
@@ -2739,7 +2739,7 @@ footer {
     align-items: center;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     animation: slideInDown 0.5s ease;
-}
+} */
 
 .family-info {
     display: flex;
@@ -2774,10 +2774,10 @@ footer {
     font-size: 0.8em;
 }
 
-.family-actions {
+/* .family-actions {
     display: flex;
     gap: 8px;
-}
+} */
 
 .btn-small {
     padding: 6px 12px;
@@ -3443,4 +3443,484 @@ footer {
         right: -80px;
         min-width: 260px;
     }
+}
+/* Header 右侧布局 */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* 家庭状态指示器 */
+.family-header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.family-header-status:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.family-status-icon {
+    font-size: 18px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.family-status-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+}
+
+/* 已加入家庭的状态 */
+.family-status-joined {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.family-status-joined .family-status-icon {
+    color: #ffd700; /* 金色图标 */
+}
+
+/* 未加入家庭的状态 */
+.family-status-not-joined {
+    background: rgba(108, 117, 125, 0.3);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.family-status-not-joined .family-status-icon {
+    color: #adb5bd;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .family-status-text {
+        display: none; /* 在小屏幕上只显示图标 */
+    }
+    
+    .family-header-status {
+        padding: 8px;
+    }
+}
+/* Header 整体样式 */
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 左侧标题区域 */
+.header-left {
+    text-align: left;
+    flex: 1;
+}
+
+.header-left h1 {
+    margin: 0 0 5px 0;
+    font-size: 28px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-left h1 i {
+    color: #ffd700;
+    font-size: 32px;
+}
+
+.subtitle {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* 右侧家庭状态区域 */
+.header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* 家庭状态指示器 - 美化版本 */
+.family-header-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.family-header-status:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.family-status-icon {
+    font-size: 20px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.family-status-text {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+/* 已加入家庭的状态 - 美化 */
+.family-status-joined {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.family-status-joined .family-status-icon {
+    color: #ffd700;
+    animation: pulse 2s infinite;
+}
+
+.family-status-joined .family-status-text {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.family-status-joined:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border-color: #ffd700;
+}
+
+/* 未加入家庭的状态 - 美化 */
+.family-status-not-joined {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.family-status-not-joined .family-status-icon {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.family-status-not-joined .family-status-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.family-status-not-joined:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 动画效果 */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+}
+
+/* 家庭徽章样式 */
+.family-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.7em;
+    margin-right: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.family-badge i {
+    font-size: 0.9em;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header-left {
+        text-align: center;
+    }
+    
+    .header-left h1 {
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .family-header-status {
+        padding: 10px 16px;
+        min-width: 120px;
+    }
+    
+    .family-status-text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .family-status-text {
+        display: none; /* 在很小屏幕上只显示图标 */
+    }
+    
+    .family-header-status {
+        min-width: auto;
+        padding: 10px;
+    }
+    
+    .header-left h1 {
+        font-size: 20px;
+    }
+    
+    .subtitle {
+        font-size: 12px;
+    }
+}
+/* 家庭状态指示器 - 去掉圆形背景的版本 */
+.family-header-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.family-header-status:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.family-status-icon {
+    font-size: 20px;
+    width: auto; /* 去掉固定宽度 */
+    height: auto; /* 去掉固定高度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    /* 去掉圆形背景相关的属性 */
+    background: none !important;
+    border-radius: 0 !important;
+}
+
+.family-status-text {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+/* 已加入家庭的状态 - 去掉圆形背景 */
+.family-status-joined {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.family-status-joined .family-status-icon {
+    color: #ffd700;
+    animation: pulse 2s infinite;
+    /* 确保没有圆形背景 */
+    background: none;
+    border-radius: 0;
+}
+
+.family-status-joined .family-status-text {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.family-status-joined:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border-color: #ffd700;
+}
+
+/* 未加入家庭的状态 - 去掉圆形背景 */
+.family-status-not-joined {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.family-status-not-joined .family-status-icon {
+    color: rgba(255, 255, 255, 0.7);
+    /* 确保没有圆形背景 */
+    background: none;
+    border-radius: 0;
+}
+
+.family-status-not-joined .family-status-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.family-status-not-joined:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 动画效果 - 优化图标动画 */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+    }
+}
+
+/* 家庭徽章样式 - 也去掉圆形背景 */
+.family-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.7em;
+    margin-right: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.family-badge i {
+    font-size: 0.9em;
+    /* 确保图标没有额外背景 */
+    background: none;
+    border-radius: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header-left {
+        text-align: center;
+    }
+    
+    .header-left h1 {
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .family-header-status {
+        padding: 10px 16px;
+        min-width: 120px;
+    }
+    
+    .family-status-text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .family-status-text {
+        display: none; /* 在很小屏幕上只显示图标 */
+    }
+    
+    .family-header-status {
+        min-width: auto;
+        padding: 10px;
+    }
+    
+    .header-left h1 {
+        font-size: 20px;
+    }
+    
+    .subtitle {
+        font-size: 12px;
+    }
+}
+
+/* 确保所有图标元素都没有圆形背景 */
+.family-status-icon i,
+.family-status-icon .fas,
+.family-status-icon .fa-home {
+    background: none !important;
+    border-radius: 0 !important;
+    width: auto !important;
+    height: auto !important;
 }

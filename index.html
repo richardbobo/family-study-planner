@@ -7,18 +7,25 @@
     <title>小学生学习计划管理</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/index.css">
-    <!-- <div class="header-actions">
-        <a href="family-management.html" class="family-btn">
-            <i class="fas fa-users"></i> 家庭管理
-        </a>
-    </div> -->
 </head>
 
 <body>
     <div class="container">
-        <header>
+        <header class="main-header">
+            <div class="header-content">
+                <!-- 左侧标题区域 -->
+                <div class="header-left">
                     <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
                     <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
+                </div>
+
+                <!-- 右侧家庭状态区域 -->
+                <div class="header-right">
+                    <div id="familyHeaderStatus" class="family-header-status">
+                        <!-- 家庭状态将动态显示在这里 -->
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- 统计卡片区域 -->
@@ -46,7 +53,7 @@
 
         </div>
         <!-- 家庭状态栏 -->
-        <div id="familyStatusBar" class="family-status-bar" style="display: none;">
+        <!-- <div id="familyStatusBar" class="family-status-bar" style="display: none;">
             <div class="family-info">
                 <span class="family-icon">👨‍👩‍👧‍👦</span>
                 <div class="family-details">
@@ -59,7 +66,7 @@
                 <button id="viewFamilyTasks" class="btn btn-outline btn-small">只看家庭任务</button>
                 <button id="manageFamily" class="btn btn-secondary btn-small">管理家庭</button>
             </div>
-        </div>
+        </div> -->
 
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
@@ -77,10 +84,6 @@
                     </a>
                     <a href="add-plan.html" class="btn btn-primary">
                         <i class="fas fa-plus"></i> 添加计划
-                    </a>
-                    <!-- 新增：家庭管理按钮 -->
-                    <a href="family-management.html" class="btn btn-family">
-                        <i class="fas fa-users"></i> 家庭管理
                     </a>
                 </div>
             </div>

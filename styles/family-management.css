@@ -865,3 +865,167 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* 精致版本 - 家庭管理页面头部 */
+.ai-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 25px;
+    padding: 40px 0 30px 0;
+    margin-bottom: 40px;
+    border-bottom: 2px solid #f8f9fa;
+    position: relative;
+}
+
+.ai-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 3px;
+}
+
+/* 返回按钮 - 精致版本 */
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    box-shadow: 
+        0 6px 20px rgba(102, 126, 234, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    margin-top: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.back-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.back-btn:hover::before {
+    left: 100%;
+}
+
+.back-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 10px 30px rgba(102, 126, 234, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.back-btn:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+.back-btn i {
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.back-btn:hover i {
+    transform: translateX(-4px);
+}
+
+/* 标题内容 - 精致版本 */
+.ai-header-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ai-header h1 {
+    margin: 0 0 12px 0;
+    font-size: 36px;
+    font-weight: 800;
+    color: #2c3e50;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #2c3e50 0%, #667eea 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ai-header .subtitle {
+    margin: 0;
+    font-size: 18px;
+    color: #7f8c8d;
+    font-weight: 400;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+/* 响应式设计 - 精致版本 */
+@media (max-width: 768px) {
+    .ai-header {
+        flex-direction: column;
+        gap: 20px;
+        padding: 30px 0 20px 0;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .ai-header::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .back-btn {
+        align-self: center;
+        margin-top: 0;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .ai-header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    
+    .ai-header .subtitle {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-header {
+        padding: 25px 0 15px 0;
+    }
+    
+    .ai-header h1 {
+        font-size: 28px;
+    }
+    
+    .ai-header .subtitle {
+        font-size: 15px;
+    }
+    
+    .back-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}

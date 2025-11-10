@@ -307,10 +307,6 @@ class FamilyService {
         return this.currentMember && this.currentMember.role === 'child';
     }
 
-    // === 完全移除本地存储相关方法 ===
-    // 删除：saveToLocalStorage()
-    // 删除：restoreFromLocalStorage()  
-    // 删除：clearLocalStorage()
 
     // === 事件系统 ===
 

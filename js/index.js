@@ -9,7 +9,7 @@ let currentDeleteTask = null;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function () {
-        console.log('主页DOM已加载');
+    console.log('主页DOM已加载');
     initializeNavigation();
     initializeModal();
     initializeQuickCompleteModal();
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateStats();
     initializeFamilyFeatures();
     setupFamilyEventListeners();
-        console.log('页面初始化完成');
+    console.log('页面初始化完成');
 
     // 🔄 修改：使用新的任务加载方式
     loadTasksFromCloud();
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // 🔄 修改：从云端加载任务
 async function loadTasksFromCloud() {
-        try {
-            console.log('🔍 开始从云端加载任务...');
+    try {
+        console.log('🔍 开始从云端加载任务...');
         showLoading(true);
 
-            const dataService = getDataService();
-            const loadedTasks = await dataService.getTasks();
+        const dataService = getDataService();
+        const loadedTasks = await dataService.getTasks();
 
         tasks = loadedTasks || [];
         console.log(`✅ 从云端加载了 ${tasks.length} 个任务`);
@@ -42,98 +42,100 @@ async function loadTasksFromCloud() {
         renderTaskList();
         updateStats();
 
-        } catch (error) {
-            console.error('❌ 从云端加载任务失败:', error);
+    } catch (error) {
+        console.error('❌ 从云端加载任务失败:', error);
         showNotification('加载任务失败，请检查网络连接', 'error');
         // 降级处理：使用空数组
         tasks = [];
         renderWeekView();
         renderTaskList();
-        updateStats();
-        } finally {
+        updateStats(); // 错误情况下也更新统计
+    } finally {
         showLoading(false);
-        }
     }
+}
 
 
 // 🔄 修改：显示加载状态
 function showLoading(show) {
-        const loadingElement = document.getElementById('loadingIndicator');
-        if (loadingElement) {
-            loadingElement.style.display = show ? 'block' : 'none';
-        }
+    const loadingElement = document.getElementById('loadingIndicator');
+    if (loadingElement) {
+        loadingElement.style.display = show ? 'block' : 'none';
+    }
 
-        const taskListContainer = document.getElementById('tasks-container');
-        if (taskListContainer && show) {
-            taskListContainer.innerHTML = `
+    const taskListContainer = document.getElementById('tasks-container');
+    if (taskListContainer && show) {
+        taskListContainer.innerHTML = `
                 <div class="loading-state">
                     <div class="loading-spinner"></div>
                     <p>正在从云端加载任务...</p>
                 </div>
             `;
-        }
     }
+}
 
 // 🔄 修改：快速完成任务 - 适配云端
 async function quickComplete(taskId) {
-        event.stopPropagation();
+    event.stopPropagation();
     openQuickCompleteModal(taskId);
-    }
+}
 
 // 🔄 修改：确认快速完成 - 适配云端
 async function confirmQuickComplete() {
     if (!currentQuickCompleteTaskId || isSubmittingCompletion) return;
 
     const task = tasks.find(t => t.id == currentQuickCompleteTaskId);
-        if (!task) {
+    if (!task) {
         showNotification('任务不存在或已被删除', 'error');
         closeQuickCompleteModal();
-            return;
-        }
+        return;
+    }
 
-        const hours = parseInt(document.getElementById('hoursInput').value) || 0;
-        const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
-        const totalMinutes = hours * 60 + minutes;
-        const completionNote = document.getElementById('completionNote').value.trim();
+    const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+    const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+    const totalMinutes = hours * 60 + minutes;
+    const completionNote = document.getElementById('completionNote').value.trim();
 
-        if (totalMinutes <= 0) {
+    if (totalMinutes <= 0) {
         showNotification('请设置有效的学习时长', 'warning');
-            return;
-        }
+        return;
+    }
 
     isSubmittingCompletion = true;
     updateConfirmButton(true);
 
-        try {
-            const dataService = getDataService();
+    try {
+        const dataService = getDataService();
 
         // 更新任务完成状态到云端
         // 🔧 修改：使用新的 completeTask 方法
-            await dataService.completeTask(task.id, {
-                actual_duration: totalMinutes,
-                notes: completionNote,
-                earned_points: task.points || 5
-            });
+        await dataService.completeTask(task.id, {
+            actual_duration: totalMinutes,
+            notes: completionNote,
+            earned_points: task.points || 5
+        });
 
         // 重新从云端加载最新数据
         await loadTasksFromCloud();
+        // 确保统计信息更新
+        updateStats(); // 新增：强制更新统计
 
         closeQuickCompleteModal();
         closeModal();
 
-            const successMessage = completionNote
-                ? `🎉 任务完成！学习时长：${totalMinutes}分钟，已记录学习心得`
-                : `🎉 任务完成！学习时长：${totalMinutes}分钟`;
+        const successMessage = completionNote
+            ? `🎉 任务完成！学习时长：${totalMinutes}分钟，已记录学习心得`
+            : `🎉 任务完成！学习时长：${totalMinutes}分钟`;
         showNotification(successMessage, 'success');
 
-        } catch (error) {
-            console.error('保存任务完成状态失败:', error);
+    } catch (error) {
+        console.error('保存任务完成状态失败:', error);
         showNotification('保存失败，请重试', 'error');
-        } finally {
+    } finally {
         isSubmittingCompletion = false;
         updateConfirmButton(false);
-        }
     }
+}
 
 // 🔄 修改：确认删除任务 - 适配云端
 async function confirmDeleteTask() {
@@ -141,52 +143,55 @@ async function confirmDeleteTask() {
 
     const taskId = currentDeleteTaskId;
     const task = currentDeleteTask;
-        const isBatchDelete = task.repeat_type !== 'once';
+    const isBatchDelete = task.repeat_type !== 'once';
 
-        try {
-            const dataService = getDataService();
-            let deletedCount = 0;
+    try {
+        const dataService = getDataService();
+        let deletedCount = 0;
 
-            if (isBatchDelete) {
+        if (isBatchDelete) {
             // 批量删除模式
-                const startDate = document.getElementById('deleteStartDate').value;
+            const startDate = document.getElementById('deleteStartDate').value;
             const affectedTasks = getAffectedRepeatTasks(task, startDate);
-                const taskIds = affectedTasks.map(t => t.id);
+            const taskIds = affectedTasks.map(t => t.id);
 
-                if (taskIds.length > 0) {
-                    const result = await dataService.batchDeleteTasks(taskIds);
-                    deletedCount = result.deletedCount;
-                }
-            } else {
+            if (taskIds.length > 0) {
+                const result = await dataService.batchDeleteTasks(taskIds);
+                deletedCount = result.deletedCount;
+            }
+        } else {
             // 单次删除模式
-                await dataService.deleteTask(taskId);
-                deletedCount = 1;
-            }
+            await dataService.deleteTask(taskId);
+            deletedCount = 1;
+        }
 
-            if (deletedCount === 0) {
+        if (deletedCount === 0) {
             showNotification('没有找到要删除的任务', 'warning');
-                return;
-            }
+            return;
+        }
 
         // 重新从云端加载最新数据
         await loadTasksFromCloud();
+
+        // 确保统计信息更新
+        updateStats(); // 新增：强制更新统计
 
         // 关闭所有模态框
         closeConfirmDeleteModal();
         closeModal();
 
         // 显示成功消息
-            if (isBatchDelete) {
+        if (isBatchDelete) {
             showNotification(`已批量删除 ${deletedCount} 个重复任务`, 'success');
-            } else {
+        } else {
             showNotification(`已删除学习计划: ${task.name}`, 'success');
-            }
-
-        } catch (error) {
-            console.error('删除任务失败:', error);
-        showNotification('删除失败，请重试', 'error');
         }
+
+    } catch (error) {
+        console.error('删除任务失败:', error);
+        showNotification('删除失败，请重试', 'error');
     }
+}
 
 // 🔄 修改：刷新按钮功能
 function setupRefreshButton() {
@@ -345,33 +350,33 @@ function navigateWeek(direction) {
 
 // 渲染周视图
 function renderWeekView() {
-        const weekDaysContainer = document.getElementById('weekDays');
+    const weekDaysContainer = document.getElementById('weekDays');
 
-        if (!weekDaysContainer) {
-            console.error('找不到周视图容器');
-            return;
-        }
+    if (!weekDaysContainer) {
+        console.error('找不到周视图容器');
+        return;
+    }
 
     updateDateDisplay();
 
-        let weekDaysHTML = '';
+    let weekDaysHTML = '';
     const today = getTodayDate();
 
-        for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i++) {
         const currentDate = new Date(currentWeekStart);
         currentDate.setDate(currentWeekStart.getDate() + i);
 
-            const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = currentDate.toISOString().split('T')[0];
         const dayTasks = tasks.filter(task => task.date === dateStr);
-            const completedTasks = dayTasks.filter(task => task.completed);
+        const completedTasks = dayTasks.filter(task => task.completed);
 
-            const isToday = dateStr === today;
-            const isActive = isToday;
+        const isToday = dateStr === today;
+        const isActive = isToday;
 
         weekDaysHTML += createDayCardHTML(currentDate, dayTasks, completedTasks, isToday, isActive);
-        }
+    }
 
-        weekDaysContainer.innerHTML = weekDaysHTML;
+    weekDaysContainer.innerHTML = weekDaysHTML;
     bindDayCardEvents();
 }
 
@@ -587,11 +592,11 @@ function updateConfirmButton(isLoading) {
 // 渲染任务列表 - 美化版本
 // 修改渲染任务列表函数，添加筛选和排序逻辑
 function renderTaskList() {
-        const taskListContainer = document.getElementById('tasks-container');
-        if (!taskListContainer) {
-            console.error('找不到任务列表容器');
-            return;
-        }
+    const taskListContainer = document.getElementById('tasks-container');
+    if (!taskListContainer) {
+        console.error('找不到任务列表容器');
+        return;
+    }
 
     // 获取当前选中的日期
     const selectedDate = getSelectedDate();
@@ -600,11 +605,11 @@ function renderTaskList() {
     updateSubjectFilterOptions();
 
     // 获取筛选和排序选项
-        const subjectFilter = document.getElementById('subjectFilter');
-        const sortSelect = document.getElementById('sortSelect');
+    const subjectFilter = document.getElementById('subjectFilter');
+    const sortSelect = document.getElementById('sortSelect');
 
-        const selectedSubject = subjectFilter ? subjectFilter.value : 'all';
-        const selectedSort = sortSelect ? sortSelect.value : 'default';
+    const selectedSubject = subjectFilter ? subjectFilter.value : 'all';
+    const selectedSort = sortSelect ? sortSelect.value : 'default';
 
     console.log('筛选条件 - 日期:', selectedDate, '科目:', selectedSubject, '排序:', selectedSort);
 
@@ -612,35 +617,35 @@ function renderTaskList() {
     let filteredTasks = tasks.filter(task => task.date === selectedDate);
 
     // 科目筛选
-        if (selectedSubject !== 'all') {
-            filteredTasks = filteredTasks.filter(task => task.subject === selectedSubject);
-        }
+    if (selectedSubject !== 'all') {
+        filteredTasks = filteredTasks.filter(task => task.subject === selectedSubject);
+    }
 
     // 排序任务
     const sortedTasks = sortTasks(filteredTasks, selectedSort);
 
-        let html = '';
+    let html = '';
 
-        if (sortedTasks.length > 0) {
-            const dateObj = new Date(selectedDate + 'T00:00:00');
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
+    if (sortedTasks.length > 0) {
+        const dateObj = new Date(selectedDate + 'T00:00:00');
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
 
-            let dateLabel = '';
-            if (selectedDate === today.toISOString().split('T')[0]) {
-                dateLabel = '今天';
-            } else if (selectedDate === tomorrow.toISOString().split('T')[0]) {
-                dateLabel = '明天';
-            } else {
-                dateLabel = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
-            }
+        let dateLabel = '';
+        if (selectedDate === today.toISOString().split('T')[0]) {
+            dateLabel = '今天';
+        } else if (selectedDate === tomorrow.toISOString().split('T')[0]) {
+            dateLabel = '明天';
+        } else {
+            dateLabel = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日`;
+        }
 
-            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-            const weekday = weekdays[dateObj.getDay()];
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekday = weekdays[dateObj.getDay()];
 
         // 显示筛选和排序信息
-            html += `
+        html += `
                 <div class="filter-info">
                     <span class="task-count-badge">${sortedTasks.length} 个任务</span>
                     ${selectedSubject !== 'all' ? `<span class="filter-badge">科目: ${selectedSubject}</span>` : ''}
@@ -657,18 +662,18 @@ function renderTaskList() {
                     <div class="tasks-container">
             `;
 
-            sortedTasks.forEach(task => {
+        sortedTasks.forEach(task => {
             // 原有的任务渲染代码保持不变
             const subjectClass = getSubjectClass(task.subject);
             const subjectIcon = getSubjectIcon(task.subject);
 
-                if (task.completed) {
+            if (task.completed) {
                 // 已完成的任务
-                    const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
-                    const timeString = completionTime.toTimeString().substring(0, 5);
-                    const duration = task.duration ? `${task.duration}分钟` : '15分钟';
+                const completionTime = task.completionTime ? new Date(task.completionTime) : new Date();
+                const timeString = completionTime.toTimeString().substring(0, 5);
+                const duration = task.duration ? `${task.duration}分钟` : '15分钟';
 
-                    html += `
+                html += `
                     <div class="task-item completed" data-task-id="${task.id}" onclick="openModal('${task.id}')">
                             <div class="task-left">
                                 <div class="subject-tab ${subjectClass}">
@@ -706,11 +711,11 @@ function renderTaskList() {
                             </div>
                         </div>
                     `;
-                } else {
+            } else {
                 // 未完成的任务
-                    const timeDisplay = task.duration ? `${Math.floor(task.duration / 60)}小时${task.duration % 60}分钟` : '未设置';
+                const timeDisplay = task.duration ? `${Math.floor(task.duration / 60)}小时${task.duration % 60}分钟` : '未设置';
 
-                    html += `
+                html += `
                     <div class="task-item" data-task-id="${task.id}" onclick="openModal('${task.id}')">
                             <div class="task-left">
                                 <div class="subject-tab ${subjectClass}">
@@ -747,20 +752,20 @@ function renderTaskList() {
                             </div>
                         </div>
                     `;
-                }
-            });
+            }
+        });
 
         html += `
                 </div>
             </div>
         `;
-        } else {
-            const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
+    } else {
+        const subjectInfo = selectedSubject !== 'all' ? `科目"${selectedSubject}"` : '该日期';
         const hasSubjects = getAllSubjects().length > 0;
 
-            if (hasSubjects && selectedSubject !== 'all') {
+        if (hasSubjects && selectedSubject !== 'all') {
             // 情况1：有科目但当前筛选条件下无任务（显示重置按钮）
-                html = `
+            html = `
                     <div class="no-tasks">
                         <i class="fas fa-search no-tasks-icon"></i>
                         <p class="no-tasks-message">${subjectInfo} 没有找到学习任务</p>
@@ -774,9 +779,9 @@ function renderTaskList() {
                         </div>
                     </div>
                 `;
-            } else if (hasSubjects && selectedSubject === 'all') {
+        } else if (hasSubjects && selectedSubject === 'all') {
             // 情况2：有科目但该日期没有任务（不显示重置按钮）
-                html = `
+            html = `
                     <div class="no-tasks">
                         <i class="fas fa-calendar-plus no-tasks-icon"></i>
                         <p class="no-tasks-message">${selectedDate} 还没有学习计划</p>
@@ -787,9 +792,9 @@ function renderTaskList() {
                         </div>
                     </div>
                 `;
-            } else {
+        } else {
             // 情况3：完全没有科目（全新用户）
-                html = `
+            html = `
                     <div class="no-tasks">
                         <i class="fas fa-calendar-plus no-tasks-icon"></i>
                         <p class="no-tasks-message">开始规划您的学习计划吧！</p>
@@ -800,11 +805,11 @@ function renderTaskList() {
                         </div>
                     </div>
                 `;
-            }
         }
-
-        taskListContainer.innerHTML = html;
     }
+
+    taskListContainer.innerHTML = html;
+}
 
 // 排序任务函数
 function sortTasks(tasks, sortType) {
@@ -859,19 +864,19 @@ function resetFilters() {
 
     renderTaskList();
     showNotification('筛选条件已重置', 'info');
-    }
+}
 // 获取选中日期
 function getSelectedDate() {
-        const activeCard = document.querySelector('.day-card.active');
-        if (activeCard) {
-            return activeCard.getAttribute('data-date');
-        }
-    return getTodayDate();
+    const activeCard = document.querySelector('.day-card.active');
+    if (activeCard) {
+        return activeCard.getAttribute('data-date');
     }
+    return getTodayDate();
+}
 
 // 获取科目图标
 function getSubjectIcon(subject) {
-        const icons = {
+    const icons = {
         '语文': 'fa-book',
         '数学': 'fa-calculator',
         '英语': 'fa-language',
@@ -883,9 +888,9 @@ function getSubjectIcon(subject) {
         '美术': 'fa-palette',
         '音乐': 'fa-music',
         '体育': 'fa-running'
-        };
-        return icons[subject] || 'fa-book';
-    }
+    };
+    return icons[subject] || 'fa-book';
+}
 
 
 // 打开模态框 - 修正版本
@@ -952,7 +957,7 @@ function openModal(taskId) {
                 </div>
             </div>
         `;
-        }
+    }
 
     // 原有的任务信息
     modalHTML += `
@@ -1021,7 +1026,7 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;")
         .replace(/\n/g, '<br>')
         .replace(/ /g, '&nbsp;');
-        }
+}
 
 // 关闭模态框
 function closeModal() {
@@ -1038,7 +1043,7 @@ function startTimer(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (task) {
         showNotification(`⏰ 开始计时: ${task.name}`, 'info');
-        }
+    }
 }
 
 // 获取重复类型文本
@@ -1093,46 +1098,127 @@ function updateStreak() {
 // 记录完成历史
 function recordCompletionHistory(task, totalMinutes, completionNote) {
     console.log('记录完成历史:', task.name, totalMinutes, completionNote);
-    }
+}
 
 // 更新统计信息
 function updateStats() {
+    console.log('📊 开始更新统计信息...');
+
+    // 计算统计信息
     const completedTasks = tasks.filter(task => task.completed).length;
-    const totalTasks = tasks.length;
-    const totalStudyTime = tasks.reduce((total, task) => {
-            return total + (task.completed ? (task.duration || 0) : 0);
-        }, 0);
 
-        const streak = localStorage.getItem('studyStreak') || '0';
-        const totalPoints = Math.floor(totalStudyTime / 10);
+    // 计算总学习时长（只计算已完成任务的时长）
+    const totalMinutes = tasks.reduce((total, task) => {
+        if (task.completed) {
+            // 优先使用实际学习时长，如果没有则使用计划时长
+            return total + (task.actual_duration || task.duration || 0);
+        }
+        return total;
+    }, 0);
 
+    // 计算总积分（只计算已完成任务的积分）
+    const totalPoints = tasks.reduce((total, task) => {
+        if (task.completed) {
+            // 优先使用实际获得积分，如果没有则使用计划积分
+            return total + (task.earned_points || task.points || 0);
+        }
+        return total;
+    }, 0);
+
+    // 计算连续打卡天数
+    const streakDays = calculateStreakDays();
+
+    console.log('统计计算结果:', {
+        completedTasks,
+        totalMinutes,
+        totalPoints,
+        streakDays
+    });
+
+    // 更新界面元素 - 使用正确的ID
     updateStatElement('completedTasks', completedTasks);
-    updateStatElement('totalTasks', totalTasks);
-    updateStatElement('studyTime', `${Math.floor(totalStudyTime / 60)}小时${totalStudyTime % 60}分钟`);
-    updateStatElement('streakDays', `${streak}天`);
-    updateStatElement('totalPoints', totalPoints);
-    }
+    updateStatElement('totalMinutes', totalMinutes); // 修正：使用正确的ID
+    updateStatElement('streakDays', streakDays);
+    updateStatElement('rewardPoints', totalPoints); // 修正：使用正确的ID
+}
 
+// 新增：计算连续打卡天数
+function calculateStreakDays() {
+    try {
+        // 获取所有已完成任务的日期
+        const completedDates = tasks
+            .filter(task => task.completed)
+            .map(task => {
+                // 使用完成时间或任务日期
+                return task.completed_at ?
+                    task.completed_at.split('T')[0] :
+                    task.date;
+            })
+            .filter(date => date) // 过滤掉空值
+            .sort(); // 排序日期
+
+        if (completedDates.length === 0) return 0;
+
+        // 去重并排序
+        const uniqueDates = [...new Set(completedDates)].sort();
+
+        // 计算连续天数（从最近一天往前计算）
+        let streak = 1;
+        let currentDate = new Date(uniqueDates[uniqueDates.length - 1]);
+
+        for (let i = uniqueDates.length - 2; i >= 0; i--) {
+            const prevDate = new Date(uniqueDates[i]);
+            const diffTime = currentDate - prevDate;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+            if (diffDays === 1) {
+                streak++;
+                currentDate = prevDate;
+            } else {
+                break; // 不连续就停止
+            }
+        }
+
+        return streak;
+    } catch (error) {
+        console.error('计算连续打卡天数失败:', error);
+        return 0;
+    }
+}
+
+// 修改 updateStatElement 函数，添加调试信息
 function updateStatElement(elementId, value) {
-        const element = document.getElementById(elementId);
-        if (element) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        // 特殊处理时长显示
+        if (elementId === 'totalMinutes') {
+            const hours = Math.floor(value / 60);
+            const minutes = value % 60;
+            element.textContent = hours > 0 ?
+                `${hours}小时${minutes}分钟` :
+                `${minutes}分钟`;
+        } else {
             element.textContent = value;
         }
+        console.log(`✅ 更新 ${elementId}: ${value}`);
+    } else {
+        console.error(`❌ 找不到统计元素: ${elementId}`);
     }
+}
 
 
 
 
 // 通知函数
 function showNotification(message, type = 'info') {
-        const existingNotification = document.querySelector('.custom-notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
+    const existingNotification = document.querySelector('.custom-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
 
-        const notification = document.createElement('div');
-        notification.className = `custom-notification ${type}`;
-        notification.innerHTML = `
+    const notification = document.createElement('div');
+    notification.className = `custom-notification ${type}`;
+    notification.innerHTML = `
             <div class="notification-content">
             <i class="fas ${getNotificationIcon(type)}"></i>
                 <span>${message}</span>
@@ -1156,7 +1242,7 @@ function showNotification(message, type = 'info') {
         font-family: inherit;
     `;
 
-        document.body.appendChild(notification);
+    document.body.appendChild(notification);
 
     setTimeout(() => {
         notification.style.transform = 'translateX(0)';
@@ -1171,18 +1257,18 @@ function showNotification(message, type = 'info') {
                 notification.remove();
             }
         }, 300);
-        }, 3000);
-    }
+    }, 3000);
+}
 
 function getNotificationIcon(type) {
-        const icons = {
-            'success': 'fa-check-circle',
-            'error': 'fa-exclamation-circle',
-            'warning': 'fa-exclamation-triangle',
-            'info': 'fa-info-circle'
-        };
-        return icons[type] || 'fa-info-circle';
-    }
+    const icons = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    };
+    return icons[type] || 'fa-info-circle';
+}
 
 function getNotificationColor(type) {
     const colors = {
@@ -1221,30 +1307,30 @@ function getAllSubjects() {
 // 更新科目筛选选项
 // 更新科目筛选选项（基于当天任务）
 function updateSubjectFilterOptions() {
-        const subjectFilter = document.getElementById('subjectFilter');
-        if (!subjectFilter) return;
+    const subjectFilter = document.getElementById('subjectFilter');
+    if (!subjectFilter) return;
 
     // 保存当前选中的值
-        const currentValue = subjectFilter.value;
+    const currentValue = subjectFilter.value;
 
     // 清空现有选项
-        subjectFilter.innerHTML = '<option value="all">全部科目</option>';
+    subjectFilter.innerHTML = '<option value="all">全部科目</option>';
 
     // 获取当天任务的所有科目
     const todaySubjects = getAllSubjects();
 
     // 添加科目选项
-        todaySubjects.forEach(subject => {
-            const option = document.createElement('option');
-            option.value = subject;
-            option.textContent = subject;
-            subjectFilter.appendChild(option);
-        });
+    todaySubjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        subjectFilter.appendChild(option);
+    });
 
     // 恢复之前选中的值（如果还存在）
-        if (currentValue && todaySubjects.includes(currentValue)) {
-            subjectFilter.value = currentValue;
-        } else {
+    if (currentValue && todaySubjects.includes(currentValue)) {
+        subjectFilter.value = currentValue;
+    } else {
         subjectFilter.value = 'all'; // 重置为全部
     }
 
@@ -1366,92 +1452,92 @@ function editTask(taskId) {
     // 暂时先关闭模态框
     closeModal();
     showNotification('编辑功能开发中...', 'info');
-    }
+}
 let currentDeleteTaskId = null;
 
 // 初始化确认删除模态框
 function initializeConfirmDeleteModal() {
-        const modal = document.getElementById('confirmDeleteModal');
-        const cancelBtn = document.getElementById('cancelDeleteBtn');
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const modal = document.getElementById('confirmDeleteModal');
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
 
-        if (cancelBtn) {
+    if (cancelBtn) {
         cancelBtn.addEventListener('click', closeConfirmDeleteModal);
-        }
-
-        if (confirmBtn) {
-        confirmBtn.addEventListener('click', confirmDeleteTask);
-        }
-
-        if (modal) {
-        modal.addEventListener('click', function (event) {
-                if (event.target === modal) {
-                closeConfirmDeleteModal();
-                }
-            });
-        }
     }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmDeleteTask);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeConfirmDeleteModal();
+            }
+        });
+    }
+}
 
 // 打开确认删除模态框 - 支持批量删除
 function openConfirmDeleteModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
-        if (!task) {
-            console.error('任务不存在:', taskId);
-            return;
-        }
+    if (!task) {
+        console.error('任务不存在:', taskId);
+        return;
+    }
 
     currentDeleteTaskId = taskId;
     currentDeleteTask = task;
 
     // 更新模态框内容
-        document.getElementById('deleteTaskName').textContent = task.name;
-        document.getElementById('deleteTaskSubject').textContent = task.subject;
+    document.getElementById('deleteTaskName').textContent = task.name;
+    document.getElementById('deleteTaskSubject').textContent = task.subject;
     document.getElementById('deleteTaskRepeatType').textContent = getRepeatTypeText(task.repeat_type);
 
     // 设置模态框标题和模式
-        const isBatchDelete = task.repeat_type !== 'once';
-        const modalTitle = document.getElementById('deleteModalTitle');
-        const modalSubtitle = document.getElementById('deleteModalSubtitle');
-        const batchOptions = document.getElementById('batchDeleteOptions');
-        const warningText = document.getElementById('deleteWarningText');
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const isBatchDelete = task.repeat_type !== 'once';
+    const modalTitle = document.getElementById('deleteModalTitle');
+    const modalSubtitle = document.getElementById('deleteModalSubtitle');
+    const batchOptions = document.getElementById('batchDeleteOptions');
+    const warningText = document.getElementById('deleteWarningText');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
 
-        if (isBatchDelete) {
+    if (isBatchDelete) {
         // 批量删除模式
-            modalTitle.innerHTML = '确认批量删除计划 <span class="delete-mode-indicator"><i class="fas fa-layer-group"></i> 批量删除</span>';
-            modalSubtitle.textContent = '此操作将删除多个重复任务';
-            batchOptions.style.display = 'block';
-            warningText.textContent = '删除后，从选定日期开始的所有重复任务都将被移除。';
-            confirmBtn.textContent = '确认批量删除';
+        modalTitle.innerHTML = '确认批量删除计划 <span class="delete-mode-indicator"><i class="fas fa-layer-group"></i> 批量删除</span>';
+        modalSubtitle.textContent = '此操作将删除多个重复任务';
+        batchOptions.style.display = 'block';
+        warningText.textContent = '删除后，从选定日期开始的所有重复任务都将被移除。';
+        confirmBtn.textContent = '确认批量删除';
 
         // 初始化日期选择器
         initializeBatchDeleteOptions(task);
-        } else {
+    } else {
         // 单次删除模式
-            modalTitle.textContent = '确认删除计划';
-            modalSubtitle.textContent = '此操作无法撤销';
-            batchOptions.style.display = 'none';
-            warningText.textContent = '删除后，此任务记录将被移除。';
-            confirmBtn.textContent = '确认删除';
-        }
+        modalTitle.textContent = '确认删除计划';
+        modalSubtitle.textContent = '此操作无法撤销';
+        batchOptions.style.display = 'none';
+        warningText.textContent = '删除后，此任务记录将被移除。';
+        confirmBtn.textContent = '确认删除';
+    }
 
     // 显示模态框
-        const modal = document.getElementById('confirmDeleteModal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+    const modal = document.getElementById('confirmDeleteModal');
+    if (modal) {
+        modal.style.display = 'flex';
     }
+}
 
 // 初始化批量删除选项
 function initializeBatchDeleteOptions(task) {
-        const dateInput = document.getElementById('deleteStartDate');
-        const deleteSummary = document.getElementById('deleteSummary');
+    const dateInput = document.getElementById('deleteStartDate');
+    const deleteSummary = document.getElementById('deleteSummary');
 
-        if (!dateInput || !deleteSummary) return;
+    if (!dateInput || !deleteSummary) return;
 
     // 设置默认日期为任务开始日期
     const taskDate = new Date(task.date + 'T00:00:00');
-        dateInput.value = task.date;
+    dateInput.value = task.date;
 
     // 计算删除统计
     updateDeleteSummary(task, task.date);
@@ -1459,20 +1545,20 @@ function initializeBatchDeleteOptions(task) {
     // 监听日期变化
     dateInput.addEventListener('change', function () {
         updateDeleteSummary(task, this.value);
-        });
-    }
+    });
+}
 
 // 更新删除统计信息
 function updateDeleteSummary(task, startDate) {
-        const deleteSummary = document.getElementById('deleteSummary');
-        if (!deleteSummary) return;
+    const deleteSummary = document.getElementById('deleteSummary');
+    if (!deleteSummary) return;
 
     // 计算受影响的重复任务
     const affectedTasks = getAffectedRepeatTasks(task, startDate);
-        const completedCount = affectedTasks.filter(t => t.completed).length;
-        const pendingCount = affectedTasks.length - completedCount;
+    const completedCount = affectedTasks.filter(t => t.completed).length;
+    const pendingCount = affectedTasks.length - completedCount;
 
-        deleteSummary.innerHTML = `
+    deleteSummary.innerHTML = `
             <div class="delete-summary-item">
                 <span>受影响任务总数：</span>
                 <span>${affectedTasks.length} 个</span>
@@ -1490,24 +1576,24 @@ function updateDeleteSummary(task, startDate) {
                 <span>${affectedTasks.length} 个任务</span>
             </div>
         `;
-    }
+}
 
 // 获取受影响的重复任务
 function getAffectedRepeatTasks(originalTask, startDate) {
-        if (originalTask.repeat_type === 'once') {
-            return [originalTask];
-        }
+    if (originalTask.repeat_type === 'once') {
+        return [originalTask];
+    }
 
     // 找到所有相关的重复任务
     const affectedTasks = tasks.filter(task =>
-            task.name === originalTask.name &&
-            task.subject === originalTask.subject &&
-            task.repeat_type === originalTask.repeat_type &&
-            task.date >= startDate
-        );
+        task.name === originalTask.name &&
+        task.subject === originalTask.subject &&
+        task.repeat_type === originalTask.repeat_type &&
+        task.date >= startDate
+    );
 
-        return affectedTasks;
-    }
+    return affectedTasks;
+}
 
 
 
@@ -1526,15 +1612,15 @@ function getDataService() {
 
 // 修改删除按钮文本显示
 function updateDeleteButtonText(task) {
-        const deleteBtn = document.getElementById('deleteTaskBtn');
-        if (!deleteBtn) return;
-        console.log('更新删除按钮文本，任务重复类型:', task.repeat_type);
-        if (task.repeat_type !== 'once') {
-            deleteBtn.innerHTML = '<i class="fas fa-layer-group"></i> 批量删除';
-        } else {
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 删除计划';
-        }
+    const deleteBtn = document.getElementById('deleteTaskBtn');
+    if (!deleteBtn) return;
+    console.log('更新删除按钮文本，任务重复类型:', task.repeat_type);
+    if (task.repeat_type !== 'once') {
+        deleteBtn.innerHTML = '<i class="fas fa-layer-group"></i> 批量删除';
+    } else {
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 删除计划';
     }
+}
 
 // 关闭确认删除模态框
 function closeConfirmDeleteModal() {
@@ -1543,7 +1629,7 @@ function closeConfirmDeleteModal() {
         modal.style.display = 'none';
     }
     currentDeleteTaskId = null;
-        }
+}
 
 /**
  * 初始化家庭功能
@@ -1552,124 +1638,92 @@ async function initializeFamilyFeatures() {
     const familyService = getFamilyService();
 
     // 等待家庭服务初始化完成
-        setTimeout(async () => {
+    setTimeout(async () => {
         await updateFamilyStatusDisplay();
         await loadFamilyTasksIfJoined();
-        }, 1000);
-    }
+    }, 1000);
+}
+
+
 
 /**
- * 更新家庭状态显示
+ * 更新家庭状态显示在 Header 右侧
  */
-// 修改 updateFamilyStatusDisplay 方法
 async function updateFamilyStatusDisplay() {
-        const familyService = getFamilyService();
-        const familyStatusBar = document.getElementById('familyStatusBar');
-
-        if (!familyStatusBar) return;
-
+    const familyService = getFamilyService();
+    const familyStatusElement = document.getElementById('familyHeaderStatus');
+    
+    if (!familyStatusElement) {
+        console.error('找不到家庭状态元素');
+        return;
+    }
+    
+    // 移除旧的事件监听器（通过重新创建元素）
+    const newElement = familyStatusElement.cloneNode(false);
+    familyStatusElement.parentNode.replaceChild(newElement, familyStatusElement);
+    
     if (familyService.hasJoinedFamily()) {
-                const family = familyService.getCurrentFamily();
-                const member = familyService.getCurrentMember();
-
-                familyStatusBar.style.display = 'flex';
-                document.getElementById('familyName').textContent = family.family_name;
-                document.getElementById('memberRole').textContent =
-                    member.role === 'parent' ? '家长' : '孩子';
-
-        // 新增：显示当前用户
-                const memberNameElement = document.getElementById('memberName');
-                if (memberNameElement) {
-                    memberNameElement.textContent = member.user_name;
-                }
-
-        // 获取成员数量
-        try {
-                const members = await familyService.getFamilyMembers();
-                document.getElementById('memberCount').textContent =
-                    `${members.length}名成员`;
-            } catch (error) {
-            console.error('获取成员数量失败:', error);
-            document.getElementById('memberCount').textContent = '成员加载中';
-            }
-
-        } else {
-            familyStatusBar.style.display = 'none';
-        }
-    }
-
-/**
- * 绑定家庭按钮事件
- */
-function bindFamilyButtonEvents() {
-    const viewFamilyTasksBtn = document.getElementById('viewFamilyTasks');
-    const manageFamilyBtn = document.getElementById('manageFamily');
-
-    if (viewFamilyTasksBtn) {
-        viewFamilyTasksBtn.addEventListener('click', toggleFamilyTasksView);
-    }
-
-    if (manageFamilyBtn) {
-        manageFamilyBtn.addEventListener('click', () => {
-            window.location.href = 'family-management.html';
+        const family = familyService.getCurrentFamily();
+        const member = familyService.getCurrentMember();
+        
+        // 创建已加入家庭的显示 - 美化版本
+        newElement.innerHTML = `
+            <div class="family-status-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="family-status-text">
+                ${family.family_name}
+            </div>
+        `;
+        
+        newElement.className = 'family-header-status family-status-joined';
+        newElement.title = `${family.family_name} - ${member.role === 'parent' ? '👨‍👩‍👧‍👦 家长' : '👦 孩子'}\n点击管理家庭`;
+        
+        // 添加悬停效果
+        newElement.addEventListener('mouseenter', function() {
+            this.style.animation = 'glow 1s ease-in-out';
         });
-    }
-}
-
-/**
- * 切换家庭任务视图
- */
-function toggleFamilyTasksView() {
-    const viewBtn = document.getElementById('viewFamilyTasks');
-    const isShowingFamilyTasks = viewBtn.classList.contains('active');
-
-    if (isShowingFamilyTasks) {
-        // 显示所有任务
-        showAllTasks();
-        viewBtn.textContent = '只看家庭任务';
-        viewBtn.classList.remove('active');
+        
+        newElement.addEventListener('mouseleave', function() {
+            this.style.animation = '';
+        });
+        
     } else {
-        // 只显示家庭任务
-        showFamilyTasksOnly();
-        viewBtn.textContent = '显示所有任务';
-        viewBtn.classList.add('active');
+        // 创建未加入家庭的显示 - 美化版本
+        newElement.innerHTML = `
+            <div class="family-status-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="family-status-text">
+                加入家庭
+            </div>
+        `;
+        
+        newElement.className = 'family-header-status family-status-not-joined';
+        newElement.title = '点击创建或加入家庭，与家人一起学习！';
     }
-    }
-
-/**
- * 显示所有任务
- */
-function showAllTasks() {
-    const allTasks = document.querySelectorAll('.task-item');
-    allTasks.forEach(task => {
-        task.style.display = 'flex';
+    
+    // 添加点击事件 - 跳转到家庭管理页面
+    newElement.addEventListener('click', function() {
+        window.location.href = 'family-management.html';
     });
+    
+    console.log('✅ 家庭状态显示已更新');
 }
 
-/**
- * 只显示家庭任务
- */
-function showFamilyTasksOnly() {
-    const allTasks = document.querySelectorAll('.task-item');
-    allTasks.forEach(task => {
-        if (task.classList.contains('family-task')) {
-            task.style.display = 'flex';
-        } else {
-            task.style.display = 'none';
-            }
-        });
-    }
+
+
 
 /**
  * 如果已加入家庭，加载家庭任务
  */
 async function loadFamilyTasksIfJoined() {
-        const familyService = getFamilyService();
+    const familyService = getFamilyService();
 
     if (familyService.hasJoinedFamily()) {
         await markFamilyTasks();
-        }
     }
+}
 
 /**
  * 标记家庭任务
@@ -1750,7 +1804,7 @@ function setupFamilyEventListeners() {
     window.addEventListener('family:familyCreated', function (event) {
         console.log('家庭创建事件触发', event.detail);
         updateFamilyStatusDisplay();
-});
+    });
 
     // 监听家庭加入事件
     window.addEventListener('family:familyJoined', function (event) {
