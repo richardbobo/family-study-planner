@@ -2,11 +2,11 @@
 const APP_CONFIG = {
     // 功能开关 - 控制新功能逐步上线
     FEATURE_FLAGS: {
-        // 数据源配置: 'localStorage' | 'supabase' | 'hybrid'
+        // 数据源配置: | 'supabase' | 
         DATA_SOURCE: 'supabase',
 
         // 家庭功能开关
-        ENABLE_FAMILY_FEATURES: true, 
+        ENABLE_FAMILY_FEATURES: true,
 
         // 数据同步开关
         ENABLE_SYNC: false,// 关闭同步功能
@@ -104,7 +104,6 @@ const APP_CONFIG = {
     },
 
 
-    // 新增同步配置    
     // 注意：SYNC_CONFIG 和 CONSTANTS 中的同步相关配置可以保留
     // 因为它们不会影响实际功能，只是配置常量
     SYNC_CONFIG: {
@@ -114,7 +113,7 @@ const APP_CONFIG = {
         RETRY_DELAY: 1000,            // 重试延迟
         CONFLICT_RESOLUTION: 'timestamp', // 冲突解决策略
         QUEUE_SIZE_LIMIT: 50,        // 队列大小限制
-        AUTO_SYNC: true               // 自动同步
+        AUTO_SYNC: false               // 自动同步
     },
 
     // 应用常量

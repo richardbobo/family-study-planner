@@ -14,11 +14,11 @@ class DataService {
         this.supabaseClient = getSupabaseClient();
         this.isInitialized = false;
         this.taskCreationInProgress = false;
-        
+
         console.log('🔧 DataService 初始化 - 纯云端模式');
         console.log('📊 配置数据源:', this.currentDataSource);
         console.log('🔌 Supabase 连接状态:', this.supabaseClient?.isConnected);
-        
+
         this.init();
     }
 
@@ -44,7 +44,7 @@ class DataService {
                     console.error(`💥 ${context} 最终失败 after ${attempt} 次重试:`, error);
                     throw error;
                 }
-                
+
                 console.log(`🔄 ${context} 失败，第 ${attempt} 次重试...`, error.message);
                 await this.delay(1000 * attempt);
             }
@@ -61,27 +61,51 @@ class DataService {
     /**
      * 获取所有任务 - 直接从云端
      */
+    // data-service.js - 修复 getAllTasks 方法
     async getAllTasks(filters = {}) {
         return this.executeWithRetry(async () => {
             console.log('🔍 从云端获取任务列表', filters);
 
-            let query = this.supabaseClient.from('study_tasks').select('*');
-            
-            // 应用筛选条件
-            if (filters.family_id) {
-                query = query.eq('family_id', filters.family_id);
+            // 🔧 关键修复：必须提供 family_id
+            if (!filters.family_id) {
+                console.warn('🚫 安全限制：未提供家庭ID，不返回任何任务');
+                return [];
             }
+            // 🔧 正确的关联查询：获取任务及相关的成员信息
+            let query = this.supabaseClient.from('study_tasks').select(`
+            *,
+            creator:family_members!study_tasks_created_by_fkey(
+                user_name,
+                role,
+                avatar
+            ),
+            assignee:family_members!study_tasks_assigned_to_fkey(
+                user_name, 
+                role,
+                avatar
+            )
+        `);
+
+            // 应用筛选条件
+            // 🔧 现在 family_id 一定有值，可以安全应用筛选
+            query = query.eq('family_id', filters.family_id);
+            
             if (filters.subject && filters.subject !== 'all') {
                 query = query.eq('subject', filters.subject);
             }
             if (filters.completed !== undefined) {
                 query = query.eq('completed', filters.completed);
             }
-            if (filters.user_name) {
-                query = query.eq('user_name', filters.user_name);
-            }
             if (filters.date) {
                 query = query.eq('date', filters.date);
+            }
+            // 按创建者筛选
+            if (filters.created_by) {
+                query = query.eq('created_by', filters.created_by);
+            }
+            // 按分配对象筛选  
+            if (filters.assigned_to) {
+                query = query.eq('assigned_to', filters.assigned_to);
             }
 
             const { data, error } = await query.order('created_at', { ascending: false });
@@ -91,76 +115,106 @@ class DataService {
                 throw error;
             }
 
-            console.log(`✅ 从云端获取到 ${data?.length || 0} 个任务`);
-            return data || [];
+            // 🔧 处理数据，添加便于前端使用的字段
+            const processedData = data ? data.map(task => ({
+                ...task,
+                // 添加用户显示信息
+                creator_name: task.creator?.user_name || '未知用户',
+                assignee_name: task.assignee?.user_name || '未知用户',
+                creator_role: task.creator?.role || 'unknown',
+                assignee_role: task.assignee?.role || 'unknown',
+                // 保持兼容性
+                user_name: task.creator?.user_name || '未知用户'
+            })) : [];
+
+            console.log(`✅ 从云端获取到 ${processedData.length} 个任务`);
+            return processedData;
         }, '获取任务列表');
     }
 
-    /**
-     * 创建任务 - 直接写入云端
-     */
+    // data-service.js - 修复 createTask 方法
     async createTask(taskData) {
-        // 防止重复调用
-        if (this.taskCreationInProgress) {
-            console.warn('⚠️ 任务创建进行中，等待...');
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        return this.executeWithRetry(async () => {
+            console.log('📝 创建新任务到云端:', taskData);
 
-        this.taskCreationInProgress = true;
+            // 数据验证
+            if (!taskData.name || !taskData.subject) {
+                throw new Error('任务名称和科目不能为空');
+            }
 
-        try {
-            return await this.executeWithRetry(async () => {
-                console.log('📝 创建新任务到云端:', taskData);
+            // 生成任务ID
+            const taskId = taskData.id || this.generateUUID();
 
-                // 数据验证
-                if (!taskData.name || !taskData.subject) {
-                    throw new Error('任务名称和科目不能为空');
-                }
+            // 🔧 构建符合数据库结构的数据
+            const finalTaskData = {
+                // 基础任务信息
+                id: taskId,
+                name: taskData.name,
+                subject: taskData.subject,
+                date: taskData.date,
+                start_time: taskData.start_time,
+                end_time: taskData.end_time,
+                description: taskData.description,
+                duration: taskData.duration || 30,
+                repeat_type: taskData.repeat_type || 'once',
+                points: taskData.points || 10,
+                detailed_content: taskData.detailedContent || taskData.detailed_content,
+                has_content: !!(taskData.detailedContent || taskData.detailed_content),
 
-                // 生成任务ID
-                const taskId = taskData.id || this.generateUUID();
+                // 系统字段
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                completed: false,
 
-                // 准备任务数据
-                const finalTaskData = {
-                    ...taskData,
-                    id: taskId,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    completed: taskData.completed || false
-                };
+                // 家庭关联字段（初始为null，下面会设置）
+                family_id: null,
+                created_by: null,
+                assigned_to: null
+            };
 
-                // 自动关联家庭信息
-                try {
-                    const familyService = getFamilyService();
-                    if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
-                        finalTaskData.family_id = familyService.getCurrentFamily().id;
-                        finalTaskData.user_name = familyService.getCurrentMember().user_name;
-                        console.log('🏠 新任务关联家庭:', finalTaskData.family_id);
+            // 🔧 设置家庭和成员关联
+            try {
+                const familyService = getFamilyService();
+                if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+                    const family = familyService.getCurrentFamily();
+                    const member = familyService.getCurrentMember();
+
+                    console.log('🏠 设置家庭关联:', {
+                        family_id: family.id,
+                        member_id: member.id,
+                        member_name: member.user_name
+                    });
+
+                    // 使用正确的数据库字段
+                    finalTaskData.family_id = family.id;
+                    finalTaskData.created_by = member.id;
+                    finalTaskData.assigned_to = member.id; // 默认分配给自己
+
+                    // 如果有指定的分配对象
+                    if (taskData.assigned_to) {
+                        finalTaskData.assigned_to = taskData.assigned_to;
                     }
-                } catch (familyError) {
-                    console.warn('⚠️ 家庭服务未就绪，任务将保存为个人任务');
                 }
+            } catch (familyError) {
+                console.warn('⚠️ 家庭服务未就绪，创建个人任务:', familyError);
+                // 如果没有家庭信息，可能需要其他处理逻辑
+            }
 
-                const { data, error } = await this.supabaseClient
-                    .from('study_tasks')
-                    .insert([finalTaskData])
-                    .select();
+            console.log('📤 准备插入数据库的数据:', finalTaskData);
 
-                if (error) {
-                    console.error('❌ 创建任务失败:', error);
-                    throw error;
-                }
+            const { data, error } = await this.supabaseClient
+                .from('study_tasks')
+                .insert([finalTaskData])
+                .select();
 
-                console.log('✅ 任务创建成功:', data[0]);
-                return data[0];
-            }, '创建任务');
+            if (error) {
+                console.error('❌ 创建任务失败:', error);
+                throw error;
+            }
 
-        } catch (error) {
-            console.error('❌ 创建任务失败:', error);
-            throw error;
-        } finally {
-            this.taskCreationInProgress = false;
-        }
+            console.log('✅ 任务创建成功:', data[0]);
+            return data[0];
+        }, '创建任务');
     }
 
     /**
@@ -234,12 +288,74 @@ class DataService {
      * 标记任务完成/未完成
      */
     async toggleTaskCompletion(taskId, completed) {
-        return this.updateTask(taskId, { 
+        return this.updateTask(taskId, {
             completed,
             completed_at: completed ? new Date().toISOString() : null
         });
     }
+    // 在 data-service.js 的 DataService 类中添加
+    /**
+     * 标记任务完成并创建完成记录
+     */
+    async completeTask(taskId, completionData) {
+        return this.executeWithRetry(async () => {
+            console.log('✅ 标记任务完成:', taskId, completionData);
 
+            const { actual_duration, notes, earned_points } = completionData;
+
+            // 1. 更新任务状态
+            const updateData = {
+                completed: true,
+                completed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            if (actual_duration) {
+                updateData.duration = actual_duration;
+            }
+
+            const { data: updatedTask, error: updateError } = await this.supabaseClient
+                .from('study_tasks')
+                .update(updateData)
+                .eq('id', taskId)
+                .select();
+
+            if (updateError) {
+                console.error('❌ 更新任务状态失败:', updateError);
+                throw updateError;
+            }
+
+            // 2. 创建完成记录
+            try {
+                const familyService = getFamilyService();
+                if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+                    const member = familyService.getCurrentMember();
+
+                    const completionRecord = {
+                        task_id: taskId,
+                        completed_by: member.id,
+                        actual_duration: actual_duration,
+                        notes: notes,
+                        earned_points: earned_points || updatedTask[0]?.points || 10
+                    };
+
+                    const { error: recordError } = await this.supabaseClient
+                        .from('completion_records')
+                        .insert([completionRecord]);
+
+                    if (recordError) {
+                        console.error('❌ 创建完成记录失败:', recordError);
+                        // 不抛出错误，因为任务状态已经更新
+                    }
+                }
+            } catch (familyError) {
+                console.warn('⚠️ 无法创建完成记录:', familyError);
+            }
+
+            console.log('✅ 任务完成处理成功');
+            return updatedTask[0];
+        }, '完成任务');
+    }
     /**
      * 批量删除任务
      */
@@ -327,7 +443,7 @@ class DataService {
         if (date) {
             filters.date = date;
         }
-        
+
         // 自动添加家庭筛选
         try {
             const familyService = getFamilyService();

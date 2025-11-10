@@ -11,21 +11,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 初始化页面
-function initializePage() {
-    // 设置当前日期
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').value = today;
-    document.querySelector('.date-highlight').textContent = today;
+// function initializePage() {
+//     // 设置当前日期
+//     const today = new Date().toISOString().split('T')[0];
+//     document.getElementById('startDate').value = today;
+//     document.querySelector('.date-highlight').textContent = today;
     
-    // 初始化表单事件
-    initializeFormEvents();
+//     // 初始化表单事件
+//     initializeFormEvents();
     
-    // 初始化自定义类别到下拉框
-    initializeCustomCategories();
+//     // 初始化自定义类别到下拉框
+//     initializeCustomCategories();
     
-    // 初始化类别功能
-    initializeCategoryFeatures();
-}
+//     // 初始化类别功能
+//     initializeCategoryFeatures();
+// }
 
 // 初始化表单事件
 function initializeFormEvents() {
@@ -192,7 +192,7 @@ function initializeCategoryFeatures() {
 }
 
 // 修改现有的自定义类别处理函数
-function handleCustomCategory() {
+function handleCustomCategoryInput() {
     const customCategoryInput = document.getElementById('customCategoryInput');
     const categorySelect = document.getElementById('categorySelect');
     
@@ -296,8 +296,9 @@ function initializeCustomCategories() {
     });
 }
 
-// 表单提交处理
-// function handleFormSubmit(event) {
+
+// 修改表单提交处理
+// async function handleFormSubmit(event) {
 //     event.preventDefault();
     
 //     const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
@@ -309,66 +310,36 @@ function initializeCustomCategories() {
 //     const formData = getFormData();
     
 //     if (validateForm(formData)) {
-//         // 添加延时动画
-//         setTimeout(() => {
-//             const tasks = generateTasks(formData);
-//             saveAllTasks(tasks);
+//         try {
+//             // 添加延时动画
+//             setTimeout(async () => {
+//                 const tasks = generateTasks(formData);
+                
+//                 // 使用修复后的保存函数
+//                 const result = await saveAllTasks(tasks);
+                
+//                 showLoadingState(saveBtn, false);
+                
+//                 if (result.errorCount === 0) {
+//                     showSuccessNotification(`学习计划添加成功！共创建 ${result.successCount} 个任务`);
+//                 } else {
+//                     showSuccessNotification(`学习计划部分成功！${result.successCount} 个成功，${result.errorCount} 个失败`);
+//                 }
+                
+//                 // 2秒后跳转回首页
+//                 setTimeout(() => {
+//                     window.location.href = 'index.html';
+//                 }, 2000);
+                
+//             }, 1500);
+//         } catch (error) {
 //             showLoadingState(saveBtn, false);
-//             showSuccessNotification(`学习计划添加成功！共创建 ${tasks.length} 个任务`);
-            
-//             // 2秒后跳转回首页
-//             setTimeout(() => {
-//                 window.location.href = 'index.html';
-//             }, 2000);
-            
-//         }, 1500);
+//             alert('保存失败: ' + error.message);
+//         }
 //     } else {
 //         showLoadingState(saveBtn, false);
 //     }
 // }
-// 修改表单提交处理
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    
-    const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
-    
-    // 显示加载状态
-    showLoadingState(saveBtn, true);
-    
-    // 获取表单数据
-    const formData = getFormData();
-    
-    if (validateForm(formData)) {
-        try {
-            // 添加延时动画
-            setTimeout(async () => {
-                const tasks = generateTasks(formData);
-                
-                // 使用修复后的保存函数
-                const result = await saveAllTasks(tasks);
-                
-                showLoadingState(saveBtn, false);
-                
-                if (result.errorCount === 0) {
-                    showSuccessNotification(`学习计划添加成功！共创建 ${result.successCount} 个任务`);
-                } else {
-                    showSuccessNotification(`学习计划部分成功！${result.successCount} 个成功，${result.errorCount} 个失败`);
-                }
-                
-                // 2秒后跳转回首页
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-                
-            }, 1500);
-        } catch (error) {
-            showLoadingState(saveBtn, false);
-            alert('保存失败: ' + error.message);
-        }
-    } else {
-        showLoadingState(saveBtn, false);
-    }
-}
 // 显示/隐藏加载状态
 function showLoadingState(button, isLoading) {
     if (!button) return;
@@ -658,11 +629,8 @@ function calculateDuration(startTime, endTime) {
     return Math.max(diff, 0);
 }
 
-// 保存所有任务到localStorage
 // 修复的 saveAllTasks 函数 - 完整版本
 async function saveAllTasks(tasks) {
-    // console.log('🔄 开始保存任务到本地和云端...');
-    // console.log('任务数量:', tasks.length);
     
     const dataService = getDataService();
     let successCount = 0;
@@ -671,7 +639,6 @@ async function saveAllTasks(tasks) {
     // 检查数据服务状态
     console.log('📊 数据服务状态:', {
         currentDataSource: dataService.currentDataSource,
-        syncService: !!dataService.syncService,
         supabaseConnected: dataService.supabaseClient.isConnected
     });
     
@@ -726,19 +693,155 @@ async function saveAllTasks(tasks) {
         total: tasks.length
     };
 }
+// 🔧 新增：显示家庭要求模态框
+function showFamilyRequiredModal() {
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.className = 'family-required-modal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-icon">👨‍👩‍👧‍👦</div>
+            <h3 class="modal-title">需要加入家庭</h3>
+            <p class="modal-message">
+                创建学习计划前，需要先创建或加入一个家庭。<br>
+                这样您可以更好地管理学习任务。
+            </p>
+            <div class="modal-actions">
+                <button class="btn-create-family" id="createFamilyBtn">创建家庭</button>
+                <button class="btn-join-family" id="joinFamilyBtn">加入家庭</button>
+                <button class="btn-cancel-family" id="cancelFamilyBtn">稍后再说</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 绑定按钮事件
+    document.getElementById('createFamilyBtn').addEventListener('click', function() {
+        window.location.href = 'family-management.html?action=create';
+    });
+    
+    document.getElementById('joinFamilyBtn').addEventListener('click', function() {
+        window.location.href = 'family-management.html?action=join';
+    });
+    
+    document.getElementById('cancelFamilyBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+    });
+    
+    // 点击背景关闭
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
 
-// 保存任务到本地存储（备用）
-// function saveTaskToLocalStorage(task) {
-//     try {
-//         let existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
-        
-//         // 检查是否已存在
-//         if (!existingTasks.some(t => t.id === task.id)) {
-//             existingTasks.push(task);
-//             localStorage.setItem('studyTasks', JSON.stringify(existingTasks));
-//         }
-//     } catch (error) {
-//         console.error('保存到本地存储失败:', error);
-//         throw error;
-//     }
-// }
+// 🔧 新增：显示家庭提示
+function showFamilyTip() {
+    const tipElement = document.createElement('div');
+    tipElement.className = 'family-tip';
+    
+    tipElement.innerHTML = `
+        <div class="tip-content">
+            <strong>💡 提示：</strong>
+            创建学习计划前，建议先创建或加入家庭
+        </div>
+        <button class="btn-setup-family" id="setupFamilyBtn">设置家庭</button>
+    `;
+    
+    // 插入到表单前面
+    const form = document.getElementById('planForm');
+    if (form && form.parentNode) {
+        form.parentNode.insertBefore(tipElement, form);
+    }
+    
+    // 绑定设置家庭按钮
+    document.getElementById('setupFamilyBtn').addEventListener('click', function() {
+        window.location.href = 'family-management.html';
+    });
+}
+
+// 🔧 修改：检查家庭状态
+function checkFamilyStatus() {
+    const familyService = getFamilyService();
+    const hasJoinedFamily = familyService && 
+                           familyService.hasJoinedFamily && 
+                           familyService.hasJoinedFamily();
+    
+    if (!hasJoinedFamily) {
+        // 显示提示信息，但不阻止用户操作
+        showFamilyTip();
+    }
+}
+
+// 🔧 修改：在页面初始化时检查家庭状态
+function initializePage() {
+    // 设置当前日期
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+    document.querySelector('.date-highlight').textContent = today;
+    
+    // 检查家庭状态
+    checkFamilyStatus();
+    
+    // 初始化表单事件
+    initializeFormEvents();
+    
+    // 初始化类别功能
+    initializeCategoryFeatures();
+}
+
+// 🔧 修改：表单提交时检查家庭
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
+    
+    // 检查用户是否已加入家庭
+    const familyService = getFamilyService();
+    const hasJoinedFamily = familyService && 
+                           familyService.hasJoinedFamily && 
+                           familyService.hasJoinedFamily();
+    
+    if (!hasJoinedFamily) {
+        // 显示友好的引导信息
+        showFamilyRequiredModal();
+        return;
+    }
+    
+    // 显示加载状态
+    showLoadingState(saveBtn, true);
+    
+    // 获取表单数据
+    const formData = getFormData();
+    
+    if (validateForm(formData)) {
+        try {
+            setTimeout(async () => {
+                const tasks = generateTasks(formData);
+                const result = await saveAllTasks(tasks);
+                
+                showLoadingState(saveBtn, false);
+                
+                if (result.errorCount === 0) {
+                    showSuccessNotification(`学习计划添加成功！共创建 ${result.successCount} 个任务`);
+                } else {
+                    showSuccessNotification(`学习计划部分成功！${result.successCount} 个成功，${result.errorCount} 个失败`);
+                }
+                
+                // 2秒后跳转回首页
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                
+            }, 1500);
+        } catch (error) {
+            showLoadingState(saveBtn, false);
+            alert('保存失败: ' + error.message);
+        }
+    } else {
+        showLoadingState(saveBtn, false);
+    }
+}

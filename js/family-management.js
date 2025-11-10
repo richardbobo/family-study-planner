@@ -1,4 +1,4 @@
-// 家庭管理页面逻辑
+// 家庭管理页面逻辑 - 增强版（添加用户记忆功能）
 class FamilyManagement {
     constructor() {
         this.familyService = getFamilyService();
@@ -12,16 +12,16 @@ class FamilyManagement {
     async init() {
         console.log('🏠 家庭管理页面初始化');
 
-        // 绑定事件监听器
-        this.bindEvents();
+            // 绑定事件监听器
+            this.bindEvents();
 
         // 监听家庭服务事件
-        this.bindFamilyEvents();
+            this.bindFamilyEvents();
 
-        // 初始渲染
-        await this.render();
+            // 初始渲染
+            await this.render();
 
-        console.log('✅ 家庭管理页面初始化完成');
+            console.log('✅ 家庭管理页面初始化完成');
     }
 
     // 绑定DOM事件
@@ -38,79 +38,72 @@ class FamilyManagement {
 
     // 绑定家庭服务事件
     bindFamilyEvents() {
-        // 家庭创建成功
-        this.familyService.on('familyCreated', (data) => {
+            // 家庭创建成功
+            this.familyService.on('familyCreated', (data) => {
             console.log('🎉 家庭创建成功事件触发');
-            this.showSuccess('家庭创建成功！');
-            this.render();
-        });
+                this.showSuccess('家庭创建成功！');
+                this.render();
+            });
 
-        // 家庭加入成功
-        this.familyService.on('familyJoined', (data) => {
+            // 家庭加入成功
+            this.familyService.on('familyJoined', (data) => {
             console.log('🎉 家庭加入成功事件触发');
-            this.showSuccess('成功加入家庭！');
-            this.render();
-        });
+                this.showSuccess('成功加入家庭！');
+                this.render();
+            });
 
-        // 家庭退出成功
-        this.familyService.on('familyLeft', () => {
-            console.log('🚪 家庭退出成功事件触发');
-            this.showSuccess('已退出家庭');
-            this.render();
-        });
-
-        // 数据迁移完成
-        this.familyService.on('dataMigrated', (data) => {
-            console.log('🔄 数据迁移完成事件触发', data);
-            this.showSuccess(`数据迁移完成：${data.success} 个任务成功迁移`);
-            this.render();
-        });
+            // 家庭退出成功
+            this.familyService.on('familyLeft', () => {
+                console.log('🚪 家庭退出成功事件触发');
+                this.showSuccess('已退出家庭');
+                this.render();
+            });
     }
 
     // 渲染页面
     async render() {
-        await this.renderFamilyStatus();
-        await this.renderActionButtons();
+            await this.renderFamilyStatus();
+            await this.renderActionButtons();
+        await this.renderRecentUsers(); // 新增：渲染最近使用的用户
 
-        if (this.familyService.hasJoinedFamily()) {
-            await this.renderFamilyInfo();
-            await this.renderMembersList();
-        }
+            if (this.familyService.hasJoinedFamily()) {
+                await this.renderFamilyInfo();
+                await this.renderMembersList();
+            }
     }
 
     // 渲染家庭状态
-    // 在 renderFamilyStatus 方法中添加重新加入提示
     async renderFamilyStatus() {
         const statusElement = document.getElementById('familyStatus');
         if (!statusElement) return;
 
-        if (this.familyService.hasJoinedFamily()) {
-            const family = this.familyService.getCurrentFamily();
-            const member = this.familyService.getCurrentMember();
+            if (this.familyService.hasJoinedFamily()) {
+                const family = this.familyService.getCurrentFamily();
+                const member = this.familyService.getCurrentMember();
 
-            statusElement.innerHTML = `
-            <i class="fas fa-check-circle" style="color: #2ed573;"></i>
-            <div>
-                <strong>已加入家庭</strong>
-                <div style="font-size: 14px; color: #6c757d;">
+                statusElement.innerHTML = `
+                <i class="fas fa-check-circle" style="color: #2ed573;"></i>
+                <div>
+                    <strong>已加入家庭</strong>
+                    <div style="font-size: 14px; color: #6c757d;">
                     ${family.family_name} • ${member.user_name} (${member.role})
+                    </div>
                 </div>
-            </div>
-        `;
-            statusElement.className = 'family-status status-joined';
-        } else {
-            statusElement.innerHTML = `
-            <i class="fas fa-home" style="color: #ff9f43;"></i>
-            <div>
-                <strong>尚未加入家庭</strong>
-                <div style="font-size: 14px; color: #6c757d;">
-                    创建或加入家庭以享受数据同步功能
+            `;
+                statusElement.className = 'family-status status-joined';
+            } else {
+                statusElement.innerHTML = `
+                <i class="fas fa-home" style="color: #ff9f43;"></i>
+                <div>
+                    <strong>尚未加入家庭</strong>
+                    <div style="font-size: 14px; color: #6c757d;">
+                        创建或加入家庭以享受数据同步功能
+                    </div>
+                    ${this.getRejoinHint()}
                 </div>
-                ${this.getRejoinHint()}
-            </div>
-        `;
-            statusElement.className = 'family-status status-not-joined';
-        }
+            `;
+                statusElement.className = 'family-status status-not-joined';
+            }
     }
 
     // 获取重新加入的提示
@@ -135,27 +128,116 @@ class FamilyManagement {
         const buttonsElement = document.getElementById('actionButtons');
         if (!buttonsElement) return;
 
-        if (this.familyService.hasJoinedFamily()) {
-            buttonsElement.innerHTML = `
-            <button class="btn-family btn-members" onclick="familyManagement.showMembers()">
-                <i class="fas fa-users"></i> 家庭成员
-            </button>
-            <button class="btn-family btn-migrate" onclick="familyManagement.migrateData()">
-                <i class="fas fa-sync"></i> 迁移数据
-            </button>
-            <button class="btn-family btn-leave" onclick="familyManagement.leaveFamily()">
-                <i class="fas fa-sign-out-alt"></i> 退出家庭
-            </button>
-        `;
-        } else {
-            buttonsElement.innerHTML = `
-            <button class="btn-family btn-create" onclick="familyManagement.showCreateForm()">
-                <i class="fas fa-plus-circle"></i> 创建家庭
-            </button>
-            <button class="btn-family btn-join" onclick="familyManagement.showJoinForm()">
-                <i class="fas fa-user-plus"></i> 加入家庭
-            </button>
-        `;
+            if (this.familyService.hasJoinedFamily()) {
+                buttonsElement.innerHTML = `
+                <button class="btn-family btn-members" onclick="familyManagement.showMembers()">
+                    <i class="fas fa-users"></i> 家庭成员
+                </button>
+                <button class="btn-family btn-leave" onclick="familyManagement.leaveFamily()">
+                    <i class="fas fa-sign-out-alt"></i> 退出家庭
+                </button>
+            `;
+            } else {
+                buttonsElement.innerHTML = `
+                <button class="btn-family btn-create" onclick="familyManagement.showCreateForm()">
+                    <i class="fas fa-plus-circle"></i> 创建家庭
+                </button>
+                <button class="btn-family btn-join" onclick="familyManagement.showJoinForm()">
+                    <i class="fas fa-user-plus"></i> 加入家庭
+                </button>
+            `;
+            }
+    }
+
+    // 新增：渲染最近使用的用户
+    async renderRecentUsers() {
+        const recentUsersContainer = document.getElementById('recentUsers');
+        if (!recentUsersContainer) return;
+
+        const recentUsers = this.familyService.getRecentUsers();
+            
+            if (recentUsers.length === 0) {
+                recentUsersContainer.innerHTML = `
+                    <div class="no-recent-users">
+                        <p>暂无历史记录</p>
+                        <small>加入家庭后会自动记录在这里</small>
+                    </div>
+                `;
+                return;
+            }
+
+            recentUsersContainer.innerHTML = recentUsers.map(user => `
+                <div class="recent-user-card" onclick="familyManagement.quickJoin('${user.familyCode}', '${user.userName}')">
+                <div class="user-avatar">${user.userName.charAt(0)}</div>
+                    <div class="user-info">
+                    <div class="user-name">${user.userName}</div>
+                    <div class="family-name">${user.familyName}</div>
+                    <div class="family-code">家庭码: ${user.familyCode}</div>
+                    </div>
+                    <div class="join-arrow">→</div>
+                </div>
+            `).join('');
+
+            // 显示最近使用区域
+            const quickAccessSection = document.getElementById('quickAccessSection');
+            if (quickAccessSection) {
+                quickAccessSection.style.display = 'block';
+            }
+    }
+
+    // 新增：快速加入家庭
+    async quickJoin(familyCode, userName) {
+        try {
+            console.log(`⚡ 快速加入: ${familyCode}, 用户: ${userName}`);
+            
+            // 自动填充表单
+            const userNameInput = document.getElementById('userName');
+            const familyCodeInput = document.getElementById('familyCode');
+            
+            if (userNameInput) userNameInput.value = userName;
+            if (familyCodeInput) familyCodeInput.value = familyCode;
+            
+            // 直接加入或让用户确认
+            const confirmJoin = confirm(`快速加入家庭 ${familyCode} 作为 ${userName}？`);
+            if (confirmJoin) {
+                await this.joinFamilyWithCredentials(familyCode, userName);
+            }
+            
+        } catch (error) {
+            console.error('快速加入失败:', error);
+            this.showError('快速加入失败: ' + error.message);
+        }
+    }
+
+    // 新增：使用凭证加入家庭
+    async joinFamilyWithCredentials(familyCode, userName, role = 'child') {
+        if (this.isLoading) return;
+
+        await this.setLoading(true);
+
+        try {
+            await this.familyService.joinFamily(familyCode, userName, role);
+            this.showSuccess(`欢迎回来 ${userName}！`);
+            this.showMainView();
+
+        } catch (error) {
+            console.error('❌ 加入家庭失败:', error);
+            
+            // 提供更友好的错误信息
+            let errorMessage = '加入家庭失败';
+            if (error.message.includes('已经在这个家庭中')) {
+                errorMessage = `用户 "${userName}" 已经在这个家庭中了，请使用其他姓名或联系家长`;
+            } else if (error.message.includes('家庭码无效')) {
+                errorMessage = '家庭码无效，请检查后重试';
+            } else if (error.message.includes('未连接')) {
+                errorMessage = '网络连接失败，请检查网络后重试';
+            } else {
+                errorMessage += ': ' + error.message;
+            }
+
+            this.showError(errorMessage);
+        } finally {
+            await this.setLoading(false);
         }
     }
 
@@ -164,21 +246,21 @@ class FamilyManagement {
         const infoElement = document.getElementById('familyInfo');
         if (!infoElement || !this.familyService.hasJoinedFamily()) return;
 
-        const family = this.familyService.getCurrentFamily();
-        const member = this.familyService.getCurrentMember();
+            const family = this.familyService.getCurrentFamily();
+            const member = this.familyService.getCurrentMember();
 
         document.getElementById('infoFamilyName').textContent = family.family_name;
-        document.getElementById('infoFamilyCode').innerHTML =
+            document.getElementById('infoFamilyCode').innerHTML =
             `<span class="family-code">${family.family_code}</span>`;
-        document.getElementById('infoMemberRole').textContent =
+            document.getElementById('infoMemberRole').textContent =
             member.role === 'parent' ? '家长' : '孩子';
 
         // 使用 created_at 字段，因为 joined_at 可能不存在
         const joinTime = member.joined_at || member.created_at;
-        document.getElementById('infoJoinTime').textContent =
+            document.getElementById('infoJoinTime').textContent =
             new Date(joinTime).toLocaleDateString('zh-CN');
 
-        infoElement.style.display = 'block';
+            infoElement.style.display = 'block';
     }
 
     // 渲染成员列表
@@ -237,6 +319,12 @@ class FamilyManagement {
         document.getElementById('createFamilyForm').style.display = 'block';
         this.currentView = 'create';
 
+        // 隐藏最近使用区域
+        const quickAccessSection = document.getElementById('quickAccessSection');
+        if (quickAccessSection) {
+            quickAccessSection.style.display = 'none';
+        }
+
         // 自动聚焦到家庭名称输入框
         setTimeout(() => {
             const familyNameInput = document.getElementById('familyName');
@@ -249,6 +337,12 @@ class FamilyManagement {
         this.hideAllForms();
         document.getElementById('joinFamilyForm').style.display = 'block';
         this.currentView = 'join';
+
+        // 显示最近使用区域
+        const quickAccessSection = document.getElementById('quickAccessSection');
+        if (quickAccessSection) {
+            quickAccessSection.style.display = 'block';
+        }
 
         // 自动聚焦到家庭码输入框
         setTimeout(() => {
@@ -306,8 +400,7 @@ class FamilyManagement {
         }
     }
 
-
-    // 处理加入家庭表单提交（修复版本）
+    // 处理加入家庭表单提交
     async handleJoinFamily(event) {
         event.preventDefault();
 
@@ -327,31 +420,7 @@ class FamilyManagement {
             return;
         }
 
-        await this.setLoading(true);
-
-        try {
-            await this.familyService.joinFamily(familyCode, userName, userRole);
-            this.showMainView();
-
-        } catch (error) {
-            console.error('❌ 加入家庭失败:', error);
-
-            // 提供更友好的错误信息
-            let errorMessage = '加入家庭失败';
-            if (error.message.includes('已经在这个家庭中')) {
-                errorMessage = `用户 "${userName}" 已经在这个家庭中了，请使用其他姓名或联系家长`;
-            } else if (error.message.includes('家庭码无效')) {
-                errorMessage = '家庭码无效，请检查后重试';
-            } else if (error.message.includes('未连接')) {
-                errorMessage = '网络连接失败，请检查网络后重试';
-            } else {
-                errorMessage += ': ' + error.message;
-            }
-
-            this.showError(errorMessage);
-        } finally {
-            await this.setLoading(false);
-        }
+        await this.joinFamilyWithCredentials(familyCode, userName, userRole);
     }
 
     // 退出家庭
@@ -373,6 +442,7 @@ class FamilyManagement {
             await this.setLoading(false);
         }
     }
+
     // 确认退出家庭
     async leaveFamilyConfirmed() {
         await this.setLoading(true);
@@ -385,25 +455,6 @@ class FamilyManagement {
         } catch (error) {
             console.error('❌ 退出家庭失败:', error);
             this.showErrorToast('退出失败', error.message);
-        } finally {
-            await this.setLoading(false);
-        }
-    }
-    // 迁移数据到家庭
-    async migrateData() {
-        if (!confirm('是否将本地数据迁移到当前家庭？迁移后数据将在家庭成员间共享。')) {
-            return;
-        }
-
-        await this.setLoading(true);
-
-        try {
-            const result = await this.familyService.migrateLocalDataToFamily();
-            console.log('✅ 数据迁移完成:', result);
-
-        } catch (error) {
-            console.error('❌ 数据迁移失败:', error);
-            this.showError('数据迁移失败: ' + error.message);
         } finally {
             await this.setLoading(false);
         }
@@ -493,6 +544,7 @@ class FamilyManagement {
             }
         }, 3000);
     }
+
     // 弹窗管理方法
     showLeaveFamilyConfirm() {
         const modal = document.getElementById('leaveFamilyModal');
@@ -547,8 +599,6 @@ class FamilyManagement {
         }
     }
 
-
-
     // Toast 提示方法
     showSuccessToast(title, description) {
         this.showToast('success', title, description);
@@ -593,11 +643,6 @@ class FamilyManagement {
         }
     }
 
-    // 更新退出家庭方法
-    async leaveFamily() {
-        this.showLeaveFamilyConfirm();
-    }
-
     // 获取消息图标
     getMessageIcon(type) {
         const icons = {
@@ -624,7 +669,7 @@ let familyManagement = null;
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function () {
-    familyManagement = new FamilyManagement();
+        familyManagement = new FamilyManagement();
 });
 
 // 全局函数供HTML调用

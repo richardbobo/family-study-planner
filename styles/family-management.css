@@ -734,3 +734,134 @@
     background: #f5f5f5;
     color: #8c8c8c;
 }
+/* 快速访问区域样式 */
+.quick-access-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.quick-access-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.recent-users {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recent-user-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recent-user-card:hover {
+    border-color: #667eea;
+    transform: translateX(5px);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.family-name {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 2px;
+}
+
+.family-code {
+    color: #888;
+    font-size: 0.8em;
+    font-family: monospace;
+}
+
+.join-arrow {
+    color: #667eea;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.no-recent-users {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.no-recent-users p {
+    margin: 0 0 5px 0;
+}
+
+.no-recent-users small {
+    color: #999;
+}
+
+.divider {
+    text-align: center;
+    margin: 20px 0;
+    color: #999;
+    position: relative;
+}
+
+.divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.divider span {
+    background: #f8f9fa;
+    padding: 0 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.loading-spinner-small {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

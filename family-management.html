@@ -92,6 +92,16 @@
             <div class="family-card" id="joinFamilyForm" style="display: none;">
                 <h3><i class="fas fa-user-plus"></i> 加入现有家庭</h3>
                 <form class="family-form" onsubmit="handleJoinFamily(event)">
+
+                    <!-- 在家庭管理页面添加快速选择区域 -->
+                    <div class="quick-access-section">
+                        <h3>🕒 最近使用</h3>
+                        <div id="recentUsers" class="recent-users">
+                            <!-- 动态生成最近使用的用户 -->
+                        </div>
+
+                        <div class="divider">或</div>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">家庭码</label>
                         <input type="text" class="form-input" id="familyCode" placeholder="输入6位家庭码" required
@@ -165,7 +175,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/sync-service.js"></script>
     <script src="js/data-service.js"></script>
     <script src="js/family-service.js"></script>
     <script src="js/family-management.js"></script>

@@ -76,11 +76,13 @@ class SupabaseClient {
         }
     }
 
-    // 健康检查
-    // async healthCheck() {
-    //     return await this.testConnection();
-    // }
-
+// 🔧 新增：暴露 from 方法
+    from(tableName) {
+        if (!this.client) {
+            throw new Error('Supabase 客户端未初始化');
+        }
+        return this.client.from(tableName);
+    }
     // === 家庭相关操作 ===
 
     // 创建家庭
@@ -322,28 +324,7 @@ class SupabaseClient {
         }
     }
 
-    // 删除任务
-    // async deleteTask(taskId) {
-    //     if (!this.isConnected) {
-    //         throw new Error('Supabase未连接');
-    //     }
 
-    //     try {
-    //         const { error } = await this.client
-    //             .from(APP_CONFIG.SUPABASE.TABLES.STUDY_TASKS)
-    //             .delete()
-    //             .eq('id', taskId);
-
-    //         if (error) throw error;
-
-    //         console.log('✅ 任务删除成功:', taskId);
-    //         return true;
-
-    //     } catch (error) {
-    //         console.error('❌ 删除任务失败:', error);
-    //         throw error;
-    //     }
-    // }
     async deleteTask(taskId, familyId = null) {
     try {
         console.log(`[Supabase] 删除任务: ${taskId}, 家庭: ${familyId}`);

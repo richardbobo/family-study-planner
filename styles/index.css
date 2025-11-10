@@ -2824,3 +2824,623 @@ footer {
         transform: translateY(0);
     }
 }
+/* Header 布局 */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.header-title {
+    flex: 1;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* 用户头像容器 */
+.user-avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* 用户头像 */
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    border-color: #667eea;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.user-avatar:active {
+    transform: scale(0.95);
+}
+
+/* 未加入家庭时的默认头像 */
+.user-avatar:not(.has-family) {
+    background: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+}
+
+.user-avatar:not(.has-family):hover {
+    border-color: #ff9f43;
+    box-shadow: 0 6px 20px rgba(255, 159, 67, 0.3);
+}
+
+/* 头像图标和文字 */
+.user-avatar i {
+    font-size: 20px;
+    color: white;
+}
+
+.user-avatar .avatar-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* 用户信息提示框 */
+.user-info-tooltip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    min-width: 280px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.user-info-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 用户信息内容 */
+.user-info-content {
+    text-align: center;
+}
+
+.user-info-header {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.user-info-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.user-info-role {
+    font-size: 0.9em;
+    color: #667eea;
+    background: #f8f9ff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.user-info-details {
+    margin-bottom: 20px;
+}
+
+.user-info-family {
+    font-size: 0.95em;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.user-info-code {
+    font-size: 0.85em;
+    color: #888;
+    font-family: monospace;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.user-info-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-user-action {
+    padding: 10px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-user-action:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.btn-user-action.primary {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.btn-user-action.primary:hover {
+    background: #5a6fd8;
+}
+
+.btn-user-action.warning {
+    background: #fff3cd;
+    color: #856404;
+    border-color: #ffeaa7;
+}
+
+.btn-user-action.warning:hover {
+    background: #ffeaa7;
+}
+
+/* 未加入家庭时的提示 */
+.no-family-tip {
+    text-align: center;
+    padding: 15px;
+}
+
+.no-family-tip i {
+    font-size: 2em;
+    color: #ff9f43;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.no-family-tip p {
+    margin: 0 0 15px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .header-actions {
+        justify-content: flex-end;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .user-info-tooltip {
+        right: -50px;
+        min-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .user-avatar i {
+        font-size: 16px;
+    }
+    
+    .user-avatar .avatar-text {
+        font-size: 16px;
+    }
+    
+    .user-info-tooltip {
+        right: -80px;
+        min-width: 220px;
+    }
+}
+/* 用户头像 - 整合家庭状态 */
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff9f43 0%, #ff6b6b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-avatar.has-family {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.user-avatar:active {
+    transform: scale(0.95);
+}
+
+/* 家庭状态指示器 */
+.family-indicator {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 20px;
+    height: 20px;
+    background: #2ed573;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(46, 213, 115, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.family-indicator i {
+    font-size: 10px;
+    color: white;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(46, 213, 115, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 213, 115, 0);
+    }
+}
+
+/* 头像图标和文字 */
+.user-avatar i {
+    font-size: 20px;
+    color: white;
+}
+
+.user-avatar .avatar-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* 用户信息提示框 - 增强家庭信息显示 */
+.user-info-tooltip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    min-width: 300px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.user-info-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 家庭状态头部 */
+.family-status-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.family-status-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+.family-status-info {
+    flex: 1;
+}
+
+.family-status-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.family-status-details {
+    font-size: 0.85em;
+    color: #666;
+}
+
+.family-member-count {
+    background: #667eea;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+/* 用户信息内容 */
+.user-info-content {
+    text-align: left;
+}
+
+.user-info-header {
+    margin-bottom: 15px;
+}
+
+.user-info-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.user-info-role {
+    font-size: 0.9em;
+    color: #667eea;
+    background: #f8f9ff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.user-info-details {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.user-info-family {
+    font-size: 0.95em;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.user-info-code {
+    font-size: 0.85em;
+    color: #666;
+    font-family: monospace;
+    background: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    display: inline-block;
+}
+
+.user-info-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-user-action {
+    padding: 12px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.btn-user-action:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-1px);
+}
+
+.btn-user-action.primary {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.btn-user-action.primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.btn-user-action.warning {
+    background: #fff3cd;
+    color: #856404;
+    border-color: #ffeaa7;
+}
+
+.btn-user-action.warning:hover {
+    background: #ffeaa7;
+    transform: translateY(-1px);
+}
+
+/* 未加入家庭时的提示 */
+.no-family-tip {
+    text-align: center;
+    padding: 20px;
+}
+
+.no-family-tip i {
+    font-size: 3em;
+    color: #ff9f43;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.no-family-tip h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.no-family-tip p {
+    margin: 0 0 20px 0;
+    color: #666;
+    line-height: 1.5;
+    font-size: 0.9em;
+}
+
+/* 快速操作按钮组 */
+.quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.quick-action-btn {
+    padding: 8px 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.quick-action-btn:hover {
+    background: #f8f9fa;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .header-actions {
+        justify-content: flex-end;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .family-indicator {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .user-info-tooltip {
+        right: -50px;
+        min-width: 280px;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .user-avatar i {
+        font-size: 16px;
+    }
+    
+    .user-avatar .avatar-text {
+        font-size: 16px;
+    }
+    
+    .family-indicator {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .family-indicator i {
+        font-size: 8px;
+    }
+    
+    .user-info-tooltip {
+        right: -80px;
+        min-width: 260px;
+    }
+}

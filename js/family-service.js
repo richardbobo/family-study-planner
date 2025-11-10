@@ -1,12 +1,14 @@
-// 家庭管理服务
+// 家庭管理服务 - 完全云端版本
 class FamilyService {
     constructor() {
         this.supabaseClient = getSupabaseClient();
-        this.dataService = getDataService();
         this.currentFamily = null;
         this.currentMember = null;
         this.isInitialized = false;
+        this.userHistory = this.getUserHistory(); // 用户使用历史
 
+        // 🔧 使用 sessionStorage 作为临时方案
+        this.storageKey = 'family_session';
         this.init();
     }
 
@@ -14,17 +16,109 @@ class FamilyService {
     async init() {
         console.log('🏠 家庭服务初始化...');
 
-        // 尝试从本地存储恢复家庭信息
-        await this.restoreFromLocalStorage();
+        // 从 sessionStorage 恢复
+        await this.restoreFromSessionStorage();
+
+        // 家庭状态将在需要时从云端实时获取
 
         this.isInitialized = true;
         console.log('✅ 家庭服务初始化完成');
 
-        // 触发初始化完成事件
         this.emitFamilyEvent('serviceInitialized', {
             family: this.currentFamily,
             member: this.currentMember
         });
+    }
+
+    // 保存到 sessionStorage
+    async saveToSessionStorage() {
+        try {
+            if (this.currentFamily && this.currentMember) {
+                const sessionData = {
+                    family: this.currentFamily,
+                    member: this.currentMember,
+                    timestamp: new Date().toISOString()
+                };
+                sessionStorage.setItem(this.storageKey, JSON.stringify(sessionData));
+                console.log('💾 家庭信息已保存到会话存储');
+            }
+        } catch (error) {
+            console.error('❌ 保存会话存储失败:', error);
+        }
+    }
+
+    // 从 sessionStorage 恢复
+    async restoreFromSessionStorage() {
+        try {
+            const saved = sessionStorage.getItem(this.storageKey);
+            if (saved) {
+                const sessionData = JSON.parse(saved);
+                this.currentFamily = sessionData.family;
+                this.currentMember = sessionData.member;
+                console.log('🔍 从会话存储恢复家庭信息');
+            }
+        } catch (error) {
+            console.error('❌ 恢复会话存储失败:', error);
+            sessionStorage.removeItem(this.storageKey);
+        }
+    }
+
+    // 清除 sessionStorage
+    async clearSessionStorage() {
+        try {
+            sessionStorage.removeItem(this.storageKey);
+            console.log('🧹 已清除会话存储');
+        } catch (error) {
+            console.error('❌ 清除会话存储失败:', error);
+        }
+    }
+
+    // 获取用户历史记录
+    getUserHistory() {
+        try {
+            return JSON.parse(localStorage.getItem('familyUserHistory') || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+
+    // 保存用户历史记录
+    saveUserHistory() {
+        try {
+            localStorage.setItem('familyUserHistory', JSON.stringify(this.userHistory));
+        } catch (error) {
+            console.error('保存用户历史失败:', error);
+        }
+    }
+
+    // 记录用户加入家庭
+    recordUserJoin(familyCode, userName, familyName) {
+        if (!this.userHistory.recentUsers) {
+            this.userHistory.recentUsers = [];
+        }
+
+        // 移除重复记录
+        this.userHistory.recentUsers = this.userHistory.recentUsers.filter(
+            user => !(user.familyCode === familyCode && user.userName === userName)
+        );
+
+        // 添加新记录到开头
+        this.userHistory.recentUsers.unshift({
+            familyCode,
+            userName,
+            familyName,
+            lastJoined: new Date().toISOString()
+        });
+
+        // 只保留最近5个记录
+        this.userHistory.recentUsers = this.userHistory.recentUsers.slice(0, 5);
+
+        this.saveUserHistory();
+    }
+
+    // 获取最近使用的用户
+    getRecentUsers() {
+        return this.userHistory.recentUsers || [];
     }
 
     // === 家庭管理核心方法 ===
@@ -32,16 +126,12 @@ class FamilyService {
     // 创建新家庭
     async createFamily(familyName, creatorName = '家长') {
         try {
-            if (!this.supabaseClient.isConnected) {
-                throw new Error('Supabase 未连接，无法创建家庭');
-            }
-
             console.log(`🏠 创建新家庭: ${familyName}`);
 
             // 在 Supabase 中创建家庭
             const family = await this.supabaseClient.createFamily(familyName);
 
-            // 添加创建者为家庭成员（家长角色）
+            // 添加创建者为家庭成员
             const member = await this.supabaseClient.joinFamily(
                 family.family_code,
                 creatorName,
@@ -52,10 +142,9 @@ class FamilyService {
             this.currentFamily = family;
             this.currentMember = member.member;
 
-            // 保存到本地存储
-            await this.saveToLocalStorage();
+            // 🔧 保存到 sessionStorage
+            await this.saveToSessionStorage();
 
-            // 触发家庭创建事件
             this.emitFamilyEvent('familyCreated', {
                 family: this.currentFamily,
                 member: this.currentMember
@@ -73,45 +162,39 @@ class FamilyService {
         }
     }
 
-    // 加入现有家庭（修复版本）
+    // 加入现有家庭
     async joinFamily(familyCode, userName, role = 'child') {
         try {
-            if (!this.supabaseClient.isConnected) {
-                throw new Error('Supabase 未连接，无法加入家庭');
-            }
-            
             console.log(`🔗 加入家庭: ${familyCode}, 用户: ${userName}`);
-            
-            // 首先验证家庭码
+
             const result = await this.supabaseClient.joinFamily(familyCode, userName, role);
-            
-            // 设置当前家庭和成员
+
             this.currentFamily = result.family;
             this.currentMember = result.member;
-            
-            // 保存到本地存储
-            await this.saveToLocalStorage();
-            
-            // 触发家庭加入事件
+
+            // 记录用户加入历史
+            this.recordUserJoin(familyCode, userName, result.family.family_name);
+            // 🔧 保存到 sessionStorage
+            await this.saveToSessionStorage();
+
             this.emitFamilyEvent('familyJoined', {
                 family: this.currentFamily,
                 member: this.currentMember
             });
-            
+
             console.log('✅ 加入家庭成功');
             return {
                 family: this.currentFamily,
                 member: this.currentMember
             };
-            
+
         } catch (error) {
             console.error('❌ 加入家庭失败:', error);
-            
-            // 如果是重复加入错误，提供更友好的错误信息
+
             if (error.message.includes('duplicate key') || error.message.includes('唯一约束')) {
                 throw new Error(`用户 "${userName}" 已经在这个家庭中了`);
             }
-            
+
             throw error;
         }
     }
@@ -122,19 +205,14 @@ class FamilyService {
             if (this.currentFamily && this.currentMember) {
                 console.log('🚪 退出家庭...');
 
-                // 注意：这里只是本地退出，Supabase 中的成员记录仍然保留
-                // 如果需要完全删除，可以调用 Supabase 删除接口
-
-                // 清除本地状态
+                // 清除内存状态
                 this.currentFamily = null;
                 this.currentMember = null;
 
-                // 清除本地存储
-                await this.clearLocalStorage();
+                // 🔧 清除 sessionStorage
+                await this.clearSessionStorage();
 
-                // 触发退出事件
                 this.emitFamilyEvent('familyLeft');
-
                 console.log('✅ 已退出家庭');
             }
 
@@ -146,6 +224,35 @@ class FamilyService {
         }
     }
 
+    // 验证家庭状态（新增方法）
+    async validateFamilyStatus() {
+        try {
+            if (!this.currentFamily || !this.currentMember) {
+                return false;
+            }
+
+            // 从云端验证家庭和成员是否仍然有效
+            const members = await this.supabaseClient.getFamilyMembers(this.currentFamily.id);
+            const currentMemberExists = members.some(member =>
+                member.id === this.currentMember.id
+            );
+
+            if (!currentMemberExists) {
+                console.warn('⚠️ 当前成员已不在家庭中，清除状态');
+                this.currentFamily = null;
+                this.currentMember = null;
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('❌ 验证家庭状态失败:', error);
+            // 验证失败时保守处理，不清除状态
+            return true;
+        }
+    }
+
     // 获取家庭成员列表
     async getFamilyMembers() {
         try {
@@ -153,13 +260,7 @@ class FamilyService {
                 throw new Error('未加入任何家庭');
             }
 
-            if (!this.supabaseClient.isConnected) {
-                throw new Error('Supabase 未连接');
-            }
-
-            // 调用 Supabase 获取成员列表
             const members = await this.supabaseClient.getFamilyMembers(this.currentFamily.id);
-
             return members;
 
         } catch (error) {
@@ -175,13 +276,7 @@ class FamilyService {
                 return [];
             }
 
-            if (!this.supabaseClient.isConnected) {
-                throw new Error('Supabase 未连接');
-            }
-
-            // 调用 Supabase 获取家庭任务
             const tasks = await this.supabaseClient.getTasks(this.currentFamily.id);
-            
             return tasks || [];
 
         } catch (error) {
@@ -192,156 +287,33 @@ class FamilyService {
 
     // === 家庭状态管理 ===
 
-    // 检查是否已加入家庭
     hasJoinedFamily() {
         return !!(this.currentFamily && this.currentMember);
     }
 
-    // 获取当前家庭信息
     getCurrentFamily() {
         return this.currentFamily;
     }
 
-    // 获取当前成员信息
     getCurrentMember() {
         return this.currentMember;
     }
 
-    // 检查是否是家长
     isParent() {
         return this.currentMember && this.currentMember.role === 'parent';
     }
 
-    // 检查是否是孩子
     isChild() {
         return this.currentMember && this.currentMember.role === 'child';
     }
 
-    // === 数据迁移 ===
-
-    // 将本地数据迁移到当前家庭
-    async migrateLocalDataToFamily() {
-        try {
-            if (!this.hasJoinedFamily()) {
-                throw new Error('未加入家庭，无法迁移数据');
-            }
-
-            console.log('🔄 开始迁移本地数据到家庭...');
-
-            const localTasks = this.dataService.getTasksFromLocalStorage();
-            console.log(`📝 找到 ${localTasks.length} 个本地任务需要迁移`);
-
-            let migratedCount = 0;
-            let errorCount = 0;
-
-            for (const localTask of localTasks) {
-                try {
-                    // 转换任务格式，添加家庭信息
-                    const familyTask = {
-                        ...localTask,
-                        family_id: this.currentFamily.id,
-                        assigned_to: this.currentMember.id,
-                        created_by: this.currentMember.id,
-                        local_id: localTask.id // 保存原始ID用于参考
-                    };
-
-                    // 在 Supabase 中创建任务
-                    await this.supabaseClient.createTask(familyTask);
-                    migratedCount++;
-
-                } catch (taskError) {
-                    console.error(`❌ 迁移任务失败 (ID: ${localTask.id}):`, taskError);
-                    errorCount++;
-                }
-            }
-
-            console.log(`✅ 数据迁移完成: ${migratedCount} 成功, ${errorCount} 失败`);
-
-            // 触发迁移完成事件
-            this.emitFamilyEvent('dataMigrated', {
-                total: localTasks.length,
-                success: migratedCount,
-                failed: errorCount
-            });
-
-            return {
-                total: localTasks.length,
-                success: migratedCount,
-                failed: errorCount
-            };
-
-        } catch (error) {
-            console.error('❌ 数据迁移失败:', error);
-            throw error;
-        }
-    }
-
-    // === 本地存储管理 ===
-
-    // 保存家庭信息到本地存储
-    async saveToLocalStorage() {
-        try {
-            const familyInfo = {
-                family: this.currentFamily,
-                member: this.currentMember,
-                savedAt: new Date().toISOString()
-            };
-
-            localStorage.setItem(
-                APP_CONFIG.CONSTANTS.STORAGE_KEYS.FAMILY_INFO,
-                JSON.stringify(familyInfo)
-            );
-
-            console.log('💾 家庭信息已保存到本地存储');
-
-        } catch (error) {
-            console.error('❌ 保存家庭信息失败:', error);
-        }
-    }
-
-    // 从本地存储恢复家庭信息
-    async restoreFromLocalStorage() {
-        try {
-            const saved = localStorage.getItem(APP_CONFIG.CONSTANTS.STORAGE_KEYS.FAMILY_INFO);
-
-            if (saved) {
-                const familyInfo = JSON.parse(saved);
-                this.currentFamily = familyInfo.family;
-                this.currentMember = familyInfo.member;
-
-                console.log('🔍 从本地存储恢复家庭信息');
-                console.log(`🏠 家庭: ${this.currentFamily?.family_name} (${this.currentFamily?.family_code})`);
-                console.log(`👤 成员: ${this.currentMember?.user_name} (${this.currentMember?.role})`);
-
-                // 触发恢复事件
-                this.emitFamilyEvent('familyRestored', {
-                    family: this.currentFamily,
-                    member: this.currentMember
-                });
-            } else {
-                console.log('📝 本地存储中没有家庭信息');
-            }
-
-        } catch (error) {
-            console.error('❌ 恢复家庭信息失败:', error);
-            // 清除损坏的存储数据
-            this.clearLocalStorage();
-        }
-    }
-
-    // 清除本地存储的家庭信息
-    async clearLocalStorage() {
-        try {
-            localStorage.removeItem(APP_CONFIG.CONSTANTS.STORAGE_KEYS.FAMILY_INFO);
-            console.log('🧹 已清除本地家庭信息');
-        } catch (error) {
-            console.error('❌ 清除家庭信息失败:', error);
-        }
-    }
+    // === 完全移除本地存储相关方法 ===
+    // 删除：saveToLocalStorage()
+    // 删除：restoreFromLocalStorage()  
+    // 删除：clearLocalStorage()
 
     // === 事件系统 ===
 
-    // 触发家庭相关事件
     emitFamilyEvent(eventType, data = {}) {
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(`family:${eventType}`, {
@@ -353,7 +325,6 @@ class FamilyService {
         }
     }
 
-    // 监听家庭事件
     on(eventType, callback) {
         if (typeof window !== 'undefined') {
             window.addEventListener(`family:${eventType}`, (event) => {
@@ -362,7 +333,6 @@ class FamilyService {
         }
     }
 
-    // 移除事件监听
     off(eventType, callback) {
         if (typeof window !== 'undefined') {
             window.removeEventListener(`family:${eventType}`, callback);
@@ -370,12 +340,9 @@ class FamilyService {
     }
 }
 
-// === 全局实例和函数定义 ===
-
-// 创建全局实例
+// 全局实例管理
 let familyServiceInstance = null;
 
-// 获取家庭服务实例
 function getFamilyService() {
     if (!familyServiceInstance) {
         familyServiceInstance = new FamilyService();
@@ -383,13 +350,10 @@ function getFamilyService() {
     return familyServiceInstance;
 }
 
-// 确保在浏览器环境中可用
+// 全局暴露
 if (typeof window !== 'undefined') {
     window.getFamilyService = getFamilyService;
     window.FamilyService = FamilyService;
 }
 
-// 模块导出（用于Node.js环境）
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FamilyService, getFamilyService };
-}
+console.log('✅ family-service.js 完全云端版本加载完成');

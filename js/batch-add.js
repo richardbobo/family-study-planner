@@ -24,6 +24,7 @@ function initializePage() {
 
     updateRepeatTypeHint();
     updateSaveButton();
+    updateFamilyInfoDisplay(); // 新增：显示家庭信息
 }
 
 // 绑定事件
@@ -139,24 +140,47 @@ function updatePreview() {
         return;
     }
 
+    // 检查家庭状态
+    const familyService = getFamilyService();
+    const hasFamily = familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily();
+    const family = hasFamily ? familyService.getCurrentFamily() : null;
+
     let previewHTML = '<div class="preview-list">';
+
+    // 添加家庭信息提示
+    if (hasFamily && family) {
+        previewHTML += `
+            <div class="family-notice">
+                <i class="fas fa-users"></i>
+                <span>这些任务将添加到家庭: <strong>${family.family_name}</strong></span>
+            </div>
+        `;
+    } else {
+        previewHTML += `
+            <div class="family-notice personal">
+                <i class="fas fa-user"></i>
+                <span>这些任务将保存为个人任务</span>
+            </div>
+        `;
+    }
 
     parsedTasks.forEach(task => {
         const subjectClass = getSubjectClass(task.subject);
         const subjectIcon = getSubjectIcon(task.subject);
 
         previewHTML += `
-            <div class="preview-task">
+            <div class="preview-task ${hasFamily ? 'family-task' : 'personal-task'}">
                 <div class="preview-task-icon ${subjectClass}">
                     <i class="fas ${subjectIcon}"></i>
                 </div>
                 <div class="preview-task-content">
                     <div class="preview-task-name">${task.name}</div>
                     <div class="preview-task-meta">
-                        <span>${task.subject}</span>
-                        <span>${currentSettings.defaultDuration}分钟</span>
-                        <span>${getRepeatTypeText(currentSettings.repeatType)}</span>
-                        <span>${currentSettings.startDate}</span>
+                        <span class="preview-subject">${task.subject}</span>
+                        <span class="preview-duration">${currentSettings.defaultDuration}分钟</span>
+                        <span class="preview-repeat">${getRepeatTypeText(currentSettings.repeatType)}</span>
+                        <span class="preview-date">${currentSettings.startDate}</span>
+                        ${hasFamily ? '<span class="family-badge">👨‍👩‍👧‍👦 家庭任务</span>' : '<span class="personal-badge">👤 个人任务</span>'}
                     </div>
                 </div>
             </div>
@@ -167,6 +191,19 @@ function updatePreview() {
     previewContent.innerHTML = previewHTML;
     previewCount.textContent = parsedTasks.length;
     totalTasksCount.textContent = parsedTasks.length;
+}
+
+// 新增：更新家庭信息显示
+function updateFamilyInfoDisplay() {
+    const familyService = getFamilyService();
+    const hasFamily = familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily();
+    
+    if (hasFamily) {
+        const family = familyService.getCurrentFamily();
+        console.log('✅ 当前已加入家庭:', family.family_name);
+    } else {
+        console.log('ℹ️ 未加入家庭，任务将保存为个人任务');
+    }
 }
 
 // 更新重复类型提示
@@ -218,50 +255,76 @@ function updateSaveButton() {
     }
 }
 
-// 保存批量任务
-function saveBatchTasks() {
+// 保存批量任务 - 修改为支持家庭关联
+async function saveBatchTasks() {
     if (parsedTasks.length === 0) {
         showNotification('没有可保存的任务', 'warning');
         return;
     }
 
     try {
-        // 获取现有任务
-        const existingTasks = JSON.parse(localStorage.getItem('studyTasks') || '[]');
-        let maxId = existingTasks.length > 0 ? Math.max(...existingTasks.map(t => t.id)) : 0;
+        console.log('开始保存批量任务，检查家庭状态...');
+        
+        // 获取家庭服务
+        const familyService = getFamilyService();
+        let familyId = null;
+        
+        // 检查是否已加入家庭
+        if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+            const family = familyService.getCurrentFamily();
+            if (family && family.id) {
+                familyId = family.id;
+                console.log('✅ 任务将关联到家庭:', family.family_name, 'ID:', familyId);
+            }
+        } else {
+            console.log('ℹ️ 用户未加入家庭，任务将保存为个人任务');
+        }
 
-        // 创建新任务
-        const newTasks = parsedTasks.map(task => {
-            maxId++;
-            return {
-                id: maxId,
-                name: task.name,
-                subject: task.subject,
-                description: '',
-                date: currentSettings.startDate,
-                startTime: '19:00',
-                endTime: '20:00',
-                time: currentSettings.defaultDuration,
-                points: calculatePoints(currentSettings.defaultDuration),
-                completed: false,
-                repeatType: currentSettings.repeatType,
-                useCustomPoints: false,
-                customPoints: 0,
-                pointsBreakdown: {
-                    basePoints: 10,
-                    timeBonus: Math.floor(currentSettings.defaultDuration / 10),
-                    earlyBonus: 0,
-                    weekendBonus: 0
-                }
-            };
-        });
+        // 使用数据服务保存任务
+        const dataService = getDataService();
+        let savedCount = 0;
 
-        // 合并任务并保存
-        const allTasks = [...existingTasks, ...newTasks];
-        localStorage.setItem('studyTasks', JSON.stringify(allTasks));
+        // 为每个任务创建数据
+        for (const task of parsedTasks) {
+            try {
+                const taskData = {
+                    name: task.name,
+                    subject: task.subject,
+                    description: '',
+                    date: currentSettings.startDate,
+                    start_time: '19:00',
+                    end_time: '20:00',
+                    duration: currentSettings.defaultDuration,
+                    points: calculatePoints(currentSettings.defaultDuration),
+                    completed: false,
+                    repeat_type: currentSettings.repeatType,
+                    family_id: familyId, // 关键：设置家庭ID
+                    use_custom_points: false,
+                    custom_points: 0
+                };
+
+                console.log('创建任务数据:', taskData);
+                
+                // 保存到云端
+                await dataService.createTask(taskData);
+                savedCount++;
+                
+            } catch (taskError) {
+                console.error(`保存任务失败 "${task.name}":`, taskError);
+                // 继续保存其他任务，不中断整个流程
+            }
+        }
 
         // 显示成功消息
-        showNotification(`成功添加 ${newTasks.length} 个学习计划`, 'success');
+        if (savedCount > 0) {
+            const message = familyId 
+                ? `成功添加 ${savedCount} 个学习计划到家庭`
+                : `成功添加 ${savedCount} 个个人学习计划`;
+            showNotification(message, 'success');
+        } else {
+            showNotification('保存任务失败，请重试', 'error');
+            return;
+        }
 
         // 延迟返回主页
         setTimeout(() => {
@@ -270,8 +333,53 @@ function saveBatchTasks() {
 
     } catch (error) {
         console.error('保存批量任务失败:', error);
-        showNotification('保存失败，请重试', 'error');
+        showNotification('保存失败: ' + (error.message || '未知错误'), 'error');
     }
+}
+
+// 获取数据服务实例
+function getDataService() {
+    if (window.dataService) {
+        return window.dataService;
+    }
+    
+    console.warn('数据服务全局实例未找到，使用模拟服务');
+    // 返回模拟的数据服务
+    return {
+        createTask: async (taskData) => {
+            console.log('模拟保存任务:', taskData);
+            // 模拟成功保存
+            return { id: Date.now(), ...taskData };
+        }
+    };
+}
+
+// 获取家庭服务实例
+function getFamilyService() {
+    if (window.familyService) {
+        return window.familyService;
+    }
+    
+    console.warn('家庭服务全局实例未找到，使用模拟服务');
+    // 返回模拟的家庭服务
+    return {
+        hasJoinedFamily: () => {
+            try {
+                const saved = localStorage.getItem('family_info');
+                return !!saved;
+            } catch (error) {
+                return false;
+            }
+        },
+        getCurrentFamily: () => {
+            try {
+                const saved = localStorage.getItem('family_info');
+                return saved ? JSON.parse(saved).family : null;
+            } catch (error) {
+                return null;
+            }
+        }
+    };
 }
 
 // 计算积分

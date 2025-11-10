@@ -402,3 +402,54 @@
     margin-top: 6px;
     line-height: 1.4;
 }
+/* 家庭通知样式 */
+.family-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #2196f3;
+    font-size: 14px;
+}
+
+.family-notice.personal {
+    background: #f3e5f5;
+    border-left-color: #9c27b0;
+}
+
+.family-notice i {
+    color: #2196f3;
+}
+
+.family-notice.personal i {
+    color: #9c27b0;
+}
+
+/* 任务徽章样式 */
+.family-badge, .personal-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: 500;
+    color: white;
+}
+
+.family-badge {
+    background: #667eea;
+}
+
+.personal-badge {
+    background: #a0aec0;
+}
+
+/* 家庭任务样式 */
+.family-task {
+    border-left: 4px solid #667eea !important;
+}
+
+.personal-task {
+    border-left: 4px solid #a0aec0 !important;
+}
