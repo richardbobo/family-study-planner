@@ -1,4 +1,4 @@
-// AI智能对话创建计划功能 - 家庭绑定云端版本
+// AI智能对话创建计划功能 - 家庭绑定云端版本 暂时不用
 console.log('ai-create.js 已加载 - 家庭绑定云端版');
 
 let chatHistory = [];
