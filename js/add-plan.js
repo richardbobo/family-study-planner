@@ -10,22 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePage();
 });
 
-// 初始化页面
-// function initializePage() {
-//     // 设置当前日期
-//     const today = new Date().toISOString().split('T')[0];
-//     document.getElementById('startDate').value = today;
-//     document.querySelector('.date-highlight').textContent = today;
-    
-//     // 初始化表单事件
-//     initializeFormEvents();
-    
-//     // 初始化自定义类别到下拉框
-//     initializeCustomCategories();
-    
-//     // 初始化类别功能
-//     initializeCategoryFeatures();
-// }
 
 // 初始化表单事件
 function initializeFormEvents() {

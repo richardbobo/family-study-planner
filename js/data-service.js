@@ -89,7 +89,7 @@ class DataService {
             // 应用筛选条件
             // 🔧 现在 family_id 一定有值，可以安全应用筛选
             query = query.eq('family_id', filters.family_id);
-            
+
             if (filters.subject && filters.subject !== 'all') {
                 query = query.eq('subject', filters.subject);
             }
@@ -130,6 +130,26 @@ class DataService {
             console.log(`✅ 从云端获取到 ${processedData.length} 个任务`);
             return processedData;
         }, '获取任务列表');
+    }
+
+        // 兼容性方法 - 保持原有接口
+    async getTasks(date = null) {
+        const filters = {};
+        if (date) {
+            filters.date = date;
+        }
+
+        // 自动添加家庭筛选
+        try {
+            const familyService = getFamilyService();
+            if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+                filters.family_id = familyService.getCurrentFamily().id;
+            }
+        } catch (error) {
+            console.warn('⚠️ 获取家庭信息失败，返回所有任务');
+        }
+
+        return this.getAllTasks(filters);
     }
 
     // data-service.js - 修复 createTask 方法
@@ -284,15 +304,6 @@ class DataService {
         }, '删除任务');
     }
 
-    /**
-     * 标记任务完成/未完成
-     */
-    async toggleTaskCompletion(taskId, completed) {
-        return this.updateTask(taskId, {
-            completed,
-            completed_at: completed ? new Date().toISOString() : null
-        });
-    }
     // 在 data-service.js 的 DataService 类中添加
     /**
      * 标记任务完成并创建完成记录
@@ -437,43 +448,6 @@ class DataService {
         });
     }
 
-    // 兼容性方法 - 保持原有接口
-    async getTasks(date = null) {
-        const filters = {};
-        if (date) {
-            filters.date = date;
-        }
-
-        // 自动添加家庭筛选
-        try {
-            const familyService = getFamilyService();
-            if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
-                filters.family_id = familyService.getCurrentFamily().id;
-            }
-        } catch (error) {
-            console.warn('⚠️ 获取家庭信息失败，返回所有任务');
-        }
-
-        return this.getAllTasks(filters);
-    }
-
-    // 兼容性方法
-    async createItem(table, data) {
-        if (table === 'study_tasks') return await this.createTask(data);
-        throw new Error(`未知的表: ${table}`);
-    }
-
-    // 兼容性方法
-    async updateItem(table, id, data) {
-        if (table === 'study_tasks') return await this.updateTask(id, data);
-        throw new Error(`未知的表: ${table}`);
-    }
-
-    // 兼容性方法
-    async deleteItem(table, id) {
-        if (table === 'study_tasks') return await this.deleteTask(id);
-        throw new Error(`未知的表: ${table}`);
-    }
 }
 
 // 全局实例管理

@@ -6,6 +6,8 @@ let currentTaskId = null;
 let currentQuickCompleteTaskId = null;
 let isSubmittingCompletion = false;
 let currentDeleteTask = null;
+// 在主应用中初始化纯云端成就系统
+let achievementSystem = null;
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function () {
@@ -114,6 +116,9 @@ async function confirmQuickComplete() {
             notes: completionNote,
             earned_points: task.points || 5
         });
+
+        // 检查成就
+        await checkAchievementsOnTaskCompletion();
 
         // 重新从云端加载最新数据
         await loadTasksFromCloud();
@@ -1652,20 +1657,20 @@ async function initializeFamilyFeatures() {
 async function updateFamilyStatusDisplay() {
     const familyService = getFamilyService();
     const familyStatusElement = document.getElementById('familyHeaderStatus');
-    
+
     if (!familyStatusElement) {
         console.error('找不到家庭状态元素');
         return;
     }
-    
+
     // 移除旧的事件监听器（通过重新创建元素）
     const newElement = familyStatusElement.cloneNode(false);
     familyStatusElement.parentNode.replaceChild(newElement, familyStatusElement);
-    
+
     if (familyService.hasJoinedFamily()) {
         const family = familyService.getCurrentFamily();
         const member = familyService.getCurrentMember();
-        
+
         // 创建已加入家庭的显示 - 美化版本
         newElement.innerHTML = `
             <div class="family-status-icon">
@@ -1675,19 +1680,19 @@ async function updateFamilyStatusDisplay() {
                 ${family.family_name}
             </div>
         `;
-        
+
         newElement.className = 'family-header-status family-status-joined';
         newElement.title = `${family.family_name} - ${member.role === 'parent' ? '👨‍👩‍👧‍👦 家长' : '👦 孩子'}\n点击管理家庭`;
-        
+
         // 添加悬停效果
-        newElement.addEventListener('mouseenter', function() {
+        newElement.addEventListener('mouseenter', function () {
             this.style.animation = 'glow 1s ease-in-out';
         });
-        
-        newElement.addEventListener('mouseleave', function() {
+
+        newElement.addEventListener('mouseleave', function () {
             this.style.animation = '';
         });
-        
+
     } else {
         // 创建未加入家庭的显示 - 美化版本
         newElement.innerHTML = `
@@ -1698,16 +1703,16 @@ async function updateFamilyStatusDisplay() {
                 加入家庭
             </div>
         `;
-        
+
         newElement.className = 'family-header-status family-status-not-joined';
         newElement.title = '点击创建或加入家庭，与家人一起学习！';
     }
-    
+
     // 添加点击事件 - 跳转到家庭管理页面
-    newElement.addEventListener('click', function() {
+    newElement.addEventListener('click', function () {
         window.location.href = 'family-management.html';
     });
-    
+
     console.log('✅ 家庭状态显示已更新');
 }
 
@@ -1828,4 +1833,64 @@ function setupFamilyEventListeners() {
         });
     });
 
+}
+
+async function initializeAchievementSystem() {
+    try {
+        achievementSystem = new CloudAchievementSystem();
+
+        // 验证用户登录
+        const user = getDataService().getCurrentUser();
+        if (!user) {
+            console.warn('用户未登录，成就系统暂不可用');
+            return;
+        }
+
+        console.log('纯云端成就系统初始化完成');
+
+        // 初始检查成就
+        await checkInitialAchievements();
+
+    } catch (error) {
+        console.error('成就系统初始化失败:', error);
+    }
+}
+
+// 初始成就检查
+async function checkInitialAchievements() {
+    if (!achievementSystem) return;
+
+    try {
+        const tasks = await getDataService().getTasks();
+        await achievementSystem.checkAchievements(tasks);
+    } catch (error) {
+        console.error('初始成就检查失败:', error);
+    }
+}
+
+// 在任务完成时检查成就
+// 在 index.html 的任务完成函数中
+async function checkAchievementsOnTaskCompletion() {
+    if (!achievementSystem) return;
+    
+    try {
+        const familyService = getFamilyService();
+        if (!familyService.hasJoinedFamily()) return;
+        
+        const family = familyService.getCurrentFamily();
+        const member = familyService.getCurrentMember();
+        const tasks = await getDataService().getTasks();
+        
+        const unlocked = await achievementSystem.checkMemberAchievements(
+            family.id, 
+            member.user_id, 
+            tasks
+        );
+        
+        if (unlocked.length > 0) {
+            console.log(`🎉 ${member.user_name} 解锁了 ${unlocked.length} 个成就`);
+        }
+    } catch (error) {
+        console.error('检查成就失败:', error);
+    }
 }

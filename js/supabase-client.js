@@ -393,15 +393,44 @@ class SupabaseClient {
     }
 }
 
-// 创建全局实例
+// 📁 js/supabase-client.js - 完整修复版本
+
 let supabaseClientInstance = null;
 
 function getSupabaseClient() {
     if (!supabaseClientInstance) {
-        supabaseClientInstance = new SupabaseClient();
+        console.log('🔧 初始化Supabase客户端...');
+        
+        // 获取配置
+        const supabaseUrl = window.SUPABASE_URL || 
+            (window.APP_CONFIG && window.APP_CONFIG.SUPABASE && window.APP_CONFIG.SUPABASE.URL);
+        const supabaseKey = window.SUPABASE_ANON_KEY || 
+            (window.APP_CONFIG && window.APP_CONFIG.SUPABASE && window.APP_CONFIG.SUPABASE.ANON_KEY);
+        
+        console.log('Supabase配置:', { supabaseUrl, supabaseKey: supabaseKey ? '已设置' : '未设置' });
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('❌ 缺少Supabase配置');
+            throw new Error('请配置 SUPABASE_URL 和 SUPABASE_ANON_KEY');
+        }
+        
+        if (!window.supabase || !window.supabase.createClient) {
+            console.error('❌ Supabase JS库未加载');
+            throw new Error('请先加载Supabase JS库');
+        }
+        
+        // 创建客户端
+        supabaseClientInstance = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('✅ Supabase客户端创建成功');
     }
+    
     return supabaseClientInstance;
 }
+
+// 全局可用
+window.getSupabaseClient = getSupabaseClient;
+
+
 
 // 导出
 if (typeof module !== 'undefined' && module.exports) {

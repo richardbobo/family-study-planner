@@ -15,7 +15,8 @@ const APP_CONFIG = {
         SHOW_SYNC_STATUS: false, // 隐藏同步状态
 
         // 启用冲突检测
-        ENABLE_CONFLICT_DETECTION: false
+        ENABLE_CONFLICT_DETECTION: false,
+        ENABLE_ACHIEVEMENTS: true // 🆕 新增成就开关
     },
 
     // Supabase 配置
@@ -29,7 +30,11 @@ const APP_CONFIG = {
             FAMILIES: 'families',
             FAMILY_MEMBERS: 'family_members',
             STUDY_TASKS: 'study_tasks',
-            COMPLETION_RECORDS: 'completion_records'
+            COMPLETION_RECORDS: 'completion_records',
+            // 🎯 新增成就系统表
+            ACHIEVEMENTS: 'achievements',                    // 成就定义表
+            USER_ACHIEVEMENTS: 'user_achievements',          // 用户成就进度表
+            USER_PROFILES: 'user_profiles'                   // 用户档案表
         }
     },
 
@@ -104,6 +109,34 @@ const APP_CONFIG = {
     },
 
 
+    // 🆕 新增成就系统配置
+    ACHIEVEMENTS: {
+        CATEGORIES: {
+            STUDY_TIME: '学习时长',
+            STREAK: '连续打卡',
+            TASKS: '任务完成',
+            SUBJECT: '科目专项',
+            SPECIAL: '特殊成就'
+        },
+        POINTS_MULTIPLIER: {
+            BASE: 10,
+            SUBJECT_BONUS: {
+                '数学': 1.2,
+                '编程': 1.5,
+                '语言': 1.1,
+                '科学': 1.3
+            },
+            TIME_BONUS: {
+                NIGHT: 1.3,
+                WEEKEND: 1.2
+            }
+        },
+        TRIGGERS: {
+            ON_TASK_COMPLETE: true,
+            ON_PAGE_LOAD: true,
+            MANUAL_CHECK: true
+        }
+    },
     // 注意：SYNC_CONFIG 和 CONSTANTS 中的同步相关配置可以保留
     // 因为它们不会影响实际功能，只是配置常量
     SYNC_CONFIG: {
@@ -289,11 +322,3 @@ if (typeof window !== 'undefined') {
     console.log('✅ config.js: 全局变量已暴露');
 }
 
-// 移除或注释掉模块导出（如果存在）
-// if (typeof module !== 'undefined' && module.exports) {
-//     module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
-// }
-// 导出配置（用于模块化）
-// if (typeof module !== 'undefined' && module.exports) {
-//     module.exports = { APP_CONFIG, validateConfig, updateFeatureFlag, getCurrentDataSource };
-// }

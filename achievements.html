@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习成就 - 小学生学习计划管理系统</title>
+    <link rel="stylesheet" href="styles/achievements.css">
+</head>
+<body>
+    <div class="achievements-page">
+        <!-- 页面头部 -->
+        <header class="achievements-header">
+            <div class="header-content">
+                <button id="backButton" class="back-button">← 返回</button>
+                <h1>学习成就</h1>
+                <div class="header-actions">
+                    <button id="refreshButton" class="refresh-btn">🔄</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 🎯 成就容器 - 必须要有这个元素 -->
+        <main class="achievements-main">
+            <div id="achievementsContainer" class="achievements-container">
+                <!-- 成就内容会动态加载到这里 -->
+            </div>
+        </main>
+
+        <!-- 加载状态（初始隐藏） -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/family-service.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/achievements_page.js"></script>
+
+    <script>
+        // 简单的测试代码
+        console.log('✅ 成就页面加载完成');
+        console.log('成就容器:', document.getElementById('achievementsContainer'));
+    </script>
+</body>
+</html>

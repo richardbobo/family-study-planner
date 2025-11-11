@@ -50,23 +50,15 @@
                 <div class="stat-number" id="rewardPoints">25</div>
                 <div>学习积分</div>
             </div>
+            <!-- 在统计栏附近或导航栏添加 -->
+            <!-- 修改：将成就按钮改为统计卡片样式 -->
+            <a href="achievements.html" class="stat-card achievement-card">
+                <i class="fas fa-medal"></i>
+                <div class="stat-number" id="achievementCount">0</div>
+                <div>我的成就</div>
+            </a>
 
         </div>
-        <!-- 家庭状态栏 -->
-        <!-- <div id="familyStatusBar" class="family-status-bar" style="display: none;">
-            <div class="family-info">
-                <span class="family-icon">👨‍👩‍👧‍👦</span>
-                <div class="family-details">
-                    <span id="familyName" class="family-name"></span>
-                    <span id="memberRole" class="member-role"></span>
-                </div>
-                <span id="memberCount" class="member-count"></span>
-            </div>
-            <div class="family-actions">
-                <button id="viewFamilyTasks" class="btn btn-outline btn-small">只看家庭任务</button>
-                <button id="manageFamily" class="btn btn-secondary btn-small">管理家庭</button>
-            </div>
-        </div> -->
 
         <!-- 学习计划整体框架 -->
         <div class="study-plan-container">
@@ -219,8 +211,9 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="js/supabase-client.js"></script>
     <script src="js/family-service.js"></script>
     <script src="js/data-service.js"></script>
