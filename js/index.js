@@ -9,6 +9,9 @@ let currentDeleteTask = null;
 // 在主应用中初始化纯云端成就系统
 let achievementSystem = null;
 
+// 初始化计时管理器
+let timerManager;
+
 // 初始化页面-1
 document.addEventListener('DOMContentLoaded', function () {
     console.log('主页DOM已加载');
@@ -18,30 +21,497 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeQuickCompleteModal();
     initializeFilterAndSort(); // 这个现在会动态更新科目选项
     initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框  
+
     renderWeekView();
     // 🔄 修改：使用新的任务加载方式
     loadTasksFromCloud();
-    
+
     renderTaskList();
     updateStats();
     initializeFamilyFeatures();
     setupFamilyEventListeners();
     setupRefreshButton();
+    timerManager = new TimerManager();
     console.log('页面初始化完成');
 
 
 });
 
+// 计时管理器类
+// 增强的计时管理器类
+// 简化版计时管理器类
+class TimerManager {
+    constructor() {
+        this.currentTimer = null;
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.isRunning = false;
+        this.currentTaskId = null;
+        this.timerInterval = null;
+        this.lastUpdateTime = null;
+        this.pauseStartTime = null; // 新增：记录暂停开始时间
+
+        this.init();
+    }
+
+    init() {
+        this.restoreTimerState();
+        this.startRealTimeUpdate();
+    }
+
+    // 开始实时更新显示（每秒更新）
+    startRealTimeUpdate() {
+        setInterval(() => {
+            if (this.isRunning && this.startTime) {
+                const now = new Date();
+                const elapsedSeconds = Math.floor((now - this.startTime) / 1000);
+                const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+
+                if (elapsedMinutes !== this.elapsedTime) {
+                    this.elapsedTime = elapsedMinutes;
+                    this.saveTimerState();
+                }
+
+                this.updateTimerDisplay(elapsedSeconds);
+            }
+        }, 1000);
+    }
+
+    // 开始计时 - 简化版本
+    startTimer(taskId) {
+        const task = tasks.find(t => t.id == taskId);
+        if (!task) {
+            showNotification('任务不存在', 'error');
+            return;
+        }
+
+        // 如果已经在计时同一个任务，则忽略
+        if (this.isRunning && this.currentTaskId === taskId) {
+            return;
+        }
+
+        // 如果已经在计时其他任务，先暂停
+        if (this.isRunning && this.currentTaskId !== taskId) {
+            this.pauseTimer();
+        }
+
+        this.currentTaskId = taskId;
+        this.startTime = new Date();
+        this.isRunning = true;
+        this.lastUpdateTime = new Date();
+        this.pauseStartTime = null; // 重置暂停开始时间
+
+        this.saveTimerState();
+        this.updateTimerDisplay(0);
+
+        showNotification(`⏰ 开始计时: ${task.name}`, 'info');
+    }
+
+    // 继续计时
+    continueTimer() {
+        if (!this.currentTaskId || this.isRunning) return;
+
+        const task = tasks.find(t => t.id == this.currentTaskId);
+        if (!task) {
+            this.resetTimer();
+            return;
+        }
+
+        this.isRunning = true;
+
+        // 修复：计算暂停的时间并调整开始时间
+        if (this.pauseStartTime) {
+            const pauseDuration = new Date() - this.pauseStartTime;
+            this.startTime = new Date(this.startTime.getTime() + pauseDuration);
+        } else {
+            // 如果没有记录暂停开始时间，使用保守估计
+            this.startTime = new Date(Date.now() - this.elapsedTime * 60 * 1000);
+        }
+
+        this.pauseStartTime = null;
+        this.lastUpdateTime = new Date();
+
+        this.saveTimerState();
+
+        // 计算当前的总秒数用于显示
+        const currentTotalSeconds = Math.floor((new Date() - this.startTime) / 1000);
+        this.updateTimerDisplay(currentTotalSeconds);
+
+        showNotification(`▶️ 继续计时: ${task.name}`, 'info');
+    }
+
+    // 暂停计时
+    pauseTimer() {
+        if (!this.isRunning) return;
+
+        this.isRunning = false;
+        this.pauseStartTime = new Date(); // 记录暂停开始时间
+        this.lastUpdateTime = new Date();
+
+        // 更新经过的时间
+        if (this.startTime) {
+            const currentElapsed = Math.floor((this.pauseStartTime - this.startTime) / 1000);
+            this.elapsedTime = Math.floor(currentElapsed / 60);
+        }
+
+        this.saveTimerState();
+
+        const task = tasks.find(t => t.id == this.currentTaskId);
+        if (task) {
+            showNotification(`⏸️ 已暂停: ${task.name} (${this.getFormattedTime()})`, 'warning');
+        }
+
+        const currentTotalSeconds = this.elapsedTime * 60;
+        this.updateTimerDisplay(currentTotalSeconds);
+    }
+
+    // 停止计时并完成任务
+    async stopAndComplete() {
+        if (!this.currentTaskId) return;
+
+        const task = tasks.find(t => t.id == this.currentTaskId);
+        if (!task) return;
+
+        this.isRunning = false;
+        this.lastUpdateTime = new Date();
+        // 确保最终时间准确
+        if (this.startTime) {
+            const finalElapsed = Math.floor((this.lastUpdateTime - this.startTime) / 1000);
+            this.elapsedTime = Math.floor(finalElapsed / 60);
+        }
+
+        const totalMinutes = this.elapsedTime;
+        const completionNote = this.getCompletionNote();
+
+        // 显示确认完成模态框
+        this.showCompletionModal(task, totalMinutes, completionNote);
+    }
+
+    // 重置计时器
+    resetTimer() {
+        this.isRunning = false;
+        this.currentTaskId = null;
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.lastUpdateTime = null;
+        this.pauseStartTime = null;
+        localStorage.removeItem('currentTimer');
+        this.updateTimerDisplay(0);
+    }
+
+    // 更新计时器显示 - 只保留一个显示区域
+     // 更新计时器显示
+    updateTimerDisplay(totalSeconds = 0) {
+        const timerBadge = document.getElementById('timerBadge');
+        
+        if (timerBadge) {
+            if (this.currentTaskId) {
+                const task = tasks.find(t => t.id == this.currentTaskId);
+                const timeText = this.getFormattedTimeWithSeconds(totalSeconds);
+                
+                timerBadge.innerHTML = `
+                    <div class="timer-container ${this.isRunning ? 'timer-running' : 'timer-paused'}">
+                        <div class="timer-header">
+                            <div class="timer-icon">
+                                <i class="fas fa-clock ${this.isRunning ? 'pulse' : ''}"></i>
+                            </div>
+                            <div class="timer-text">
+                                <div class="timer-task">${task?.name || '任务'}</div>
+                                <div class="timer-time">${timeText}</div>
+                            </div>
+                        </div>
+                        <div class="timer-controls">
+                            ${this.isRunning ? `
+                                <button class="btn-timer-control btn-pause" onclick="timerManager.pauseTimer()" title="暂停">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                                <button class="btn-timer-control btn-complete" onclick="timerManager.stopAndComplete()" title="完成">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : `
+                                <button class="btn-timer-control btn-continue" onclick="timerManager.continueTimer()" title="继续">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="btn-timer-control btn-reset" onclick="timerManager.resetTimer()" title="重置">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                timerBadge.style.display = 'block';
+            } else {
+                timerBadge.style.display = 'none';
+            }
+        }
+        
+        // 更新任务列表中的计时按钮状态
+        this.updateTaskTimerButtons();
+    }
+
+    // 获取带秒数的时间格式
+    getFormattedTimeWithSeconds(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (hours > 0) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    // 更新任务列表中的计时按钮
+    updateTaskTimerButtons() {
+        const timerButtons = document.querySelectorAll('.btn-start-timer');
+        timerButtons.forEach(button => {
+            const taskItem = button.closest('.task-item');
+            const taskId = taskItem?.getAttribute('data-task-id');
+            
+            if (taskId == this.currentTaskId) {
+                if (this.isRunning) {
+                    button.innerHTML = '<i class="fas fa-pause"></i> 计时中';
+                    button.className = 'btn btn-start-timer timer-active';
+                    button.onclick = (e) => {
+                        e.stopPropagation();
+                        this.pauseTimer();
+                    };
+                    taskItem.classList.add('task-timing');
+                } else {
+                    button.innerHTML = '<i class="fas fa-play"></i> 继续';
+                    button.className = 'btn btn-start-timer timer-paused';
+                    button.onclick = (e) => {
+                        e.stopPropagation();
+                        this.continueTimer();
+                    };
+                    taskItem.classList.remove('task-timing');
+                    taskItem.classList.add('task-paused');
+                }
+            } else {
+                button.innerHTML = '<i class="fas fa-play"></i> 开始计时';
+                button.className = 'btn btn-start-timer';
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    this.startTimer(taskId);
+                };
+                taskItem?.classList.remove('task-timing', 'task-paused');
+            }
+        });
+    }
+
+    // 显示完成确认模态框 - 保留翻页时钟效果
+    // 在 showCompletionModal 方法中添加样式确保正确显示
+    showCompletionModal(task, totalMinutes, defaultNote) {
+        // 先移除可能存在的旧模态框
+        const existingModal = document.getElementById('timerCompletionModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal timer-completion-modal';
+        modal.id = 'timerCompletionModal';
+        modal.style.display = 'flex';
+
+        modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎉 学习完成！</h3>
+                <button class="close-btn" onclick="timerManager.cancelCompletion()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="completion-summary">
+                    <div class="flip-clock">
+                        <div class="flip-card hours">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">${Math.floor(totalMinutes / 60).toString().padStart(2, '0')}</div>
+                                <div class="flip-card-back">${Math.floor(totalMinutes / 60).toString().padStart(2, '0')}</div>
+                            </div>
+                        </div>
+                        <div class="flip-colon">:</div>
+                        <div class="flip-card minutes">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">${(totalMinutes % 60).toString().padStart(2, '0')}</div>
+                                <div class="flip-card-back">${(totalMinutes % 60).toString().padStart(2, '0')}</div>
+                            </div>
+                        </div>
+                        <div class="flip-label">学习时长</div>
+                    </div>
+                    
+                    <div class="task-info">
+                        <strong>${task.name}</strong>
+                        <div class="subject-badge">${task.subject}</div>
+                    </div>
+                </div>
+                
+                <div class="completion-notes">
+                    <label for="timerCompletionNote">学习心得（可选）:</label>
+                    <textarea id="timerCompletionNote" placeholder="记录本次学习的收获和心得..." rows="3">${defaultNote}</textarea>
+                </div>
+                
+                <div class="completion-actions">
+                    <button class="btn btn-cancel" onclick="timerManager.cancelCompletion()">取消</button>
+                    <button class="btn btn-confirm" onclick="timerManager.confirmCompletion()">
+                        <i class="fas fa-check"></i> 确认完成
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        document.body.appendChild(modal);
+
+        // 添加翻页动画
+        setTimeout(() => {
+            const flipCards = modal.querySelectorAll('.flip-card-inner');
+            flipCards.forEach(card => {
+                card.style.transform = 'rotateX(-180deg)';
+            });
+        }, 100);
+
+        // 确保模态框在视口中可见
+        setTimeout(() => {
+            modal.scrollTop = 0;
+        }, 50);
+    }
+
+    // 取消完成
+    cancelCompletion() {
+        const modal = document.getElementById('timerCompletionModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    // 确认完成任务
+    async confirmCompletion() {
+        const modal = document.getElementById('timerCompletionModal');
+        const note = document.getElementById('timerCompletionNote')?.value.trim() || '';
+        const task = tasks.find(t => t.id == this.currentTaskId);
+
+        if (!task) {
+            showNotification('任务不存在', 'error');
+            return;
+        }
+
+        try {
+            const dataService = getDataService();
+
+            await dataService.completeTask(task.id, {
+                actual_duration: this.elapsedTime,
+                notes: note,
+                earned_points: task.points || 5
+            });
+
+            await checkAchievementsOnTaskCompletion();
+            await loadTasksFromCloud();
+
+            if (modal) modal.remove();
+            this.resetTimer();
+
+            showNotification(`🎉 学习完成！用时 ${this.formatMinutes(this.elapsedTime)}`, 'success');
+
+        } catch (error) {
+            console.error('保存任务完成状态失败:', error);
+            showNotification('保存失败，请重试', 'error');
+        }
+    }
+
+    // 辅助方法
+    getFormattedTime() {
+        const hours = Math.floor(this.elapsedTime / 60);
+        const minutes = this.elapsedTime % 60;
+        return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
+    }
+
+    formatMinutes(totalMinutes) {
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
+    }
+
+    getCompletionNote() {
+        const hours = Math.floor(this.elapsedTime / 60);
+        const minutes = this.elapsedTime % 60;
+
+        if (this.elapsedTime >= 120) {
+            return `专注学习了${hours}小时${minutes}分钟，收获满满！`;
+        } else if (this.elapsedTime >= 60) {
+            return `认真学习${hours}小时${minutes}分钟，继续保持！`;
+        } else {
+            return `学习了${minutes}分钟，完成了今日任务。`;
+        }
+    }
+
+    // 保存计时状态 - 修复版本
+    saveTimerState() {
+        const timerState = {
+            taskId: this.currentTaskId,
+            startTime: this.startTime?.toISOString(),
+            elapsedTime: this.elapsedTime,
+            isRunning: this.isRunning,
+            lastUpdate: new Date().toISOString(),
+            pauseStartTime: this.pauseStartTime?.toISOString() // 保存暂停状态
+        };
+        localStorage.setItem('currentTimer', JSON.stringify(timerState));
+    }
+
+    // 恢复计时状态 - 修复版本
+    restoreTimerState() {
+        try {
+            const saved = localStorage.getItem('currentTimer');
+            if (saved) {
+                const timerState = JSON.parse(saved);
+                
+                const lastUpdate = new Date(timerState.lastUpdate);
+                const now = new Date();
+                const hoursDiff = (now - lastUpdate) / (1000 * 60 * 60);
+                
+                if (hoursDiff < 24) {
+                    this.currentTaskId = timerState.taskId;
+                    this.startTime = new Date(timerState.startTime);
+                    this.elapsedTime = timerState.elapsedTime;
+                    this.isRunning = timerState.isRunning;
+                    
+                    // 恢复暂停状态
+                    if (timerState.pauseStartTime) {
+                        this.pauseStartTime = new Date(timerState.pauseStartTime);
+                    }
+                    
+                    if (this.isRunning) {
+                        // 重新计算经过的时间
+                        const currentElapsed = Math.floor((now - this.startTime) / (1000 * 60));
+                        this.elapsedTime = currentElapsed;
+                        this.startTime = new Date(now - currentElapsed * 60 * 1000);
+                    }
+                    
+                    const currentTotalSeconds = this.elapsedTime * 60;
+                    this.updateTimerDisplay(currentTotalSeconds);
+                } else {
+                    localStorage.removeItem('currentTimer');
+                }
+            }
+        } catch (error) {
+            console.error('恢复计时状态失败:', error);
+            localStorage.removeItem('currentTimer');
+        }
+    }
+}
+
+
+
+
 
 // 🔄 修改：从云端加载任务
 async function loadTasksFromCloud() {
 
-        console.group('🔍 [DEBUG] 主页任务加载前状态检查');
-    
+    console.group('🔍 [DEBUG] 主页任务加载前状态检查');
+
     // 检查1: 直接读取sessionStorage
     const sessionData = sessionStorage.getItem('family_session');
     console.log('💾 原始sessionStorage数据:', sessionData);
-    
+
     if (sessionData) {
         try {
             const parsed = JSON.parse(sessionData);
@@ -54,7 +524,7 @@ async function loadTasksFromCloud() {
             console.error('❌ sessionStorage数据解析失败:', e);
         }
     }
-    
+
     // 检查2: 家庭服务状态
     const familyService = getFamilyService();
     console.log('👥 家庭服务状态:', {
@@ -63,7 +533,7 @@ async function loadTasksFromCloud() {
         currentMember: familyService.currentMember,
         storageKey: familyService.storageKey
     });
-    
+
     // 检查3: 手动尝试恢复
     if (!familyService.isInitialized) {
         console.log('🔄 手动触发家庭服务恢复...');
@@ -73,7 +543,7 @@ async function loadTasksFromCloud() {
             currentMember: familyService.currentMember
         });
     }
-    
+
     console.groupEnd();
     try {
         console.log('🔍 开始从云端加载任务...');
@@ -1159,11 +1629,10 @@ function closeModal() {
 
 
 // 开始计时
+// 替换原有的简单开始计时函数
 function startTimer(taskId) {
-    event.stopPropagation();
-    const task = tasks.find(t => t.id == taskId);
-    if (task) {
-        showNotification(`⏰ 开始计时: ${task.name}`, 'info');
+    if (timerManager) {
+        timerManager.startTimer(taskId);
     }
 }
 
@@ -1809,7 +2278,7 @@ async function updateFamilyStatusDisplay() {
         newElement.title = `${family.family_name} - ${member.role === 'parent' ? '👨‍👩‍👧‍👦 家长' : '👦 孩子'}\n点击查看家庭信息`;
 
         // 添加点击事件 - 显示下拉菜单
-        newElement.addEventListener('click', function(event) {
+        newElement.addEventListener('click', function (event) {
             event.stopPropagation();
             toggleFamilyDropdown(this);
         });
@@ -1829,7 +2298,7 @@ async function updateFamilyStatusDisplay() {
         newElement.title = '点击创建或加入家庭，与家人一起学习！';
 
         // 添加点击事件 - 跳转到家庭管理
-        newElement.addEventListener('click', function() {
+        newElement.addEventListener('click', function () {
             window.location.href = 'family-management.html';
         });
     }
@@ -1914,19 +2383,19 @@ async function quickLeaveFamily() {
         }
 
         await familyService.leaveFamily();
-        
+
         // 更新显示
         await updateFamilyStatusDisplay();
-        
+
         // 重新加载任务（因为家庭ID变了）
         await loadTasksFromCloud();
-        
+
         showNotification('已成功退出家庭', 'success');
 
     } catch (error) {
         console.error('❌ 退出家庭失败:', error);
         showNotification('退出家庭失败: ' + error.message, 'error');
-        
+
         // 恢复显示
         await updateFamilyStatusDisplay();
     }
@@ -2009,7 +2478,7 @@ function setupFamilyEventListeners() {
         console.log('家庭退出事件触发', event.detail);
         updateFamilyStatusDisplay();
         loadTasksFromCloud(); // 重新加载任务
-        
+
         // 移除所有家庭任务标记
         const familyTasks = document.querySelectorAll('.family-task');
         familyTasks.forEach(task => {

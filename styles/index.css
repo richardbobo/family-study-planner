@@ -4155,3 +4155,829 @@ footer {
         white-space: nowrap;
     }
 }
+/* 计时器容器样式 */
+.timer-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    min-width: 280px;
+    border: 2px solid transparent;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.timer-running {
+    border-color: #4cd964;
+}
+
+.timer-paused {
+    border-color: #ff9500;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.timer-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.timer-icon {
+    font-size: 20px;
+}
+
+.timer-text {
+    flex: 1;
+}
+
+.timer-task {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.timer-time {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-timer-control {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.btn-timer-control:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* 任务项计时状态 */
+.task-timing {
+    border-left: 4px solid #667eea;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+    animation: taskPulse 3s ease-in-out infinite;
+}
+
+.task-paused {
+    border-left: 4px solid #ff9500;
+    background: linear-gradient(135deg, #fff8f0 0%, #fff4e6 100%);
+}
+
+/* 计时完成模态框样式 */
+.timer-completion-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.timer-completion-modal .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 450px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.timer-completion-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.timer-completion-modal .modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.timer-completion-modal .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.timer-completion-modal .close-btn:hover {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.timer-completion-modal .modal-body {
+    padding: 24px;
+}
+
+/* 完成摘要样式 */
+.completion-summary {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+    border-radius: 12px;
+    border: 1px solid #e6e9ff;
+}
+
+/* 翻页时钟样式 */
+.flip-clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+    position: relative;
+}
+
+.flip-card {
+    perspective: 400px;
+    width: 60px;
+    height: 80px;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    transform: rotateX(0deg);
+}
+
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.flip-card-back {
+    transform: rotateX(180deg);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+.flip-colon {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    margin: 0 4px;
+}
+
+.flip-label {
+    position: absolute;
+    bottom: -25px;
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 任务信息样式 */
+.task-info {
+    margin-top: 30px;
+}
+
+.task-info strong {
+    display: block;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.subject-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 学习心得样式 */
+.completion-notes {
+    margin-bottom: 24px;
+}
+
+.completion-notes label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.completion-notes textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: border-color 0.3s ease;
+    min-height: 80px;
+}
+
+.completion-notes textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 完成操作按钮样式 */
+.completion-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.completion-actions .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.completion-actions .btn-cancel {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.completion-actions .btn-cancel:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.completion-actions .btn-confirm {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.completion-actions .btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 动画效果 */
+@keyframes glow {
+    from {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+    to {
+        box-shadow: 0 4px 30px rgba(102, 126, 234, 0.6);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes taskPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(102, 126, 234, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+}
+
+@keyframes buttonPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    }
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 按钮状态 */
+.btn-start-timer.timer-active {
+    background: #667eea;
+    color: white;
+    animation: buttonPulse 2s infinite;
+}
+
+.btn-start-timer.timer-paused {
+    background: #ff9500;
+    color: white;
+}
+
+/* 模态框基础样式（确保有这些基础样式） */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .timer-container {
+        min-width: 250px;
+        padding: 10px 12px;
+    }
+    
+    .timer-task {
+        font-size: 13px;
+        max-width: 150px;
+    }
+    
+    .timer-time {
+        font-size: 16px;
+    }
+    
+    .flip-card {
+        width: 50px;
+        height: 70px;
+    }
+    
+    .flip-card-front, .flip-card-back {
+        font-size: 28px;
+    }
+    
+    .timer-completion-modal .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .completion-actions {
+        flex-direction: column;
+    }
+    
+    .completion-actions .btn {
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .timer-container {
+        min-width: 220px;
+        padding: 8px 10px;
+    }
+    
+    .timer-header {
+        gap: 8px;
+    }
+    
+    .timer-task {
+        font-size: 12px;
+        max-width: 120px;
+    }
+    
+    .timer-time {
+        font-size: 14px;
+    }
+    
+    .btn-timer-control {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+}
+/* 计时完成模态框样式 - 修复版本 */
+.timer-completion-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.timer-completion-modal .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    width: 100%;
+    max-width: 450px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.timer-completion-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.timer-completion-modal .modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.timer-completion-modal .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.timer-completion-modal .close-btn:hover {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.timer-completion-modal .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 完成摘要样式 - 优化布局 */
+.completion-summary {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+    border-radius: 12px;
+    border: 1px solid #e6e9ff;
+    flex-shrink: 0;
+}
+
+/* 翻页时钟样式 - 调整尺寸 */
+.flip-clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 20px 0;
+    position: relative;
+}
+
+.flip-card {
+    perspective: 400px;
+    width: 50px;
+    height: 70px;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    transform: rotateX(0deg);
+}
+
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.flip-card-back {
+    transform: rotateX(180deg);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+.flip-colon {
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+    margin: 0 4px;
+}
+
+.flip-label {
+    position: absolute;
+    bottom: -20px;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 任务信息样式 */
+.task-info {
+    margin-top: 10px;
+}
+
+.task-info strong {
+    display: block;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.subject-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 学习心得样式 - 限制高度 */
+.completion-notes {
+    flex-shrink: 0;
+}
+
+.completion-notes label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.completion-notes textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: border-color 0.3s ease;
+    min-height: 80px;
+    max-height: 120px;
+    box-sizing: border-box;
+}
+
+.completion-notes textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 完成操作按钮样式 - 固定在底部 */
+.completion-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+.completion-actions .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.completion-actions .btn-cancel {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.completion-actions .btn-cancel:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.completion-actions .btn-confirm {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.completion-actions .btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 动画效果 */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 响应式设计 - 优化小屏幕 */
+@media (max-width: 480px) {
+    .timer-completion-modal {
+        padding: 10px;
+    }
+    
+    .timer-completion-modal .modal-content {
+        max-height: 90vh;
+    }
+    
+    .timer-completion-modal .modal-body {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .timer-completion-modal .modal-header {
+        padding: 16px 20px;
+    }
+    
+    .timer-completion-modal .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .completion-summary {
+        padding: 16px;
+    }
+    
+    .flip-card {
+        width: 45px;
+        height: 60px;
+    }
+    
+    .flip-card-front, .flip-card-back {
+        font-size: 24px;
+    }
+    
+    .flip-colon {
+        font-size: 18px;
+    }
+    
+    .task-info strong {
+        font-size: 15px;
+    }
+    
+    .completion-notes textarea {
+        min-height: 70px;
+        max-height: 100px;
+        padding: 10px 14px;
+    }
+    
+    .completion-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .completion-actions .btn {
+        min-width: auto;
+        width: 100%;
+        padding: 12px 20px;
+    }
+}
+
+/* 确保模态框在滚动时内容可见 */
+@media (max-height: 600px) {
+    .timer-completion-modal .modal-content {
+        max-height: 95vh;
+    }
+    
+    .completion-summary {
+        padding: 12px;
+    }
+    
+    .flip-clock {
+        margin: 5px 0 15px 0;
+    }
+    
+    .completion-notes textarea {
+        min-height: 60px;
+        max-height: 80px;
+    }
+}
