@@ -9,27 +9,72 @@ let currentDeleteTask = null;
 // 在主应用中初始化纯云端成就系统
 let achievementSystem = null;
 
-// 初始化页面
+// 初始化页面-1
 document.addEventListener('DOMContentLoaded', function () {
     console.log('主页DOM已加载');
+
     initializeNavigation();
     initializeModal();
     initializeQuickCompleteModal();
     initializeFilterAndSort(); // 这个现在会动态更新科目选项
-    initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框
+    initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框  
     renderWeekView();
+    // 🔄 修改：使用新的任务加载方式
+    loadTasksFromCloud();
+    
     renderTaskList();
     updateStats();
     initializeFamilyFeatures();
     setupFamilyEventListeners();
+    setupRefreshButton();
     console.log('页面初始化完成');
 
-    // 🔄 修改：使用新的任务加载方式
-    loadTasksFromCloud();
+
 });
+
 
 // 🔄 修改：从云端加载任务
 async function loadTasksFromCloud() {
+
+        console.group('🔍 [DEBUG] 主页任务加载前状态检查');
+    
+    // 检查1: 直接读取sessionStorage
+    const sessionData = sessionStorage.getItem('family_session');
+    console.log('💾 原始sessionStorage数据:', sessionData);
+    
+    if (sessionData) {
+        try {
+            const parsed = JSON.parse(sessionData);
+            console.log('📦 解析后的家庭信息:', {
+                family: parsed.family,
+                member: parsed.member,
+                timestamp: parsed.timestamp
+            });
+        } catch (e) {
+            console.error('❌ sessionStorage数据解析失败:', e);
+        }
+    }
+    
+    // 检查2: 家庭服务状态
+    const familyService = getFamilyService();
+    console.log('👥 家庭服务状态:', {
+        isInitialized: familyService.isInitialized,
+        currentFamily: familyService.currentFamily,
+        currentMember: familyService.currentMember,
+        storageKey: familyService.storageKey
+    });
+    
+    // 检查3: 手动尝试恢复
+    if (!familyService.isInitialized) {
+        console.log('🔄 手动触发家庭服务恢复...');
+        await familyService.restoreFromSessionStorage();
+        console.log('🔄 恢复后状态:', {
+            currentFamily: familyService.currentFamily,
+            currentMember: familyService.currentMember
+        });
+    }
+    
+    console.groupEnd();
     try {
         console.log('🔍 开始从云端加载任务...');
         showLoading(true);
@@ -209,11 +254,7 @@ function setupRefreshButton() {
     }
 }
 
-// 在初始化函数中添加刷新按钮监听
-document.addEventListener('DOMContentLoaded', function () {
-    // ... 其他初始化代码
-    setupRefreshButton();
-});
+
 
 // 🔄 修改：标记家庭任务 - 适配云端
 async function markFamilyTasks() {
@@ -276,6 +317,81 @@ async function markFamilyTasks() {
         console.error('标记家庭任务失败:', error);
     }
 }
+
+
+// /**
+//  * 标记家庭任务
+//  */
+// async function markFamilyTasks() {
+//     const familyService = getFamilyService();
+
+//     if (!familyService.hasJoinedFamily()) {
+//         return;
+//     }
+
+//     try {
+//         const today = new Date().toISOString().split('T')[0];
+
+//         // 只获取今天的家庭任务
+//         const taskService = getTaskService(); // 获取任务服务
+//         const todayFamilyTasks = await taskService.getTasks(
+//             familyService.getCurrentFamily().id,
+//             today
+//         );
+
+//         console.log(`📅 今天(${today})的家庭任务:`, todayFamilyTasks.length);
+
+//         const pageTasks = document.querySelectorAll('.task-item');
+//         let markedCount = 0;
+
+//         // 使用名称匹配标记任务
+//         todayFamilyTasks.forEach(cloudTask => {
+//             let foundTask = null;
+
+//             // 在页面任务中查找匹配
+//             pageTasks.forEach(pageTask => {
+//                 const taskNameElement = pageTask.querySelector('.task-name');
+//                 const pageTaskName = taskNameElement?.textContent?.trim();
+
+//                 if (pageTaskName === cloudTask.name) {
+//                     foundTask = pageTask;
+//                 }
+//             });
+
+//             if (foundTask && !foundTask.classList.contains('family-task')) {
+//                 foundTask.classList.add('family-task');
+
+//                 // 添加徽章
+//                 const taskNameElement = foundTask.querySelector('.task-name');
+//                 if (taskNameElement && !foundTask.querySelector('.family-badge')) {
+//                     const familyBadge = document.createElement('span');
+//                     familyBadge.className = 'family-badge';
+//                     familyBadge.textContent = '👨‍👩‍👧‍👦 家庭任务';
+
+//                     // 确保样式
+//                     familyBadge.style.cssText = `
+//                         background: #667eea;
+//                         color: white;
+//                         padding: 2px 8px;
+//                         border-radius: 12px;
+//                         font-size: 0.7em;
+//                         margin-right: 8px;
+//                         font-weight: 500;
+//                         display: inline-block;
+//                     `;
+
+//                     taskNameElement.parentNode.insertBefore(familyBadge, taskNameElement);
+//                     markedCount++;
+//                 }
+//             }
+//         });
+
+//         console.log(`✅ 标记了 ${markedCount} 个家庭任务`);
+
+//     } catch (error) {
+//         console.error('标记家庭任务失败:', error);
+//     }
+// }
 
 // 初始化筛选和排序功能
 function initializeFilterAndSort() {
@@ -1654,24 +1770,29 @@ async function initializeFamilyFeatures() {
 /**
  * 更新家庭状态显示在 Header 右侧
  */
+// index.js - 修改 updateFamilyStatusDisplay 函数
+/**
+ * 更新家庭状态显示在 Header 右侧 - 增强版本
+ */
 async function updateFamilyStatusDisplay() {
-    const familyService = getFamilyService();
     const familyStatusElement = document.getElementById('familyHeaderStatus');
-
     if (!familyStatusElement) {
         console.error('找不到家庭状态元素');
         return;
     }
 
+    const familyService = getFamilyService();
+    const hasJoinedFamily = familyService.hasJoinedFamily && familyService.hasJoinedFamily();
+
     // 移除旧的事件监听器（通过重新创建元素）
     const newElement = familyStatusElement.cloneNode(false);
     familyStatusElement.parentNode.replaceChild(newElement, familyStatusElement);
 
-    if (familyService.hasJoinedFamily()) {
+    if (hasJoinedFamily) {
         const family = familyService.getCurrentFamily();
         const member = familyService.getCurrentMember();
 
-        // 创建已加入家庭的显示 - 美化版本
+        // 创建已加入家庭的显示 - 支持快速退出
         newElement.innerHTML = `
             <div class="family-status-icon">
                 <i class="fas fa-home"></i>
@@ -1679,22 +1800,22 @@ async function updateFamilyStatusDisplay() {
             <div class="family-status-text">
                 ${family.family_name}
             </div>
+            <div class="family-status-dropdown">
+                <i class="fas fa-chevron-down"></i>
+            </div>
         `;
 
         newElement.className = 'family-header-status family-status-joined';
-        newElement.title = `${family.family_name} - ${member.role === 'parent' ? '👨‍👩‍👧‍👦 家长' : '👦 孩子'}\n点击管理家庭`;
+        newElement.title = `${family.family_name} - ${member.role === 'parent' ? '👨‍👩‍👧‍👦 家长' : '👦 孩子'}\n点击查看家庭信息`;
 
-        // 添加悬停效果
-        newElement.addEventListener('mouseenter', function () {
-            this.style.animation = 'glow 1s ease-in-out';
-        });
-
-        newElement.addEventListener('mouseleave', function () {
-            this.style.animation = '';
+        // 添加点击事件 - 显示下拉菜单
+        newElement.addEventListener('click', function(event) {
+            event.stopPropagation();
+            toggleFamilyDropdown(this);
         });
 
     } else {
-        // 创建未加入家庭的显示 - 美化版本
+        // 创建未加入家庭的显示 - 点击跳转到家庭管理
         newElement.innerHTML = `
             <div class="family-status-icon">
                 <i class="fas fa-home"></i>
@@ -1706,14 +1827,116 @@ async function updateFamilyStatusDisplay() {
 
         newElement.className = 'family-header-status family-status-not-joined';
         newElement.title = '点击创建或加入家庭，与家人一起学习！';
+
+        // 添加点击事件 - 跳转到家庭管理
+        newElement.addEventListener('click', function() {
+            window.location.href = 'family-management.html';
+        });
     }
 
-    // 添加点击事件 - 跳转到家庭管理页面
-    newElement.addEventListener('click', function () {
-        window.location.href = 'family-management.html';
-    });
-
     console.log('✅ 家庭状态显示已更新');
+}
+
+/**
+ * 切换家庭下拉菜单
+ */
+function toggleFamilyDropdown(element) {
+    // 移除其他可能打开的下拉菜单
+    const existingDropdown = document.querySelector('.family-dropdown-menu');
+    if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+    }
+
+    const familyService = getFamilyService();
+    const family = familyService.getCurrentFamily();
+    const member = familyService.getCurrentMember();
+
+    // 创建下拉菜单
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'family-dropdown-menu';
+    dropdownMenu.innerHTML = `
+        <div class="dropdown-header">
+            <div class="family-info">
+                <div class="family-name">${family.family_name}</div>
+                <div class="member-info">${member.user_name} (${member.role === 'parent' ? '家长' : '孩子'})</div>
+            </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="goToFamilyManagement()">
+            <i class="fas fa-users"></i>
+            <span>家庭管理</span>
+        </div>
+        <div class="dropdown-item" onclick="quickLeaveFamily()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>退出家庭</span>
+        </div>
+    `;
+
+    // 定位下拉菜单
+    const rect = element.getBoundingClientRect();
+    dropdownMenu.style.position = 'fixed';
+    dropdownMenu.style.top = (rect.bottom + 5) + 'px';
+    dropdownMenu.style.right = (window.innerWidth - rect.right) + 'px';
+
+    document.body.appendChild(dropdownMenu);
+
+    // 点击其他地方关闭下拉菜单
+    const closeDropdown = (e) => {
+        if (!dropdownMenu.contains(e.target) && !element.contains(e.target)) {
+            dropdownMenu.remove();
+            document.removeEventListener('click', closeDropdown);
+        }
+    };
+
+    // 延迟添加事件监听，避免立即触发
+    setTimeout(() => {
+        document.addEventListener('click', closeDropdown);
+    }, 100);
+}
+
+/**
+ * 快速退出家庭
+ */
+async function quickLeaveFamily() {
+    const familyService = getFamilyService();
+    const family = familyService.getCurrentFamily();
+
+    if (!confirm(`确定要退出 "${family.family_name}" 家庭吗？退出后需要重新加入才能访问家庭数据。`)) {
+        return;
+    }
+
+    try {
+        // 显示加载状态
+        const familyStatusElement = document.getElementById('familyHeaderStatus');
+        if (familyStatusElement) {
+            familyStatusElement.classList.add('loading');
+        }
+
+        await familyService.leaveFamily();
+        
+        // 更新显示
+        await updateFamilyStatusDisplay();
+        
+        // 重新加载任务（因为家庭ID变了）
+        await loadTasksFromCloud();
+        
+        showNotification('已成功退出家庭', 'success');
+
+    } catch (error) {
+        console.error('❌ 退出家庭失败:', error);
+        showNotification('退出家庭失败: ' + error.message, 'error');
+        
+        // 恢复显示
+        await updateFamilyStatusDisplay();
+    }
+}
+
+/**
+ * 跳转到家庭管理页面
+ */
+function goToFamilyManagement() {
+    window.location.href = 'family-management.html';
 }
 
 
@@ -1726,85 +1949,16 @@ async function loadFamilyTasksIfJoined() {
     const familyService = getFamilyService();
 
     if (familyService.hasJoinedFamily()) {
+
         await markFamilyTasks();
+
     }
 }
 
-/**
- * 标记家庭任务
- */
-async function markFamilyTasks() {
-    const familyService = getFamilyService();
 
-    if (!familyService.hasJoinedFamily()) {
-        return;
-    }
-
-    try {
-        const today = new Date().toISOString().split('T')[0];
-
-        // 只获取今天的家庭任务
-        const todayFamilyTasks = await familyService.supabaseClient.getTasks(
-            familyService.getCurrentFamily().id,
-            today
-        );
-
-        console.log(`📅 今天(${today})的家庭任务:`, todayFamilyTasks.length);
-
-        const pageTasks = document.querySelectorAll('.task-item');
-        let markedCount = 0;
-
-        // 使用名称匹配标记任务
-        todayFamilyTasks.forEach(cloudTask => {
-            let foundTask = null;
-
-            // 在页面任务中查找匹配
-            pageTasks.forEach(pageTask => {
-                const taskNameElement = pageTask.querySelector('.task-name');
-                const pageTaskName = taskNameElement?.textContent?.trim();
-
-                if (pageTaskName === cloudTask.name) {
-                    foundTask = pageTask;
-                }
-            });
-
-            if (foundTask && !foundTask.classList.contains('family-task')) {
-                foundTask.classList.add('family-task');
-
-                // 添加徽章
-                const taskNameElement = foundTask.querySelector('.task-name');
-                if (taskNameElement && !foundTask.querySelector('.family-badge')) {
-                    const familyBadge = document.createElement('span');
-                    familyBadge.className = 'family-badge';
-                    familyBadge.textContent = '👨‍👩‍👧‍👦 家庭任务';
-
-                    // 确保样式
-                    familyBadge.style.cssText = `
-                        background: #667eea;
-                        color: white;
-                        padding: 2px 8px;
-                        border-radius: 12px;
-                        font-size: 0.7em;
-                        margin-right: 8px;
-                        font-weight: 500;
-                        display: inline-block;
-                    `;
-
-                    taskNameElement.parentNode.insertBefore(familyBadge, taskNameElement);
-                    markedCount++;
-                }
-            }
-        });
-
-        console.log(`✅ 标记了 ${markedCount} 个家庭任务`);
-
-    } catch (error) {
-        console.error('标记家庭任务失败:', error);
-    }
-}
 
 // 监听家庭状态变化
-function setupFamilyEventListeners() {
+function setupFamilyEventListenersold() {
     // 监听家庭创建事件
     window.addEventListener('family:familyCreated', function (event) {
         console.log('家庭创建事件触发', event.detail);
@@ -1833,6 +1987,39 @@ function setupFamilyEventListeners() {
         });
     });
 
+}
+// index.js - 修改 setupFamilyEventListeners 函数
+function setupFamilyEventListeners() {
+    // 监听家庭创建事件
+    window.addEventListener('family:familyCreated', function (event) {
+        console.log('家庭创建事件触发', event.detail);
+        updateFamilyStatusDisplay();
+        loadTasksFromCloud(); // 重新加载任务
+    });
+
+    // 监听家庭加入事件
+    window.addEventListener('family:familyJoined', function (event) {
+        console.log('家庭加入事件触发', event.detail);
+        updateFamilyStatusDisplay();
+        loadTasksFromCloud(); // 重新加载任务
+    });
+
+    // 监听家庭退出事件
+    window.addEventListener('family:familyLeft', function (event) {
+        console.log('家庭退出事件触发', event.detail);
+        updateFamilyStatusDisplay();
+        loadTasksFromCloud(); // 重新加载任务
+        
+        // 移除所有家庭任务标记
+        const familyTasks = document.querySelectorAll('.family-task');
+        familyTasks.forEach(task => {
+            task.classList.remove('family-task');
+            const badge = task.querySelector('.family-badge');
+            if (badge) {
+                badge.remove();
+            }
+        });
+    });
 }
 
 async function initializeAchievementSystem() {
@@ -1872,21 +2059,21 @@ async function checkInitialAchievements() {
 // 在 index.html 的任务完成函数中
 async function checkAchievementsOnTaskCompletion() {
     if (!achievementSystem) return;
-    
+
     try {
         const familyService = getFamilyService();
         if (!familyService.hasJoinedFamily()) return;
-        
+
         const family = familyService.getCurrentFamily();
         const member = familyService.getCurrentMember();
         const tasks = await getDataService().getTasks();
-        
+
         const unlocked = await achievementSystem.checkMemberAchievements(
-            family.id, 
-            member.user_id, 
+            family.id,
+            member.user_id,
             tasks
         );
-        
+
         if (unlocked.length > 0) {
             console.log(`🎉 ${member.user_name} 解锁了 ${unlocked.length} 个成就`);
         }

@@ -1029,3 +1029,31 @@
         font-size: 18px;
     }
 }
+/* 添加到家庭管理页面的CSS中 */
+.recent-user-card.inactive-user {
+    opacity: 0.7;
+    border-left: 4px solid #ff9f43;
+}
+
+.recent-user-card.inactive-user:hover {
+    opacity: 1;
+}
+
+.inactive-badge {
+    background: #ff9f43;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    margin-right: 8px;
+}
+
+.leave-time {
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 4px;
+}
+
+.active-user {
+    border-left: 4px solid #2ed573;
+}

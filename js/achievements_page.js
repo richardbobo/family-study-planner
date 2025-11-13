@@ -2,6 +2,9 @@
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('🎯 成就页面初始化...');
 
+    // 🔧 修复：按正确顺序初始化
+    // 1. 立即绑定返回按钮（最高优先级）
+    bindBackButtonEvent();
     // 显示加载状态
     showLoadingState();
 
@@ -19,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const member = familyService.getCurrentMember();
 
         if (!family || !member) {
-            showErrorState('请先选择家庭或成员');
+            showFamilyRequiredState(); // 显示友好的家庭要求提示
             return;
         }
 
@@ -51,6 +54,116 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
+
+/**
+ * 🔧 新增：独立绑定返回按钮事件
+ * 在页面加载时立即执行，确保返回按钮始终可用
+ */
+function bindBackButtonEvent() {
+    console.log('🔧 绑定返回按钮事件...');
+
+    const backButton = document.getElementById('backButton');
+    if (!backButton) {
+        console.warn('⚠️ 找不到返回按钮，将在DOM就绪后重试');
+        // 如果按钮还不存在，稍后重试
+        setTimeout(bindBackButtonEvent, 100);
+        return;
+    }
+
+    // 移除可能存在的旧事件监听器
+    const newBackButton = backButton.cloneNode(true);
+    backButton.parentNode.replaceChild(newBackButton, backButton);
+
+    // 绑定点击事件
+    newBackButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        console.log('🔙 返回按钮被点击');
+        goBackToHome();
+    });
+
+    // 添加键盘事件支持
+    newBackButton.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            goBackToHome();
+        }
+    });
+
+    // 添加触摸事件支持（移动端）
+    newBackButton.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        this.style.transform = 'scale(0.95)';
+    });
+
+    newBackButton.addEventListener('touchend', function (e) {
+        e.preventDefault();
+        this.style.transform = 'scale(1)';
+        goBackToHome();
+    });
+
+    console.log('✅ 返回按钮事件绑定成功');
+}
+
+/**
+ * 显示家庭要求状态 - 友好的引导界面
+ */
+function showFamilyRequiredState() {
+    const container = document.getElementById('achievementsContainer');
+    if (container) {
+        container.innerHTML = `
+            <div class="family-required-state">
+                <div class="family-required-icon">👨‍👩‍👧‍👦</div>
+                <h2>加入家庭，解锁成就</h2>
+                <p class="family-required-description">
+                    成就系统需要您先创建或加入一个家庭。<br>
+                    与家人一起学习，共同成长，解锁更多精彩成就！
+                </p>
+                <div class="family-required-actions">
+                    <button class="btn-create-family" onclick="goToFamilyManagement('create')">
+                        <i class="fas fa-plus-circle"></i> 创建家庭
+                    </button>
+                    <button class="btn-join-family" onclick="goToFamilyManagement('join')">
+                        <i class="fas fa-user-plus"></i> 加入家庭
+                    </button>
+                    <button class="btn-back-home" onclick="goBackToHome()">
+                        <i class="fas fa-home"></i> 返回首页
+                    </button>
+                </div>
+                <div class="family-features">
+                    <h3>加入家庭后，您可以：</h3>
+                    <ul>
+                        <li>📊 查看学习统计和进度</li>
+                        <li>🎯 解锁各种学习成就</li>
+                        <li>👥 与家人分享学习成果</li>
+                        <li>🏆 获得积分和奖励</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+    hideLoadingState();
+    // 🔧 修复：确保返回按钮在显示家庭要求状态后仍然可用
+    setTimeout(bindBackButtonEvent, 50);
+}
+
+/**
+ * 跳转到家庭管理页面
+ */
+function goToFamilyManagement(action = '') {
+    let url = 'family-management.html';
+    if (action) {
+        url += `?action=${action}`;
+    }
+    window.location.href = url;
+}
+
+/**
+ * 返回首页
+ */
+function goBackToHome() {
+    window.location.href = 'index.html';
+}
+
 /**
  * 显示加载状态
  */
@@ -77,7 +190,7 @@ function hideLoadingState() {
 }
 
 /**
- * 显示错误状态
+ * 显示错误状态 - 改进版本
  */
 function showErrorState(message) {
     const container = document.getElementById('achievementsContainer');
@@ -87,10 +200,18 @@ function showErrorState(message) {
                 <div class="error-icon">⚠️</div>
                 <h3>加载失败</h3>
                 <p>${message}</p>
-                <button class="retry-btn" onclick="window.location.reload()">重新加载</button>
+                <div class="error-actions">
+                    <button class="retry-btn" onclick="window.location.reload()">
+                        <i class="fas fa-redo"></i> 重新加载
+                    </button>
+                    <button class="home-btn" onclick="goBackToHome()">
+                        <i class="fas fa-home"></i> 返回首页
+                    </button>
+                </div>
             </div>
         `;
     }
+    hideLoadingState();
 }
 
 /**
@@ -102,28 +223,28 @@ async function renderAchievements(achievementSystem, stats) {
         console.error('❌ 找不到成就容器');
         return;
     }
-    
+
     try {
         // 获取分组后的成就数据
         const groupedAchievements = achievementSystem.getAllAchievementsWithProgress(stats);
-        
+
         let html = '';
-        
+
         // 渲染统计信息（传入achievementSystem以计算成就统计）
         html += renderStatsSection(stats, achievementSystem);
-        
+
         // 渲染各个成就类别
         for (const [category, achievements] of Object.entries(groupedAchievements)) {
             html += renderAchievementCategory(category, achievements);
         }
-        
+
         container.innerHTML = html;
-        
+
         // 绑定事件监听器
         bindEventListeners();
-        
+
         console.log('✅ 成就渲染完成');
-        
+
     } catch (error) {
         console.error('❌ 渲染成就失败:', error);
         container.innerHTML = `
@@ -206,12 +327,12 @@ function renderAchievementCategory(category, achievements) {
  */
 function renderAchievementCard(achievement) {
     const unlockedClass = achievement.unlocked ? 'unlocked' : 'locked';
-    
+
     // 🔧 修复：已解锁的成就不显示进度条，显示完成日期
-    const progressContent = achievement.unlocked ? 
-        renderUnlockedContent(achievement) : 
+    const progressContent = achievement.unlocked ?
+        renderUnlockedContent(achievement) :
         renderProgressContent(achievement);
-    
+
     return `
         <div class="achievement-card ${unlockedClass}" data-achievement-id="${achievement.id}">
             <div class="achievement-icon">${achievement.icon}</div>
@@ -230,13 +351,13 @@ function renderAchievementCard(achievement) {
  * 渲染已解锁成就的内容（不显示进度条，显示完成日期）
  */
 function renderUnlockedContent(achievement) {
-    const unlockedDate = achievement.unlocked_at ? 
+    const unlockedDate = achievement.unlocked_at ?
         new Date(achievement.unlocked_at).toLocaleDateString('zh-CN', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
         }) : '未知日期';
-    
+
     return `
         <div class="unlocked-info">
             <div class="completion-date">
@@ -263,51 +384,17 @@ function renderProgressContent(achievement) {
 /**
  * 绑定事件监听器
  */
+/**
+ * 绑定事件监听器 - 修复版本
+ */
 function bindEventListeners() {
-    // 返回按钮
-    const backButton = document.getElementById('backButton');
-    if (backButton) {
-        backButton.addEventListener('click', function () {
-            window.location.href = 'index.html';
-        });
-    }
-
     // 成就卡片点击事件
     const achievementCards = document.querySelectorAll('.achievement-card');
     achievementCards.forEach(card => {
         card.addEventListener('click', function () {
             const achievementId = this.getAttribute('data-achievement-id');
             console.log('点击成就:', achievementId);
-            // 这里可以添加成就详情显示逻辑
         });
     });
 }
 
-/**
- * 手动检查成就（用于调试）
- */
-window.checkAchievements = async function () {
-    try {
-        const familyService = getFamilyService();
-        const family = familyService.getCurrentFamily();
-        const member = familyService.getCurrentMember();
-
-        if (!family || !member) {
-            alert('请先选择家庭和成员');
-            return;
-        }
-
-        const achievementSystem = new CloudAchievementSystem();
-        const unlocked = await achievementSystem.checkAndUnlockAchievements(family.id, member.id);
-
-        if (unlocked.length > 0) {
-            alert(`解锁了 ${unlocked.length} 个新成就！`);
-            window.location.reload();
-        } else {
-            alert('暂无新成就可解锁');
-        }
-    } catch (error) {
-        console.error('检查成就失败:', error);
-        alert('检查成就失败: ' + error.message);
-    }
-};

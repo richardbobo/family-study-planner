@@ -691,3 +691,138 @@
 .achievement-card:hover::before {
     transform: scaleX(1);
 }
+/* 成就页面专用样式 */
+.family-required-state {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.family-required-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.family-required-state h2 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.family-required-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.family-required-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.btn-create-family, 
+.btn-join-family, 
+.btn-back-home {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-create-family {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-join-family {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.btn-back-home {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.btn-create-family:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-join-family:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+}
+
+.btn-back-home:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.family-features {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.family-features h3 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.family-features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.family-features li {
+    padding: 8px 0;
+    color: #555;
+    font-size: 1rem;
+}
+
+.family-features li:before {
+    content: "✓ ";
+    color: #2ed573;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* 错误状态改进 */
+.error-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.home-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.home-btn:hover {
+    background: #5a6268;
+}
+
+

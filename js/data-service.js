@@ -24,6 +24,8 @@ class DataService {
 
     init() {
         console.log(`📊 数据服务初始化 - 使用数据源: ${this.currentDataSource}`);
+
+         this.debugFamilyState(); // 初始化前先诊断
         this.isInitialized = true;
         console.log('✅ 数据服务初始化完成 - 纯云端模式');
     }
@@ -133,24 +135,159 @@ class DataService {
     }
 
         // 兼容性方法 - 保持原有接口
-    async getTasks(date = null) {
-        const filters = {};
-        if (date) {
-            filters.date = date;
-        }
+// data-service.js - 修改 getTasks 方法 原来的版本先屏蔽
+// async getTasks(date = null) {
+//     console.group('🔍 [DEBUG] getTasks 方法调用追踪');
+//     console.log('📅 传入日期参数:', date);
+    
+//     const filters = {};
+//     if (date) {
+//         filters.date = date;
+//     }
 
-        // 自动添加家庭筛选
+//     // 自动添加家庭筛选
+//     try {
+//         const familyService = getFamilyService();
+//         console.log('👥 FamilyService 实例:', familyService);
+        
+//         if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+//             console.log('✅ 用户已加入家庭');
+//             const currentFamily = familyService.getCurrentFamily();
+//             const currentMember = familyService.getCurrentMember();
+            
+//             console.log('🏠 当前家庭信息:', currentFamily);
+//             console.log('👤 当前成员信息:', currentMember);
+//             console.log('💾 sessionStorage 中的家庭数据:', sessionStorage.getItem('familyService'));
+            
+//             if (currentFamily && currentFamily.id) {
+//                 filters.family_id = currentFamily.id;
+//                 console.log('🎯 设置家庭筛选条件:', filters.family_id);
+//             } else {
+//                 console.warn('⚠️ 当前家庭信息不完整:', currentFamily);
+//             }
+//         } else {
+//             console.warn('⚠️ 用户未加入家庭或家庭服务方法不可用');
+//             console.log('hasJoinedFamily 方法存在:', !!familyService?.hasJoinedFamily);
+//             if (familyService) {
+//                 console.log('hasJoinedFamily() 结果:', familyService.hasJoinedFamily?.());
+//             }
+//         }
+//     } catch (error) {
+//         console.error('💥 获取家庭信息时发生错误:', error);
+//     }
+    
+//     console.log('🎯 最终筛选条件:', filters);
+//     console.groupEnd();
+    
+//     return this.getAllTasks(filters);
+// }
+// family-service.js - 添加状态验证
+debugFamilyState() {
+    console.group('🔍 [DEBUG] 家庭服务完整状态诊断');
+    
+    console.log('💾 SessionStorage键:', this.storageKey);
+    const rawData = sessionStorage.getItem(this.storageKey);
+    console.log('💾 SessionStorage原始数据:', rawData);
+    
+    if (rawData) {
         try {
-            const familyService = getFamilyService();
-            if (familyService && familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
-                filters.family_id = familyService.getCurrentFamily().id;
-            }
-        } catch (error) {
-            console.warn('⚠️ 获取家庭信息失败，返回所有任务');
+            const parsed = JSON.parse(rawData);
+            console.log('📦 解析后的数据:', parsed);
+            console.log('🔑 关键字段检查:', {
+                familyExists: !!parsed.family,
+                familyId: parsed.family?.id,
+                familyName: parsed.family?.family_name,
+                memberExists: !!parsed.member,
+                memberId: parsed.member?.id,
+                memberName: parsed.member?.user_name
+            });
+        } catch (e) {
+            console.error('❌ 解析失败:', e);
         }
-
-        return this.getAllTasks(filters);
     }
+    
+    console.log('🧠 内存状态:', {
+        isInitialized: this.isInitialized,
+        currentFamily: this.currentFamily,
+        currentMember: this.currentMember
+    });
+    
+    console.log('🔧 方法检查:', {
+        hasJoinedFamily: this.hasJoinedFamily?.(),
+        getCurrentFamily: this.getCurrentFamily?.(),
+        getCurrentMember: this.getCurrentMember?.()
+    });
+    
+    console.groupEnd();
+}
+
+
+// data-service.js - 增强调试版本
+async getTasks(date = null) {
+    console.group('🔍 [DEBUG] DataService.getTasks 详细追踪');
+    
+    const filters = {};
+    if (date) {
+        filters.date = date;
+    }
+
+    try {
+        const familyService = getFamilyService();
+        console.log('👥 家庭服务实例详情:', {
+            constructor: familyService.constructor.name,
+            hasJoinedFamily: familyService.hasJoinedFamily?.call(familyService),
+            getCurrentFamily: familyService.getCurrentFamily?.call(familyService),
+            isInitialized: familyService.isInitialized,
+            storageKey: familyService.storageKey
+        });
+
+        // 直接检查sessionStorage
+        const sessionKey = familyService.storageKey || 'family_session';
+        const rawSession = sessionStorage.getItem(sessionKey);
+        console.log('💾 DataService直接读取sessionStorage:', {
+            key: sessionKey,
+            exists: !!rawSession,
+            data: rawSession
+        });
+
+        if (familyService.hasJoinedFamily && familyService.hasJoinedFamily()) {
+            const currentFamily = familyService.getCurrentFamily();
+            console.log('🏠 getCurrentFamily() 返回:', currentFamily);
+            
+            if (currentFamily && currentFamily.id) {
+                filters.family_id = currentFamily.id;
+                console.log('✅ 成功设置family_id:', filters.family_id);
+            } else {
+                console.error('❌ getCurrentFamily() 返回无效数据:', currentFamily);
+                
+                // 尝试紧急恢复
+                console.log('🆘 尝试紧急恢复家庭状态...');
+                if (rawSession) {
+                    try {
+                        const emergencyData = JSON.parse(rawSession);
+                        if (emergencyData.family && emergencyData.family.id) {
+                            filters.family_id = emergencyData.family.id;
+                            console.log('🚑 紧急恢复family_id:', filters.family_id);
+                        }
+                    } catch (e) {
+                        console.error('❌ 紧急恢复失败:', e);
+                    }
+                }
+            }
+        } else {
+            console.warn('⚠️ hasJoinedFamily() 返回false');
+        }
+        
+    } catch (error) {
+        console.error('💥 获取家庭信息时发生严重错误:', error);
+    }
+    
+    console.log('🎯 最终筛选条件:', filters);
+    console.groupEnd();
+    
+    return this.getAllTasks(filters);
+}
+    
 
     // data-service.js - 修复 createTask 方法
     async createTask(taskData) {

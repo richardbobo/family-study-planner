@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小学生学习计划管理</title>
+    <title>学习计划管理</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/index.css">
 </head>
@@ -15,7 +15,7 @@
             <div class="header-content">
                 <!-- 左侧标题区域 -->
                 <div class="header-left">
-                    <h1><i class="fas fa-graduation-cap"></i> 小学生学习计划管理</h1>
+                    <h1><i class="fas fa-graduation-cap"></i> 学习计划管理</h1>
                     <p class="subtitle">制定计划，坚持打卡，养成良好学习习惯！</p>
                 </div>
 
@@ -68,9 +68,9 @@
                     <h2>学习计划</h2>
                 </div>
                 <div class="plan-buttons">
-                    <a href="ai-create.html" class="btn btn-ai">
+                    <!-- <a href="ai-create.html" class="btn btn-ai">
                         <i class="fas fa-robot"></i> AI智能创建
-                    </a>
+                    </a> -->
                     <a href="batch-add.html" class="btn btn-batch">
                         <i class="fas fa-plus"></i> 批量添加
                     </a>
@@ -108,9 +108,9 @@
                 <div class="plan-list-header">
                     <div class="list-title-section">
                         <h3>我的学习计划</h3>
-                        <button class="btn btn-share">
+                        <!-- <button class="btn btn-share">
                             <i class="fas fa-share"></i> 分享任务
-                        </button>
+                        </button> -->
                     </div>
                     <div class="list-controls">
                         <select id="subjectFilter" class="filter-select">
@@ -211,14 +211,23 @@
             </div>
         </div>
     </div>
-    <script src="js/config.js"></script>
+    <!-- 🎯 标准加载顺序 -->
+    <!-- 1. 第三方库 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- 2. 配置和基础服务 -->
+    <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
+
+    <!-- 3. 业务服务层（按依赖顺序） -->
+    <script src="js/task-service.js"></script> <!-- 🆕 新增 -->
     <script src="js/family-service.js"></script>
     <script src="js/data-service.js"></script>
     <script src="js/family-management.js"></script>
+
+    <!-- 4. 页面特定逻辑 -->
     <script src="js/index.js"></script>
+
     <!-- 确认删除模态框 - 支持批量删除 -->
     <div class="confirm-modal" id="confirmDeleteModal">
         <div class="confirm-modal-content">

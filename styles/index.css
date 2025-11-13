@@ -4040,3 +4040,118 @@ footer {
         font-size: 22px;
     }
 }
+/* 家庭状态下拉菜单样式 */
+.family-header-status {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.family-header-status.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.family-status-dropdown {
+    margin-left: 8px;
+    font-size: 0.8em;
+    color: #6c757d;
+    transition: transform 0.3s ease;
+}
+
+.family-header-status:hover .family-status-dropdown {
+    color: #495057;
+}
+
+.family-dropdown-menu {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 200px;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.family-info .family-name {
+    font-weight: 600;
+    color: #212529;
+    font-size: 14px;
+}
+
+.family-info .member-info {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #f1f3f4;
+    margin: 4px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 20px;
+    margin-right: 8px;
+    color: #6c757d;
+}
+
+.dropdown-item:last-child {
+    color: #dc3545;
+}
+
+.dropdown-item:last-child:hover {
+    background: #fff5f5;
+}
+
+.dropdown-item:last-child i {
+    color: #dc3545;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .family-dropdown-menu {
+        position: fixed !important;
+        top: 60px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+    }
+    
+    .family-status-text {
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

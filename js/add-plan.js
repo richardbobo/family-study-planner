@@ -3,6 +3,7 @@ console.log('add-plan.js 已加载');
 
 let customCategories = JSON.parse(localStorage.getItem('customCategories') || '[]');
 let recentCategories = JSON.parse(localStorage.getItem('recentCategories') || '[]');
+let pointsManager; // 积分管理器实例
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
@@ -10,6 +11,147 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePage();
 });
 
+// 初始化页面
+function initializePage() {
+    console.log('📝 初始化添加计划页面');
+    
+    // 设置当前日期
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById('startDate');
+    if (startDateInput) {
+        startDateInput.value = today;
+    }
+    
+    const dateHighlight = document.querySelector('.date-highlight');
+    if (dateHighlight) {
+        dateHighlight.textContent = today;
+    }
+    
+    // 检查家庭状态
+    checkFamilyStatus();
+
+    // 初始化自定义类别
+    initializeCustomCategories();
+    
+    // 初始化表单事件
+    initializeFormEvents();
+    
+    // 初始化类别功能
+    initializeCategoryFeatures();
+    
+    // 初始化积分管理器
+    initializePointsManager();
+    
+    // 确保自定义类别输入初始状态正确
+    const categorySelect = document.getElementById('categorySelect');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    
+    if (categorySelect && customCategoryInput) {
+        if (categorySelect.value !== 'custom') {
+            customCategoryInput.style.display = 'none';
+        }
+    }
+    
+    console.log('✅ 添加计划页面初始化完成');
+}
+
+// 初始化积分管理器
+function initializePointsManager() {
+    pointsManager = new PointsManager();
+    
+    // 设置默认选中智能积分
+    const autoOption = document.querySelector('.points-option[data-points="auto"]');
+    if (autoOption) {
+        autoOption.classList.add('active');
+    }
+}
+
+// 积分管理器类
+class PointsManager {
+    constructor() {
+        this.selectedOption = 'auto'; // 默认选择智能积分
+        this.initEvents();
+    }
+    
+    initEvents() {
+        // 积分选项点击事件
+        document.querySelectorAll('.points-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                this.selectPointsOption(e.currentTarget);
+            });
+        });
+        
+        // 范围滑块与数字输入框同步
+        const pointsInput = document.getElementById('customPointsValue');
+        const pointsRange = document.getElementById('pointsRange');
+        
+        if (pointsInput && pointsRange) {
+            pointsInput.addEventListener('input', (e) => {
+                pointsRange.value = e.target.value;
+            });
+            
+            pointsRange.addEventListener('input', (e) => {
+                pointsInput.value = e.target.value;
+            });
+        }
+    }
+    
+    selectPointsOption(optionElement) {
+        // 移除所有激活状态
+        document.querySelectorAll('.points-option').forEach(opt => {
+            opt.classList.remove('active');
+        });
+        
+        // 设置当前选项为激活状态
+        optionElement.classList.add('active');
+        
+        const pointsType = optionElement.dataset.points;
+        this.selectedOption = pointsType;
+        
+        // 显示/隐藏自定义积分输入
+        const customInput = document.getElementById('customPointsInput');
+        if (customInput) {
+            if (pointsType === 'custom') {
+                customInput.style.display = 'block';
+                // 聚焦到输入框
+                const pointsValueInput = document.getElementById('customPointsValue');
+                if (pointsValueInput) {
+                    pointsValueInput.focus();
+                }
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+    }
+    
+    // 获取积分值
+    getPointsValue() {
+        switch (this.selectedOption) {
+            case 'auto':
+                return null; // 返回null表示使用自动计算
+            case 'easy':
+                return 2;
+            case 'medium':
+                return 4;
+            case 'hard':
+                return 6;
+            case 'custom':
+                const customValue = document.getElementById('customPointsValue');
+                return customValue ? parseInt(customValue.value) : 3;
+            default:
+                return null;
+        }
+    }
+    
+    // 获取积分设置数据
+    getPointsConfig() {
+        return {
+            type: this.selectedOption,
+            value: this.getPointsValue(),
+            isAuto: this.selectedOption === 'auto'
+        };
+    }
+}
 
 // 初始化表单事件
 function initializeFormEvents() {
@@ -144,11 +286,17 @@ function initializeCategoryFeatures() {
     if (categorySelect) {
         categorySelect.addEventListener('change', function() {
             if (this.value === 'custom') {
-                customCategoryInput.style.display = 'block';
-                newCategoryName.focus();
+                if (customCategoryInput) {
+                    customCategoryInput.style.display = 'block';
+                }
+                if (newCategoryName) {
+                    newCategoryName.focus();
+                }
             } else {
-                customCategoryInput.style.display = 'none';
-                if (this.value) {
+                if (customCategoryInput) {
+                    customCategoryInput.style.display = 'none';
+                }
+                if (this.value && this.value !== 'custom') {
                     addToRecentCategories(this.value);
                 }
             }
@@ -169,60 +317,88 @@ function initializeCategoryFeatures() {
                 handleCustomCategoryInput();
             }
         });
+        
+        // 输入验证
+        newCategoryName.addEventListener('input', function() {
+            if (this.value.length > 10) {
+                this.value = this.value.substring(0, 10);
+                alert('类别名称不能超过10个字符');
+            }
+        });
     }
 
     // 初始化最近使用类别
     updateRecentCategories();
 }
 
-// 修改现有的自定义类别处理函数
+// 处理自定义类别输入
 function handleCustomCategoryInput() {
     const customCategoryInput = document.getElementById('customCategoryInput');
+    const newCategoryNameInput = document.getElementById('newCategoryName');
     const categorySelect = document.getElementById('categorySelect');
     
-    if (!customCategoryInput || !categorySelect) return;
+    if (!customCategoryInput || !newCategoryNameInput || !categorySelect) return;
     
-    const customCategory = customCategoryInput.value.trim();
+    const customCategory = newCategoryNameInput.value ? newCategoryNameInput.value.trim() : '';
+    
     if (customCategory) {
-        // 添加到下拉选项
-        const newOption = document.createElement('option');
-        newOption.value = customCategory;
-        newOption.textContent = customCategory;
-        categorySelect.appendChild(newOption);
+        // 检查是否已存在该类别
+        const existingOptions = Array.from(categorySelect.options).map(opt => opt.value);
+        if (!existingOptions.includes(customCategory)) {
+            // 找到"自定义"选项的位置
+            const customOption = categorySelect.querySelector('option[value="custom"]');
+            
+            // 创建新选项并插入到"自定义"选项之前
+            const newOption = document.createElement('option');
+            newOption.value = customCategory;
+            newOption.textContent = customCategory;
+            
+            if (customOption) {
+                categorySelect.insertBefore(newOption, customOption);
+            } else {
+                categorySelect.appendChild(newOption);
+            }
+            
+            console.log(`✅ 添加新类别: ${customCategory}`);
+        }
+        
+        // 自动选中新添加的类别
         categorySelect.value = customCategory;
         
         // 保存自定义类别
         saveCustomCategory(customCategory);
         
-        // 隐藏自定义输入框
-        customCategoryInput.style.display = 'none';
-        customCategoryInput.value = '';
-    }
-}
-
-// 添加自定义类别
-function addCustomCategory(categoryName) {
-    if (!customCategories.includes(categoryName)) {
-        customCategories.push(categoryName);
-        localStorage.setItem('customCategories', JSON.stringify(customCategories));
+        // 添加到最近使用
+        addToRecentCategories(customCategory);
         
-        const categorySelect = document.getElementById('categorySelect');
-        const customOption = categorySelect.querySelector('option[value="custom"]');
-        const option = document.createElement('option');
-        option.value = categoryName;
-        option.textContent = categoryName;
-        categorySelect.insertBefore(option, customOption);
+        // 隐藏自定义输入框并清空
+        customCategoryInput.style.display = 'none';
+        newCategoryNameInput.value = '';
+        
+    } else {
+        // 如果输入为空，重置选择
+        categorySelect.value = '';
+        customCategoryInput.style.display = 'none';
     }
 }
 
-// 在保存自定义类别时，同时保存到localStorage
+// 保存自定义类别
 function saveCustomCategory(category) {
     try {
-        let categories = JSON.parse(localStorage.getItem('studyCategories') || '[]');
-        if (!categories.includes(category)) {
-            categories.push(category);
-            localStorage.setItem('studyCategories', JSON.stringify(categories));
+        // 同时更新 customCategories 数组
+        if (!customCategories.includes(category)) {
+            customCategories.push(category);
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
         }
+        
+        // 保存到学习类别
+        let studyCategories = JSON.parse(localStorage.getItem('studyCategories') || '[]');
+        if (!studyCategories.includes(category)) {
+            studyCategories.push(category);
+            localStorage.setItem('studyCategories', JSON.stringify(studyCategories));
+        }
+        
+        console.log(`💾 保存类别: ${category}`);
         
         // 同时更新主页面的科目筛选（如果主页面已加载）
         if (window.opener && typeof window.opener.updateSubjectFilterOptions === 'function') {
@@ -232,8 +408,6 @@ function saveCustomCategory(category) {
         console.error('保存自定义类别失败:', e);
     }
 }
-
-
 
 // 添加到最近使用类别
 function addToRecentCategories(categoryName) {
@@ -267,104 +441,40 @@ function updateRecentCategories() {
     });
 }
 
-// 在页面加载时初始化自定义类别到下拉框
+// 初始化自定义类别
 function initializeCustomCategories() {
     const categorySelect = document.getElementById('categorySelect');
+    if (!categorySelect) return;
+    
+    // 找到"自定义"选项的位置
     const customOption = categorySelect.querySelector('option[value="custom"]');
     
+    // 如果没有"自定义"选项，创建一个
+    if (!customOption) {
+        const newCustomOption = document.createElement('option');
+        newCustomOption.value = 'custom';
+        newCustomOption.textContent = '+ 自定义类别';
+        categorySelect.appendChild(newCustomOption);
+    }
+    
+    // 添加自定义类别到下拉框（在"自定义"选项之前）
     customCategories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.insertBefore(option, customOption);
-    });
-}
-
-
-// 修改表单提交处理
-// async function handleFormSubmit(event) {
-//     event.preventDefault();
-    
-//     const saveBtn = event.target.querySelector('.btn-save') || document.querySelector('.btn-save');
-    
-//     // 显示加载状态
-//     showLoadingState(saveBtn, true);
-    
-//     // 获取表单数据
-//     const formData = getFormData();
-    
-//     if (validateForm(formData)) {
-//         try {
-//             // 添加延时动画
-//             setTimeout(async () => {
-//                 const tasks = generateTasks(formData);
-                
-//                 // 使用修复后的保存函数
-//                 const result = await saveAllTasks(tasks);
-                
-//                 showLoadingState(saveBtn, false);
-                
-//                 if (result.errorCount === 0) {
-//                     showSuccessNotification(`学习计划添加成功！共创建 ${result.successCount} 个任务`);
-//                 } else {
-//                     showSuccessNotification(`学习计划部分成功！${result.successCount} 个成功，${result.errorCount} 个失败`);
-//                 }
-                
-//                 // 2秒后跳转回首页
-//                 setTimeout(() => {
-//                     window.location.href = 'index.html';
-//                 }, 2000);
-                
-//             }, 1500);
-//         } catch (error) {
-//             showLoadingState(saveBtn, false);
-//             alert('保存失败: ' + error.message);
-//         }
-//     } else {
-//         showLoadingState(saveBtn, false);
-//     }
-// }
-// 显示/隐藏加载状态
-function showLoadingState(button, isLoading) {
-    if (!button) return;
-    
-    if (isLoading) {
-        button.classList.add('loading');
-        button.disabled = true;
-    } else {
-        button.classList.remove('loading');
-        button.disabled = false;
-    }
-}
-
-// 显示成功通知
-function showSuccessNotification(message) {
-    const existingNotification = document.querySelector('.notification-bubble');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = 'notification-bubble';
-    notification.innerHTML = `
-        <i class="fas fa-check-circle"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
+        // 检查是否已存在
+        const existingOption = categorySelect.querySelector(`option[value="${category}"]`);
+        if (!existingOption) {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            
+            if (customOption) {
+                categorySelect.insertBefore(option, customOption);
+            } else {
+                categorySelect.appendChild(option);
             }
-        }, 300);
-    }, 3000);
+        }
+    });
+    
+    console.log(`✅ 初始化 ${customCategories.length} 个自定义类别`);
 }
 
 // 获取表单数据
@@ -373,15 +483,22 @@ function getFormData() {
     let category = categorySelect.value;
     
     if (category === 'custom') {
-        const newCategoryName = document.getElementById('newCategoryName').value.trim();
+        const newCategoryNameInput = document.getElementById('newCategoryName');
+        const newCategoryName = newCategoryNameInput ? newCategoryNameInput.value.trim() : '';
         if (newCategoryName) {
             category = newCategoryName;
+        } else {
+            // 如果自定义类别为空，返回 null 让验证函数处理
+            category = null;
         }
     }
     
     // 获取重复类型详情
     const recurrenceType = document.querySelector('.recurrence-option.active')?.getAttribute('data-value') || 'once';
     const recurrenceData = getRecurrenceData(recurrenceType);
+    
+    // 获取积分设置
+    const pointsConfig = pointsManager ? pointsManager.getPointsConfig() : { type: 'auto', value: null, isAuto: true };
     
     return {
         startDate: document.getElementById('startDate').value,
@@ -392,7 +509,7 @@ function getFormData() {
         recurrenceData: recurrenceData,
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
-        customPoints: document.getElementById('customPoints').checked
+        pointsConfig: pointsConfig
     };
 }
 
@@ -478,6 +595,12 @@ function generateTasks(data) {
     const tasks = [];
     const baseTaskId = Date.now();
     
+    // 计算积分
+    let points = 5; // 默认积分
+    if (data.pointsConfig && !data.pointsConfig.isAuto) {
+        points = data.pointsConfig.value || 5;
+    }
+    
     const baseTask = {
         name: data.name,
         subject: data.category,
@@ -485,7 +608,7 @@ function generateTasks(data) {
         startTime: data.startTime,
         endTime: data.endTime,
         time: calculateDuration(data.startTime, data.endTime),
-        points: data.customPoints ? 10 : 5,
+        points: points,
         completed: false,
         repeatType: data.recurrenceType
     };
@@ -613,9 +736,8 @@ function calculateDuration(startTime, endTime) {
     return Math.max(diff, 0);
 }
 
-// 修复的 saveAllTasks 函数 - 完整版本
+// 保存所有任务
 async function saveAllTasks(tasks) {
-    
     const dataService = getDataService();
     let successCount = 0;
     let errorCount = 0;
@@ -641,7 +763,7 @@ async function saveAllTasks(tasks) {
                 description: task.description || '',
                 duration: task.time || 30,
                 repeat_type: task.repeatType || 'once',
-                points: task.points || 10,
+                points: task.points || 5,
                 completed: task.completed || false
             };
             
@@ -677,7 +799,25 @@ async function saveAllTasks(tasks) {
         total: tasks.length
     };
 }
-// 🔧 新增：显示家庭要求模态框
+
+// 保存任务到本地存储
+function saveTaskToLocalStorage(task) {
+    try {
+        let localTasks = JSON.parse(localStorage.getItem('localTasks') || '[]');
+        localTasks.push({
+            ...task,
+            id: task.id || Date.now() + Math.random(),
+            localOnly: true
+        });
+        localStorage.setItem('localTasks', JSON.stringify(localTasks));
+        return true;
+    } catch (error) {
+        console.error('保存到本地存储失败:', error);
+        return false;
+    }
+}
+
+// 显示家庭要求模态框
 function showFamilyRequiredModal() {
     // 创建模态框
     const modal = document.createElement('div');
@@ -722,7 +862,7 @@ function showFamilyRequiredModal() {
     });
 }
 
-// 🔧 新增：显示家庭提示
+// 显示家庭提示
 function showFamilyTip() {
     const tipElement = document.createElement('div');
     tipElement.className = 'family-tip';
@@ -747,7 +887,7 @@ function showFamilyTip() {
     });
 }
 
-// 🔧 修改：检查家庭状态
+// 检查家庭状态
 function checkFamilyStatus() {
     const familyService = getFamilyService();
     const hasJoinedFamily = familyService && 
@@ -760,24 +900,7 @@ function checkFamilyStatus() {
     }
 }
 
-// 🔧 修改：在页面初始化时检查家庭状态
-function initializePage() {
-    // 设置当前日期
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').value = today;
-    document.querySelector('.date-highlight').textContent = today;
-    
-    // 检查家庭状态
-    checkFamilyStatus();
-    
-    // 初始化表单事件
-    initializeFormEvents();
-    
-    // 初始化类别功能
-    initializeCategoryFeatures();
-}
-
-// 🔧 修改：表单提交时检查家庭
+// 表单提交处理
 async function handleFormSubmit(event) {
     event.preventDefault();
     
@@ -828,4 +951,47 @@ async function handleFormSubmit(event) {
     } else {
         showLoadingState(saveBtn, false);
     }
+}
+
+// 显示/隐藏加载状态
+function showLoadingState(button, isLoading) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+    }
+}
+
+// 显示成功通知
+function showSuccessNotification(message) {
+    const existingNotification = document.querySelector('.notification-bubble');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification-bubble';
+    notification.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 3000);
 }

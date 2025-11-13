@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学习成就 - 小学生学习计划管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/achievements.css">
 </head>
+
 <body>
     <div class="achievements-page">
         <!-- 页面头部 -->
@@ -13,9 +16,9 @@
             <div class="header-content">
                 <button id="backButton" class="back-button">← 返回</button>
                 <h1>学习成就</h1>
-                <div class="header-actions">
+                <!-- <div class="header-actions">
                     <button id="refreshButton" class="refresh-btn">🔄</button>
-                </div>
+                </div> -->
             </div>
         </header>
 
@@ -37,6 +40,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
+    <script src="js/task-service.js"></script> <!-- 🆕 新增 -->
     <script src="js/family-service.js"></script>
     <script src="js/achievements.js"></script>
     <script src="js/achievements_page.js"></script>
@@ -47,4 +51,5 @@
         console.log('成就容器:', document.getElementById('achievementsContainer'));
     </script>
 </body>
+
 </html>

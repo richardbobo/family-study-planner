@@ -189,26 +189,81 @@
                 </div>
 
                 <!-- 积分设置 -->
-                <div class="form-section">
-                    <h3 class="section-title">积分设置（可选）</h3>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="customPoints">
-                        <label for="customPoints" class="checkbox-label">启用自定义积分</label>
-                    </div>
-                    <p class="section-description">
-                        为任务设置固定积分数值，替代系统默认计算规则
-                    </p>
-
-                    <div class="points-rules">
-                        <strong>系统默认规则</strong>
-                        <ul>
-                            <li>基础积分：1星</li>
-                            <li>时间奖励：30分钟+1星，60分钟+2星</li>
-                            <li>早起加成：6:00-8:00 ×1.2倍</li>
-                            <li>周末加成：×1.5倍</li>
-                        </ul>
-                    </div>
-                </div>
+<!-- 替换原有的积分设置部分 -->
+<div class="form-section">
+    <h3 class="section-title">积分难度 <span class="optional">(可选)</span></h3>
+    
+    <div class="points-presets">
+        <div class="points-option" data-points="auto">
+            <div class="option-icon">🤖</div>
+            <div class="option-content">
+                <div class="option-title">智能积分</div>
+                <div class="option-desc">系统根据时长自动计算</div>
+            </div>
+            <div class="option-check">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        
+        <div class="points-option" data-points="easy">
+            <div class="option-icon">😊</div>
+            <div class="option-content">
+                <div class="option-title">轻松任务</div>
+                <div class="option-desc">1-2 星 · 简单易完成</div>
+            </div>
+            <div class="option-check">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        
+        <div class="points-option" data-points="medium">
+            <div class="option-icon">💪</div>
+            <div class="option-content">
+                <div class="option-title">标准任务</div>
+                <div class="option-desc">3-4 星 · 适中挑战</div>
+            </div>
+            <div class="option-check">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        
+        <div class="points-option" data-points="hard">
+            <div class="option-icon">🔥</div>
+            <div class="option-content">
+                <div class="option-title">挑战任务</div>
+                <div class="option-desc">5 星 · 高难度奖励</div>
+            </div>
+            <div class="option-check">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        
+        <div class="points-option" data-points="custom">
+            <div class="option-icon">⚙️</div>
+            <div class="option-content">
+                <div class="option-title">自定义积分</div>
+                <div class="option-desc">手动设置具体数值</div>
+            </div>
+            <div class="option-check">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 自定义积分输入框（默认隐藏） -->
+    <div class="custom-points-input" id="customPointsInput" style="display: none;">
+        <div class="points-input-group">
+            <label>积分数值</label>
+            <input type="number" class="form-input" id="customPointsValue" min="1" max="10" step="1" value="3">
+            <span class="points-unit">星</span>
+        </div>
+        <div class="points-range">
+            <span>1</span>
+            <input type="range" id="pointsRange" min="1" max="10" value="3">
+            <span>10</span>
+        </div>
+    </div>
+</div>
 
                 <!-- 表单操作 -->
                 <div class="form-actions">
@@ -222,6 +277,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
+     <script src="js/task-service.js"></script>             <!-- 🆕 新增 -->
     <script src="js/data-service.js"></script>
     <script src="js/family-service.js"></script>
     <!-- 其他原有脚本 -->
