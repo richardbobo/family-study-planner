@@ -651,6 +651,136 @@ async initialize(familyId, userId) {
         return grouped;
     }
     
+/**
+ * 成就定义管理方法
+ */
+
+/**
+ * 添加成就定义到数据库
+ */
+async addAchievementDefinition(achievement) {
+    try {
+        console.log('➕ 添加成就定义:', achievement);
+        
+        const { data, error } = await this.supabaseClient
+            .from('achievements')
+            .insert([achievement])
+            .select();
+
+        if (error) {
+            console.error('❌ 添加成就定义失败:', error);
+            throw error;
+        }
+
+        // 更新本地缓存
+        this.achievementDefinitions[achievement.id] = achievement;
+        
+        console.log('✅ 成就定义添加成功');
+        return data[0];
+        
+    } catch (error) {
+        console.error('❌ 添加成就定义异常:', error);
+        throw error;
+    }
+}
+
+/**
+ * 更新成就定义
+ */
+async updateAchievementDefinition(originalId, achievement) {
+    try {
+        console.log('✏️ 更新成就定义:', { originalId, newId: achievement.id });
+        
+        const { data, error } = await this.supabaseClient
+            .from('achievements')
+            .update(achievement)
+            .eq('id', originalId)
+            .select();
+
+        if (error) {
+            console.error('❌ 更新成就定义失败:', error);
+            throw error;
+        }
+
+        // 更新本地缓存
+        delete this.achievementDefinitions[originalId];
+        this.achievementDefinitions[achievement.id] = achievement;
+        
+        console.log('✅ 成就定义更新成功');
+        return data[0];
+        
+    } catch (error) {
+        console.error('❌ 更新成就定义异常:', error);
+        throw error;
+    }
+}
+
+/**
+ * 删除成就定义
+ */
+async deleteAchievementDefinition(achievementId) {
+    try {
+        console.log('🗑️ 删除成就定义:', achievementId);
+        
+        const { error } = await this.supabaseClient
+            .from('achievements')
+            .delete()
+            .eq('id', achievementId);
+
+        if (error) {
+            console.error('❌ 删除成就定义失败:', error);
+            throw error;
+        }
+
+        // 更新本地缓存
+        delete this.achievementDefinitions[achievementId];
+        
+        console.log('✅ 成就定义删除成功');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ 删除成就定义异常:', error);
+        throw error;
+    }
+}
+
+/**
+ * 从数据库加载所有成就定义
+ */
+async loadAchievementDefinitions() {
+    try {
+        console.log('📥 从数据库加载成就定义...');
+        
+        const { data, error } = await this.supabaseClient
+            .from('achievements')
+            .select('*');
+
+        if (error) {
+            console.error('❌ 加载成就定义失败:', error);
+            throw error;
+        }
+
+        // 转换为本地缓存格式
+        const definitions = {};
+        data.forEach(achievement => {
+            definitions[achievement.id] = achievement;
+        });
+        
+        this.achievementDefinitions = definitions;
+        
+        console.log(`✅ 从数据库加载了 ${Object.keys(definitions).length} 个成就定义`);
+        return definitions;
+        
+    } catch (error) {
+        console.error('❌ 加载成就定义异常:', error);
+        // 如果数据库加载失败，使用默认定义
+        console.log('⚠️ 使用默认成就定义');
+        return this.initializeAchievements();
+    }
+}
+
+
+
     /**
      * 强制刷新用户数据
      */

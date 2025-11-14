@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学习成就 - 小学生学习计划管理系统</title>
+    <title>学习成就 - 学习计划管理系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/achievements.css">
 </head>
@@ -35,7 +35,177 @@
             <p>加载中...</p>
         </div>
     </div>
+<!-- 成就管理列表模态框 -->
+<div class="modal" id="achievementManagerModal">
+    <div class="modal-content achievement-manager-modal">
+        <div class="modal-header">
+            <h3>成就定义管理</h3>
+            <button class="close-btn" onclick="closeAchievementManager()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="manager-actions">
+                <button class="btn btn-primary" onclick="openAddAchievementForm()">
+                    <i class="fas fa-plus"></i> 添加成就
+                </button>
+            </div>
+            
+            <div class="achievements-list" id="achievementsList">
+                <!-- 成就列表会在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- 添加/编辑成就表单模态框 -->
+<!-- 添加/编辑成就表单模态框 -->
+<div class="modal" id="achievementFormModal">
+    <div class="modal-content achievement-form-modal">
+        <div class="modal-header">
+            <h3 id="achievementFormTitle">添加成就</h3>
+            <button class="close-btn" onclick="closeAchievementForm()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="achievementForm">
+                <input type="hidden" id="achievementId">
+                
+                <!-- 基础信息 -->
+                <div class="form-section">
+                    <h4>基础信息</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">成就名称 *</label>
+                        <input type="text" id="achievementName" class="form-input" required 
+                               placeholder="例如: 学习新星">
+                        <div class="field-help">给成就起一个吸引人的名字</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">成就描述 *</label>
+                        <textarea id="achievementDescription" class="form-textarea" 
+                                  placeholder="例如: 累计学习1小时即可获得此成就" required></textarea>
+                        <div class="field-help">简单描述如何获得这个成就</div>
+                    </div>
+                </div>
+
+                <!-- 成就条件 -->
+                <div class="form-section">
+                    <h4>成就条件</h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">成就类型 *</label>
+                            <select id="achievementType" class="form-select" required>
+                                <option value="">请选择类型</option>
+                                <option value="study_time">📚 学习时长</option>
+                                <option value="total_tasks">✅ 完成任务数</option>
+                                <option value="streak">🔥 连续打卡</option>
+                                <option value="subject_tasks">📖 科目任务</option>
+                            </select>
+                            <div class="field-help">选择成就的达成条件类型</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">要求数值 *</label>
+                            <input type="number" id="achievementRequirement" class="form-input" 
+                                   required min="1" placeholder="例如: 60">
+                            <div class="field-help" id="requirementHelp">
+                                <!-- 动态提示文本 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="subjectField" style="display: none;">
+                        <label class="form-label">选择科目 *</label>
+                        <select id="achievementSubject" class="form-select">
+                            <option value="数学">📐 数学</option>
+                            <option value="语文">📝 语文</option>
+                            <option value="英语">🔤 英语</option>
+                            <option value="科学">🔬 科学</option>
+                            <option value="美术">🎨 美术</option>
+                            <option value="音乐">🎵 音乐</option>
+                            <option value="体育">⚽ 体育</option>
+                        </select>
+                        <div class="field-help">选择需要完成任务的科目</div>
+                    </div>
+                </div>
+
+                <!-- 奖励设置 -->
+                <div class="form-section">
+                    <h4>奖励设置</h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">奖励积分 *</label>
+                            <input type="number" id="achievementRewardPoints" class="form-input" 
+                                   required min="1" value="10" placeholder="例如: 10">
+                            <div class="field-help">成就解锁后奖励的积分数量</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">成就图标 *</label>
+                            <input type="text" id="achievementIcon" class="form-input" 
+                                   required placeholder="点击下方选择图标" readonly>
+                            <div class="field-help">选择代表成就的图标</div>
+                            
+                            <!-- 图标选择器 -->
+                            <div class="icon-selector" id="iconSelector">
+                                <div class="icon-option" data-icon="⭐">⭐</div>
+                                <div class="icon-option" data-icon="🏆">🏆</div>
+                                <div class="icon-option" data-icon="👑">👑</div>
+                                <div class="icon-option" data-icon="🔥">🔥</div>
+                                <div class="icon-option" data-icon="💎">💎</div>
+                                <div class="icon-option" data-icon="🚀">🚀</div>
+                                <div class="icon-option" data-icon="🎯">🎯</div>
+                                <div class="icon-option" data-icon="✅">✅</div>
+                                <div class="icon-option" data-icon="🏅">🏅</div>
+                                <div class="icon-option" data-icon="📚">📚</div>
+                                <div class="icon-option" data-icon="📐">📐</div>
+                                <div class="icon-option" data-icon="🔬">🔬</div>
+                                <div class="icon-option" data-icon="🎨">🎨</div>
+                                <div class="icon-option" data-icon="🎵">🎵</div>
+                                <div class="icon-option" data-icon="⚽">⚽</div>
+                                <div class="icon-option" data-icon="🌟">🌟</div>
+                                <div class="icon-option" data-icon="💡">💡</div>
+                                <div class="icon-option" data-icon="🎉">🎉</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分类设置 -->
+                <div class="form-section">
+                    <h4>分类设置</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">成就类别 *</label>
+                        <select id="achievementCategory" class="form-select" required>
+                            <option value="学习时长">📚 学习时长</option>
+                            <option value="连续打卡">🔥 连续打卡</option>
+                            <option value="任务完成">✅ 任务完成</option>
+                            <option value="科目专项">📖 科目专项</option>
+                            <option value="学习习惯">💪 学习习惯</option>
+                            <option value="特殊成就">🎊 特殊成就</option>
+                        </select>
+                        <div class="field-help">选择成就所属的分类，用于页面分组显示</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">成就ID *</label>
+                        <input type="text" id="achievementIdInput" class="form-input" required 
+                               placeholder="例如: study_time_1h">
+                        <div class="field-help">唯一的英文标识符，用于系统识别（只能使用英文、数字和下划线）</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-cancel" onclick="closeAchievementForm()">取消</button>
+            <button type="button" class="btn btn-confirm" onclick="saveAchievement()">
+                <i class="fas fa-check"></i> 保存成就
+            </button>
+        </div>
+    </div>
+</div>
     <!-- JavaScript 文件 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0"></script>
     <script src="js/config.js"></script>
@@ -45,11 +215,8 @@
     <script src="js/achievements.js"></script>
     <script src="js/achievements_page.js"></script>
 
-    <script>
-        // 简单的测试代码
-        console.log('✅ 成就页面加载完成');
-        console.log('成就容器:', document.getElementById('achievementsContainer'));
-    </script>
+
 </body>
 
 </html>
+
