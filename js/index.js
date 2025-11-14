@@ -22,18 +22,29 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeFilterAndSort(); // 这个现在会动态更新科目选项
     initializeConfirmDeleteModal(); // 新增：初始化确认删除模态框  
 
+
     renderWeekView();
     // 🔄 修改：使用新的任务加载方式
     loadTasksFromCloud();
 
     renderTaskList();
-    updateStats();
+    // 确保统计信息初始化
+    setTimeout(() => {
+        updateStats();
+    }, 2000);
     initializeFamilyFeatures();
     setupFamilyEventListeners();
     setupRefreshButton();
     timerManager = new TimerManager();
     console.log('页面初始化完成');
-
+    // 初始化成就系统
+    setTimeout(() => {
+        initializeAchievementSystem();
+    // 成就系统初始化后再次更新统计
+        setTimeout(() => {
+            updateStats();
+        }, 3000);
+    }, 2000); // 延迟2秒确保其他服务已初始化
 
 });
 
@@ -200,15 +211,15 @@ class TimerManager {
     }
 
     // 更新计时器显示 - 只保留一个显示区域
-     // 更新计时器显示
+    // 更新计时器显示
     updateTimerDisplay(totalSeconds = 0) {
         const timerBadge = document.getElementById('timerBadge');
-        
+
         if (timerBadge) {
             if (this.currentTaskId) {
                 const task = tasks.find(t => t.id == this.currentTaskId);
                 const timeText = this.getFormattedTimeWithSeconds(totalSeconds);
-                
+
                 timerBadge.innerHTML = `
                     <div class="timer-container ${this.isRunning ? 'timer-running' : 'timer-paused'}">
                         <div class="timer-header">
@@ -244,7 +255,7 @@ class TimerManager {
                 timerBadge.style.display = 'none';
             }
         }
-        
+
         // 更新任务列表中的计时按钮状态
         this.updateTaskTimerButtons();
     }
@@ -254,7 +265,7 @@ class TimerManager {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
-        
+
         if (hours > 0) {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         } else {
@@ -268,7 +279,7 @@ class TimerManager {
         timerButtons.forEach(button => {
             const taskItem = button.closest('.task-item');
             const taskId = taskItem?.getAttribute('data-task-id');
-            
+
             if (taskId == this.currentTaskId) {
                 if (this.isRunning) {
                     button.innerHTML = '<i class="fas fa-pause"></i> 计时中';
@@ -463,29 +474,29 @@ class TimerManager {
             const saved = localStorage.getItem('currentTimer');
             if (saved) {
                 const timerState = JSON.parse(saved);
-                
+
                 const lastUpdate = new Date(timerState.lastUpdate);
                 const now = new Date();
                 const hoursDiff = (now - lastUpdate) / (1000 * 60 * 60);
-                
+
                 if (hoursDiff < 24) {
                     this.currentTaskId = timerState.taskId;
                     this.startTime = new Date(timerState.startTime);
                     this.elapsedTime = timerState.elapsedTime;
                     this.isRunning = timerState.isRunning;
-                    
+
                     // 恢复暂停状态
                     if (timerState.pauseStartTime) {
                         this.pauseStartTime = new Date(timerState.pauseStartTime);
                     }
-                    
+
                     if (this.isRunning) {
                         // 重新计算经过的时间
                         const currentElapsed = Math.floor((now - this.startTime) / (1000 * 60));
                         this.elapsedTime = currentElapsed;
                         this.startTime = new Date(now - currentElapsed * 60 * 1000);
                     }
-                    
+
                     const currentTotalSeconds = this.elapsedTime * 60;
                     this.updateTimerDisplay(currentTotalSeconds);
                 } else {
@@ -506,7 +517,7 @@ class TimerManager {
 // 🔄 修改：从云端加载任务
 async function loadTasksFromCloud() {
 
-    console.group('🔍 [DEBUG] 主页任务加载前状态检查');
+    // console.group('🔍 [DEBUG] 主页任务加载前状态检查');
 
     // 检查1: 直接读取sessionStorage
     const sessionData = sessionStorage.getItem('family_session');
@@ -557,7 +568,8 @@ async function loadTasksFromCloud() {
 
         renderWeekView();
         renderTaskList();
-        updateStats();
+     // 🔥 修改：确保统计信息更新，包括成就数量
+        await updateStats(); // 改为异步调用
 
     } catch (error) {
         console.error('❌ 从云端加载任务失败:', error);
@@ -566,7 +578,7 @@ async function loadTasksFromCloud() {
         tasks = [];
         renderWeekView();
         renderTaskList();
-        updateStats(); // 错误情况下也更新统计
+        await updateStats(); // 错误情况下也更新统计
     } finally {
         showLoading(false);
     }
@@ -655,6 +667,25 @@ async function confirmQuickComplete() {
         isSubmittingCompletion = false;
         updateConfirmButton(false);
     }
+// 监听成就解锁事件
+window.addEventListener('achievement:unlocked', function(event) {
+    console.log('🎉 收到成就解锁事件:', event.detail);
+    
+    // 显示成就解锁通知
+    const achievement = event.detail.achievement;
+    showNotification(
+        `🎉 成就解锁！${achievement.icon} ${achievement.name}`,
+        'success'
+    );
+    
+    // 更新成就页面显示
+    if (window.updateAchievementsDisplay) {
+        setTimeout(() => {
+            window.updateAchievementsDisplay();
+        }, 1000);
+    }
+});
+
 }
 
 // 🔄 修改：确认删除任务 - 适配云端
@@ -1484,8 +1515,8 @@ function getSubjectIcon(subject) {
 }
 
 
-// 打开模态框 - 修正版本
-function openModal(taskId) {
+// 打开模态框显示任务 - 修正版本
+async function openModal(taskId) {
     const task = tasks.find(t => t.id == taskId);
     if (!task) return;
 
@@ -1536,51 +1567,147 @@ function openModal(taskId) {
         <div class="modal-body-content">
     `;
 
-    // 显示具体内容（如果有的话）
-    if (task.detailedContent) {
+    // 显示任务描述（无论是否完成都显示）
+    if (task.description) {
         modalHTML += `
             <div class="detail-item full-width">
-                <div class="detail-label">学习内容：</div>
+                <div class="detail-label">任务描述：</div>
                 <div class="detail-value">
-                    <div class="task-content-box">
-                        <pre class="content-text">${escapeHtml(task.detailedContent)}</pre>
+                    <div class="task-description-box">
+                        <p class="description-text">${escapeHtml(task.description)}</p>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    // 原有的任务信息
+    // 如果任务已完成，从 completion_records 表获取详细信息
+    let completionRecord = null;
+    if (task.completed) {
+        try {
+            // 从 completion_records 表获取完成记录
+            completionRecord = await getCompletionRecord(taskId);
+        } catch (error) {
+            console.error('获取完成记录失败:', error);
+        }
+
+        // 显示学习心得（从 completion_records 表的 notes 字段）
+        if (completionRecord && completionRecord.notes) {
+            modalHTML += `
+                <div class="detail-item full-width">
+                    <div class="detail-label">
+                        <i class="fas fa-sticky-note" style="color: #667eea;"></i>
+                        学习心得：
+                    </div>
+                    <div class="detail-value">
+                        <div class="completion-note-box">
+                            <p class="note-text">${escapeHtml(completionRecord.notes)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示实际学习时长（优先使用 completion_records 的 actual_duration）
+        const actualDuration = completionRecord ? completionRecord.actual_duration : (task.actual_duration || task.actualDuration);
+        if (actualDuration) {
+            const hours = Math.floor(actualDuration / 60);
+            const minutes = actualDuration % 60;
+            const durationText = hours > 0 ?
+                `${hours}小时${minutes}分钟` :
+                `${minutes}分钟`;
+
+            modalHTML += `
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-clock" style="color: #2ed573;"></i>
+                        实际耗时：
+                    </div>
+                    <div class="detail-value" style="color: #2ed573; font-weight: 500;">
+                        ${durationText}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示完成时间（优先使用 completion_records 的 completed_at）
+        const completionTime = completionRecord ? completionRecord.completed_at : (task.completed_at || task.completionTime);
+        if (completionTime) {
+            const completionDate = new Date(completionTime);
+            const timeString = completionDate.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateString = completionDate.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            modalHTML += `
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-calendar-check" style="color: #ff9f43;"></i>
+                        完成时间：
+                    </div>
+                    <div class="detail-value">
+                        ${dateString} ${timeString}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示实际获得积分（优先使用 completion_records 的 earned_points）
+        const earnedPoints = completionRecord ? completionRecord.earned_points : (task.earned_points || task.points);
+        if (earnedPoints) {
+            modalHTML += `
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-star" style="color: #ffd700;"></i>
+                        获得积分：
+                    </div>
+                    <div class="detail-value" style="color: #ff9f43; font-weight: 500;">
+                        ${earnedPoints} 分
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // 原有的任务基本信息
     modalHTML += `
             <div class="detail-item">
-                <div class="detail-label">重复类型:</div>
+                <div class="detail-label">
+                    <i class="fas fa-redo" style="color: #667eea;"></i>
+                    重复类型：
+                </div>
                 <div class="detail-value">${getRepeatTypeText(task.repeat_type)}</div>
             </div>
             
             <div class="detail-item">
-                <div class="detail-label">计划时间:</div>
+                <div class="detail-label">
+                    <i class="fas fa-clock" style="color: #667eea;"></i>
+                    计划时间：
+                </div>
                 <div class="detail-value">${task.startTime || '19:00'} - ${task.endTime || '20:00'}</div>
             </div>
             
             <div class="detail-item">
-                <div class="detail-label">任务积分:</div>
+                <div class="detail-label">
+                    <i class="fas fa-star" style="color: #667eea;"></i>
+                    计划积分：
+                </div>
                 <div class="detail-value">${task.points || 10} 分</div>
             </div>
             
             <div class="detail-item">
-                <div class="detail-label">预计时长:</div>
+                <div class="detail-label">
+                    <i class="fas fa-hourglass-half" style="color: #667eea;"></i>
+                    预计时长：
+                </div>
                 <div class="detail-value">${task.duration ? `${Math.floor(task.duration / 60)}小时${task.duration % 60}分钟` : '未设置'}</div>
             </div>
     `;
-
-    if (task.description && !task.detailedContent) {
-        modalHTML += `
-            <div class="detail-item">
-                <div class="detail-label">任务描述:</div>
-                <div class="detail-value">${task.description}</div>
-            </div>
-        `;
-    }
 
     modalHTML += `</div>`;
 
@@ -1605,6 +1732,29 @@ function openModal(taskId) {
     }
 
     modal.style.display = 'flex';
+}
+
+// 新增：从 completion_records 表获取完成记录
+async function getCompletionRecord(taskId) {
+    try {
+        const dataService = getDataService();
+
+        // 假设数据服务有获取完成记录的方法
+        if (dataService.getCompletionRecord) {
+            return await dataService.getCompletionRecord(taskId);
+        }
+
+        // 如果没有专门的方法，可以尝试从现有数据中获取
+        // 这里需要根据您的实际数据服务实现来调整
+        console.log('尝试从 completion_records 表获取记录，任务ID:', taskId);
+
+        // 临时返回 null，需要您根据实际的数据服务实现来完善
+        return null;
+
+    } catch (error) {
+        console.error('获取完成记录失败:', error);
+        return null;
+    }
 }
 
 // HTML转义函数
@@ -1691,7 +1841,7 @@ function recordCompletionHistory(task, totalMinutes, completionNote) {
 }
 
 // 更新统计信息
-function updateStats() {
+async function updateStats() {
     console.log('📊 开始更新统计信息...');
 
     // 计算统计信息
@@ -1718,18 +1868,39 @@ function updateStats() {
     // 计算连续打卡天数
     const streakDays = calculateStreakDays();
 
+        // 🔥 新增：获取成就数量
+    const achievementCount = await getAchievementCount();
+
     console.log('统计计算结果:', {
         completedTasks,
         totalMinutes,
         totalPoints,
-        streakDays
+        streakDays,
+        achievementCount
     });
+    
 
     // 更新界面元素 - 使用正确的ID
     updateStatElement('completedTasks', completedTasks);
     updateStatElement('totalMinutes', totalMinutes); // 修正：使用正确的ID
     updateStatElement('streakDays', streakDays);
     updateStatElement('rewardPoints', totalPoints); // 修正：使用正确的ID
+    // 🔥 新增：更新成就数量
+    updateStatElement('achievementCount', achievementCount);
+}
+
+// 🎯 最简单的成就数量获取方案
+async function getAchievementCount() {
+    // 如果成就系统已初始化且有数据，直接使用
+    if (achievementSystem && achievementSystem.isInitialized && achievementSystem.userAchievements) {
+        const unlockedCount = achievementSystem.userAchievements.length;
+        console.log(`🎯 从成就系统获取 ${unlockedCount} 个已解锁成就`);
+        return unlockedCount;
+    }
+    
+    // 如果成就系统未初始化，返回0（不会阻塞页面）
+    console.log('成就系统未初始化，返回默认值 0');
+    return 0;
 }
 
 // 新增：计算连续打卡天数
@@ -2491,62 +2662,130 @@ function setupFamilyEventListeners() {
     });
 }
 
+
+// 在主页面中的成就系统初始化函数 - 修复版本
 async function initializeAchievementSystem() {
     try {
         achievementSystem = new CloudAchievementSystem();
-
-        // 验证用户登录
-        const user = getDataService().getCurrentUser();
-        if (!user) {
-            console.warn('用户未登录，成就系统暂不可用');
+        
+        const familyService = getFamilyService();
+        
+        // 等待家庭服务完全初始化
+        if (!familyService.isInitialized) {
+            console.log('🔄 家庭服务未初始化，等待...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 手动尝试恢复
+            await familyService.restoreFromSessionStorage();
+        }
+        
+        if (!familyService.hasJoinedFamily()) {
+            console.warn('用户未加入家庭，成就系统暂不可用');
             return;
         }
 
-        console.log('纯云端成就系统初始化完成');
+        const family = familyService.getCurrentFamily();
+        const member = familyService.getCurrentMember();
+        
+        // 检查必要的ID是否存在
+        if (!family || !family.id) {
+            console.error('❌ 家庭信息不完整:', family);
+            return;
+        }
+        
+        if (!member || !member.id) {
+            console.error('❌ 成员信息不完整:', member);
+            return;
+        }
+        
+        console.log('🔄 初始化成就系统...', {
+            家庭: family.family_name,
+            用户: member.user_name,
+            家庭ID: family.id,
+            用户ID: member.id
+        });
 
-        // 初始检查成就
-        await checkInitialAchievements();
+        const success = await achievementSystem.initialize(family.id, member.id);
+        
+        if (success) {
+            console.log('✅ 成就系统初始化完成');
+            
+            // 初始检查一次成就
+            setTimeout(async () => {
+                try {
+                    const unlocked = await achievementSystem.checkAndUnlockAchievements(
+                        family.id, 
+                        member.id
+                    );
+                    if (unlocked.length > 0) {
+                        console.log(`🎉 初始检查解锁了 ${unlocked.length} 个成就`);
+                    }
+                } catch (error) {
+                    console.error('初始成就检查失败:', error);
+                }
+            }, 3000);
+        } else {
+            console.error('❌ 成就系统初始化失败');
+        }
 
     } catch (error) {
         console.error('成就系统初始化失败:', error);
     }
 }
 
-// 初始成就检查
-async function checkInitialAchievements() {
-    if (!achievementSystem) return;
+// async function checkInitialAchievements() {
+//     if (!achievementSystem) return;
 
-    try {
-        const tasks = await getDataService().getTasks();
-        await achievementSystem.checkAchievements(tasks);
-    } catch (error) {
-        console.error('初始成就检查失败:', error);
-    }
-}
+//     try {
+//         const tasks = await getDataService().getTasks();
+//         await achievementSystem.checkAchievements(tasks);
+//     } catch (error) {
+//         console.error('初始成就检查失败:', error);
+//     }
+// }
 
 // 在任务完成时检查成就
 // 在 index.html 的任务完成函数中
+// 在主页面逻辑中添加成就检查
 async function checkAchievementsOnTaskCompletion() {
-    if (!achievementSystem) return;
-
     try {
         const familyService = getFamilyService();
-        if (!familyService.hasJoinedFamily()) return;
+        if (!familyService.hasJoinedFamily()) {
+            console.log('未加入家庭，跳过成就检查');
+            return;
+        }
 
         const family = familyService.getCurrentFamily();
         const member = familyService.getCurrentMember();
-        const tasks = await getDataService().getTasks();
+        
+        console.log('🔍 任务完成，检查成就...', {
+            家庭ID: family.id,
+            用户ID: member.id
+        });
 
-        const unlocked = await achievementSystem.checkMemberAchievements(
+        if (!achievementSystem) {
+                        // 即使没有成就系统，也要更新统计
+            setTimeout(updateStats, 1000);
+            console.log('成就系统未初始化，跳过检查');
+            return;
+        }
+
+        const unlocked = await achievementSystem.checkAndUnlockAchievements(
             family.id,
-            member.user_id,
-            tasks
+            member.id
         );
 
         if (unlocked.length > 0) {
             console.log(`🎉 ${member.user_name} 解锁了 ${unlocked.length} 个成就`);
+              // 立即更新成就统计
+            await updateStats();
+            // 如果有新成就解锁，更新成就页面显示
+            if (window.updateAchievementsDisplay) {
+                window.updateAchievementsDisplay();
+            }
         }
     } catch (error) {
         console.error('检查成就失败:', error);
+         setTimeout(updateStats, 500);
     }
 }

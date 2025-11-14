@@ -4981,3 +4981,139 @@ footer {
         max-height: 80px;
     }
 }
+/* 任务描述和笔记样式 */
+.task-description-box, .completion-note-box {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 8px 0;
+}
+
+.description-text, .note-text {
+    margin: 0;
+    line-height: 1.6;
+    color: #495057;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.completion-note-box {
+    background: #f0f9ff;
+    border-color: #b3e0ff;
+}
+
+/* 模态框详情项样式优化 */
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.detail-item.full-width {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.detail-label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    flex: 1;
+    color: #666;
+    line-height: 1.5;
+}
+
+.detail-item.full-width .detail-label {
+    margin-bottom: 8px;
+}
+
+/* 完成状态的特殊样式 */
+.detail-item .detail-value[style*="color: #2ed573"] {
+    font-weight: 600;
+}
+
+.detail-item .detail-value[style*="color: #ff9f43"] {
+    font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .detail-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .detail-label {
+        min-width: auto;
+    }
+    
+    .task-description-box, .completion-note-box {
+        padding: 10px 12px;
+    }
+}
+/* 修复快速完成模态框的滚动问题 */
+.quick-complete-modal {
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh; /* 限制最大高度为视口的90% */
+    display: flex;
+    flex-direction: column;
+}
+
+.quick-complete-modal .modal-body {
+    padding: 20px;
+    overflow-y: auto; /* 添加垂直滚动条 */
+    flex: 1; /* 占据剩余空间 */
+    max-height: calc(90vh - 140px); /* 减去头部和底部的高度 */
+}
+
+/* 确保表单内容可以正常滚动 */
+#quickCompleteForm {
+    min-height: min-content; /* 确保表单有最小高度 */
+}
+
+/* 响应式调整 */
+@media (max-height: 700px) {
+    .quick-complete-modal {
+        max-height: 95vh; /* 在小屏幕上使用更大的比例 */
+    }
+    
+    .quick-complete-modal .modal-body {
+        max-height: calc(95vh - 140px);
+    }
+}
+
+/* 可选：美化滚动条 */
+.quick-complete-modal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.quick-complete-modal .modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.quick-complete-modal .modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.quick-complete-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

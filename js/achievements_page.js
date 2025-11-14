@@ -31,14 +31,36 @@ document.addEventListener('DOMContentLoaded', async function () {
             member: member.user_name
         });
 
-        // 直接使用成就系统（不再依赖dataService）
-        const achievementSystem = new CloudAchievementSystem();
+        // 🔧 修复：使用全局的成就系统实例，或者正确初始化新的实例
+        let achievementSystem;
+        
+        // 检查是否已经有全局的成就系统实例
+        if (window.achievementSystem && window.achievementSystem.isInitialized) {
+            console.log('🔄 使用已初始化的成就系统');
+            achievementSystem = window.achievementSystem;
+        } else {
+            console.log('🔄 创建新的成就系统实例');
+            achievementSystem = new CloudAchievementSystem();
+            
+            // 🔧 修复：必须调用 initialize 方法
+            const success = await achievementSystem.initialize(family.id, member.id);
+            if (!success) {
+                throw new Error('成就系统初始化失败');
+            }
+            
+            // 保存到全局变量供其他页面使用
+            window.achievementSystem = achievementSystem;
+        }
 
-        // 并行加载数据
-        const [achievements, stats] = await Promise.all([
-            achievementSystem.loadUserAchievements(family.id, member.id),
-            achievementSystem.loadUserStats(family.id, member.id)
-        ]);
+        // 🔧 修复：直接使用成就系统的数据，不需要重新加载
+        const stats = achievementSystem.userStats;
+        const userAchievements = achievementSystem.userAchievements;
+
+        console.log('📊 成就系统数据:', {
+            用户成就数量: userAchievements.length,
+            统计信息: stats,
+            已解锁成就: userAchievements.map(a => a.name)
+        });
 
         // 渲染成就页面
         await renderAchievements(achievementSystem, stats);
@@ -217,6 +239,9 @@ function showErrorState(message) {
 /**
  * 渲染成就页面
  */
+/**
+ * 渲染成就页面 - 修复版本
+ */
 async function renderAchievements(achievementSystem, stats) {
     const container = document.getElementById('achievementsContainer');
     if (!container) {
@@ -225,12 +250,18 @@ async function renderAchievements(achievementSystem, stats) {
     }
 
     try {
-        // 获取分组后的成就数据
+        // 🔧 修复：确保使用正确的成就数据
         const groupedAchievements = achievementSystem.getAllAchievementsWithProgress(stats);
+
+        console.log('🎯 开始渲染成就:', {
+            分组数量: Object.keys(groupedAchievements).length,
+            总成就数: Object.values(groupedAchievements).flat().length,
+            已解锁数: Object.values(groupedAchievements).flat().filter(a => a.unlocked).length
+        });
 
         let html = '';
 
-        // 渲染统计信息（传入achievementSystem以计算成就统计）
+        // 渲染统计信息
         html += renderStatsSection(stats, achievementSystem);
 
         // 渲染各个成就类别
@@ -323,53 +354,49 @@ function renderAchievementCategory(category, achievements) {
 }
 
 /**
- * 渲染单个成就卡片
+ * 渲染单个成就卡片 - 优化版本
  */
 function renderAchievementCard(achievement) {
     const unlockedClass = achievement.unlocked ? 'unlocked' : 'locked';
 
-    // 🔧 修复：已解锁的成就不显示进度条，显示完成日期
+    // 🔧 优化：已解锁的成就只显示完成日期，不显示进度条
     const progressContent = achievement.unlocked ?
         renderUnlockedContent(achievement) :
         renderProgressContent(achievement);
 
     return `
         <div class="achievement-card ${unlockedClass}" data-achievement-id="${achievement.id}">
-            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-header">
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-points">+${achievement.reward_points}</div>
+            </div>
             <div class="achievement-content">
                 <h3 class="achievement-title">${achievement.name}</h3>
                 <p class="achievement-description">${achievement.description}</p>
-                <div class="achievement-reward">奖励: ${achievement.reward_points} 积分</div>
                 ${progressContent}
             </div>
-            ${achievement.unlocked ? '<div class="unlocked-badge">已解锁</div>' : ''}
         </div>
     `;
 }
-
 /**
- * 渲染已解锁成就的内容（不显示进度条，显示完成日期）
+ * 渲染已解锁成就的内容 - 优化版本
  */
 function renderUnlockedContent(achievement) {
     const unlockedDate = achievement.unlocked_at ?
         new Date(achievement.unlocked_at).toLocaleDateString('zh-CN', {
-            year: 'numeric',
             month: 'short',
             day: 'numeric'
-        }) : '未知日期';
+        }) : '';
 
     return `
-        <div class="unlocked-info">
-            <div class="completion-date">
-                <span class="date-icon">📅</span>
-                <span class="date-text">${unlockedDate}</span>
-            </div>
-            <div class="completion-badge">已完成</div>
+        <div class="achievement-date">
+            <span class="date-icon">📅</span>
+            <span class="date-text">${unlockedDate}</span>
         </div>
     `;
 }
 /**
- * 渲染未解锁成就的内容（显示进度条）
+ * 渲染未解锁成就的内容 - 优化版本
  */
 function renderProgressContent(achievement) {
     return `
@@ -377,7 +404,7 @@ function renderProgressContent(achievement) {
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${achievement.progress}%"></div>
             </div>
-            <div class="progress-text">${achievement.progress}%</div>
+            <span class="progress-text">${achievement.progress}%</span>
         </div>
     `;
 }

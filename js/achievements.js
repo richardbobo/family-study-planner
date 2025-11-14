@@ -1,4 +1,5 @@
-// 📁 js/achievements.js
+
+// 📁 js/achievements.js - 完整修复版本
 class CloudAchievementSystem {
     constructor() {
         // 直接使用Supabase客户端，不再依赖其他服务
@@ -10,9 +11,68 @@ class CloudAchievementSystem {
         // 用户数据缓存
         this.userAchievements = [];
         this.userStats = null;
+        this.isInitialized = false; // 新增初始化状态
         
         console.log('🔧 成就系统初始化 - 直接访问模式');
     }
+    
+    /**
+     * 初始化成就系统（异步）
+     */
+// 在 CloudAchievementSystem 类中修改 initialize 方法
+async initialize(familyId, userId) {
+    try {
+        console.log('🔄 初始化成就系统...', { 
+            familyId: familyId, 
+            userId: userId,
+            familyIdType: typeof familyId,
+            userIdType: typeof userId
+        });
+        
+        // 更严格的参数检查
+        if (!familyId || familyId === 'undefined' || familyId === 'null') {
+            console.error('❌ 家庭ID无效:', familyId);
+            return false;
+        }
+        
+        if (!userId || userId === 'undefined' || userId === 'null') {
+            console.error('❌ 用户ID无效:', userId);
+            return false;
+        }
+        
+        // 检查Supabase客户端
+        if (!this.supabaseClient) {
+            console.error('❌ Supabase客户端未初始化');
+            return false;
+        }
+        
+        console.log('✅ 参数验证通过，开始加载数据...');
+        
+        // 并行加载用户成就和统计
+        const [achievements, stats] = await Promise.all([
+            this.loadUserAchievements(familyId, userId),
+            this.loadUserStats(familyId, userId)
+        ]);
+        
+        this.userAchievements = achievements;
+        this.userStats = stats;
+        this.isInitialized = true;
+        
+        console.log('✅ 成就系统初始化完成', {
+            成就数量: this.userAchievements.length,
+            学习时长: this.userStats.totalStudyTime,
+            完成任务: this.userStats.totalTasksCompleted,
+            连续打卡: this.userStats.currentStreak
+        });
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ 成就系统初始化失败:', error);
+        this.isInitialized = false;
+        return false;
+    }
+}
     
     /**
      * 初始化成就定义数据
@@ -153,22 +213,24 @@ class CloudAchievementSystem {
     }
     
     /**
-     * 加载用户成就数据
+     * 加载用户成就数据 - 修复版本
      */
-     async loadUserAchievements(familyId, userId) {
+    async loadUserAchievements(familyId, userId) {
         try {
+            console.log('📥 加载用户成就数据...', { familyId, userId });
+            
             const { data, error } = await this.supabaseClient
                 .from('user_achievements')
                 .select('*')
                 .eq('family_id', familyId)
                 .eq('user_id', userId);
             
-            if (error) throw error;
+            if (error) {
+                console.error('❌ 查询用户成就失败:', error);
+                throw error;
+            }
             
-            this.userAchievements = data || [];
-            
-            // 🔧 修复：正确合并数据库记录和本地定义
-            return this.userAchievements.map(dbAchievement => {
+            const achievements = (data || []).map(dbAchievement => {
                 const definition = this.achievementDefinitions[dbAchievement.achievement_id];
                 if (!definition) {
                     console.warn(`❌ 找不到成就定义: ${dbAchievement.achievement_id}`);
@@ -184,6 +246,9 @@ class CloudAchievementSystem {
                 };
             }).filter(achievement => achievement !== null); // 过滤掉找不到定义的成就
             
+            console.log(`✅ 加载了 ${achievements.length} 个用户成就`);
+            return achievements;
+            
         } catch (error) {
             console.error('加载用户成就失败:', error);
             return [];
@@ -191,45 +256,50 @@ class CloudAchievementSystem {
     }
     
     /**
-     * 加载用户学习统计
+     * 加载用户学习统计 - 修复版本
      */
     async loadUserStats(familyId, userId) {
         try {
             console.log('📊 加载用户统计...', { familyId, userId });
             
-            // 获取总学习时长
-            const { data: timeData, error: timeError } = await this.supabaseClient
-                .from('completion_records')
-                .select('actual_duration')
-                .eq('completed_by', userId);
+            // 使用 Promise.all 并行查询
+            const [timeResult, taskResult] = await Promise.all([
+                // 获取总学习时长
+                this.supabaseClient
+                    .from('completion_records')
+                    .select('actual_duration')
+                    .eq('completed_by', userId),
+                
+                // 获取完成任务数量
+                this.supabaseClient
+                    .from('study_tasks')
+                    .select('id, subject, date')
+                    .eq('assigned_to', userId)
+                    .eq('completed', true)
+                    .eq('family_id', familyId)
+            ]);
             
-            if (timeError) console.error('学习时长统计错误:', timeError);
-            
-            // 获取完成任务数量
-            const { data: taskData, error: taskError } = await this.supabaseClient
-                .from('study_tasks')
-                .select('id, subject, date')
-                .eq('assigned_to', userId)
-                .eq('completed', true)
-                .eq('family_id', familyId);
-            
-            if (taskError) console.error('任务统计错误:', taskError);
+            if (timeResult.error) console.error('学习时长统计错误:', timeResult.error);
+            if (taskResult.error) console.error('任务统计错误:', taskResult.error);
             
             // 计算连续打卡
             const currentStreak = await this.calculateCurrentStreak(familyId, userId);
             
             // 计算科目分布
-            const subjectDistribution = this.calculateSubjectDistribution(taskData || []);
+            const subjectDistribution = this.calculateSubjectDistribution(taskResult.data || []);
             
-            this.userStats = {
-                totalStudyTime: timeData?.reduce((sum, record) => sum + (record.actual_duration || 0), 0) || 0,
-                totalTasksCompleted: taskData?.length || 0,
+            const totalStudyTime = timeResult.data?.reduce((sum, record) => 
+                sum + (record.actual_duration || 0), 0) || 0;
+            
+            const stats = {
+                totalStudyTime: totalStudyTime,
+                totalTasksCompleted: taskResult.data?.length || 0,
                 currentStreak: currentStreak,
                 subjectDistribution: subjectDistribution
             };
             
-            console.log('✅ 用户统计加载完成:', this.userStats);
-            return this.userStats;
+            console.log('✅ 用户统计加载完成:', stats);
+            return stats;
             
         } catch (error) {
             console.error('❌ 用户统计加载失败:', error);
@@ -243,7 +313,7 @@ class CloudAchievementSystem {
     }
     
     /**
-     * 计算当前连续打卡天数
+     * 计算当前连续打卡天数 - 修复版本
      */
     async calculateCurrentStreak(familyId, userId) {
         try {
@@ -255,31 +325,41 @@ class CloudAchievementSystem {
                 .eq('family_id', familyId)
                 .order('date', { ascending: false });
             
-            if (error || !data || data.length === 0) return 0;
+            if (error) {
+                console.error('查询打卡记录失败:', error);
+                return 0;
+            }
+            
+            if (!data || data.length === 0) return 0;
             
             let streak = 0;
             const today = new Date();
             const oneDay = 24 * 60 * 60 * 1000;
             
+            // 去重并排序日期
+            const uniqueDates = [...new Set(data.map(task => task.date))].sort().reverse();
+            
             // 检查今天是否有学习
             const todayStr = today.toISOString().split('T')[0];
-            const hasToday = data.some(task => task.date === todayStr);
-            if (hasToday) streak = 1;
+            let currentDate = todayStr;
             
-            // 检查连续天数
-            for (let i = hasToday ? 1 : 0; i < data.length; i++) {
-                const currentDate = new Date(data[i].date);
-                const prevDate = new Date(data[i-1]?.date);
+            for (let i = 0; i < uniqueDates.length; i++) {
+                const taskDate = uniqueDates[i];
                 
-                const diffDays = Math.round((prevDate - currentDate) / oneDay);
-                
-                if (diffDays === 1) {
+                // 如果日期连续，增加连续天数
+                if (taskDate === currentDate) {
                     streak++;
+                    
+                    // 计算下一天
+                    const nextDate = new Date(currentDate);
+                    nextDate.setDate(nextDate.getDate() - 1);
+                    currentDate = nextDate.toISOString().split('T')[0];
                 } else {
                     break;
                 }
             }
             
+            console.log(`📅 连续打卡计算: ${streak} 天`);
             return streak;
             
         } catch (error) {
@@ -300,11 +380,11 @@ class CloudAchievementSystem {
     }
     
     /**
-     * 解锁成就
+     * 解锁成就 - 修复版本
      */
     async unlockAchievement(familyId, userId, achievementId) {
         try {
-            console.log(`🎉 解锁成就: ${achievementId}`);
+            console.log(`🎉 尝试解锁成就: ${achievementId}`);
             
             const achievement = this.achievementDefinitions[achievementId];
             if (!achievement) {
@@ -318,10 +398,12 @@ class CloudAchievementSystem {
             
             if (alreadyUnlocked) {
                 console.log('ℹ️ 成就已解锁，跳过');
-                return true;
+                return false; // 返回false表示没有新解锁
             }
             
-            // 直接插入成就记录
+            console.log(`🔓 解锁新成就: ${achievement.name}`);
+            
+            // 插入成就记录
             const { data, error } = await this.supabaseClient
                 .from('user_achievements')
                 .insert({
@@ -343,14 +425,46 @@ class CloudAchievementSystem {
             await this.rewardPoints(userId, achievement.reward_points);
             
             // 更新本地缓存
-            this.userAchievements.push(data[0]);
+            this.userAchievements.push({
+                ...achievement,
+                ...data[0],
+                unlocked: true
+            });
             
             console.log(`✅ 成就解锁成功: ${achievement.name}`);
-            return true;
+            
+            // 触发成就解锁事件
+            this.triggerAchievementUnlocked(achievement);
+            
+            return true; // 返回true表示成功解锁
             
         } catch (error) {
             console.error('❌ 解锁成就异常:', error);
             return false;
+        }
+    }
+    
+    /**
+     * 触发成就解锁事件
+     */
+    triggerAchievementUnlocked(achievement) {
+        // 创建自定义事件
+        const event = new CustomEvent('achievement:unlocked', {
+            detail: {
+                achievement: achievement,
+                timestamp: new Date().toISOString()
+            }
+        });
+        
+        // 派发事件
+        window.dispatchEvent(event);
+        
+        // 显示通知
+        if (window.showNotification) {
+            window.showNotification(
+                `🎉 成就解锁！${achievement.icon} ${achievement.name}`,
+                'success'
+            );
         }
     }
     
@@ -387,15 +501,23 @@ class CloudAchievementSystem {
     }
     
     /**
-     * 检查并解锁符合条件的成就
+     * 检查并解锁符合条件的成就 - 修复版本
      */
     async checkAndUnlockAchievements(familyId, userId) {
         try {
-            console.log('🔍 检查成就解锁条件...');
+            console.log('🔍 开始检查成就解锁条件...');
             
-            // 重新加载最新数据
+            if (!this.isInitialized) {
+                console.log('🔄 成就系统未初始化，先初始化...');
+                await this.initialize(familyId, userId);
+            }
+            
+            // 重新加载最新统计数据
             const stats = await this.loadUserStats(familyId, userId);
-            if (!stats) return [];
+            if (!stats) {
+                console.error('❌ 无法加载用户统计');
+                return [];
+            }
             
             const unlockedAchievements = [];
             
@@ -405,39 +527,55 @@ class CloudAchievementSystem {
                 const alreadyUnlocked = this.userAchievements.some(
                     ua => ua.achievement_id === achievementId
                 );
-                if (alreadyUnlocked) continue;
+                
+                if (alreadyUnlocked) {
+                    console.log(`ℹ️ 成就已解锁，跳过: ${achievement.name}`);
+                    continue;
+                }
                 
                 let shouldUnlock = false;
+                let currentValue = 0;
                 
                 // 根据成就类型检查条件
                 switch (achievement.type) {
                     case 'study_time':
-                        shouldUnlock = stats.totalStudyTime >= achievement.requirement;
+                        currentValue = stats.totalStudyTime;
+                        shouldUnlock = currentValue >= achievement.requirement;
                         break;
                         
                     case 'total_tasks':
-                        shouldUnlock = stats.totalTasksCompleted >= achievement.requirement;
+                        currentValue = stats.totalTasksCompleted;
+                        shouldUnlock = currentValue >= achievement.requirement;
                         break;
                         
                     case 'streak':
-                        shouldUnlock = stats.currentStreak >= achievement.requirement;
+                        currentValue = stats.currentStreak;
+                        shouldUnlock = currentValue >= achievement.requirement;
                         break;
                         
                     case 'subject_tasks':
-                        const subjectCount = stats.subjectDistribution[achievement.subject] || 0;
-                        shouldUnlock = subjectCount >= achievement.requirement;
+                        currentValue = stats.subjectDistribution[achievement.subject] || 0;
+                        shouldUnlock = currentValue >= achievement.requirement;
                         break;
                 }
+                
+                console.log(`📊 检查成就: ${achievement.name}`, {
+                    类型: achievement.type,
+                    当前值: currentValue,
+                    要求: achievement.requirement,
+                    是否解锁: shouldUnlock
+                });
                 
                 if (shouldUnlock) {
                     const success = await this.unlockAchievement(familyId, userId, achievementId);
                     if (success) {
                         unlockedAchievements.push(achievement);
+                        console.log(`🎯 新成就解锁: ${achievement.name}`);
                     }
                 }
             }
             
-            console.log(`🎯 解锁了 ${unlockedAchievements.length} 个新成就`);
+            console.log(`🎉 本次检查解锁了 ${unlockedAchievements.length} 个新成就`);
             return unlockedAchievements;
             
         } catch (error) {
@@ -493,8 +631,7 @@ class CloudAchievementSystem {
                 ...achievement,
                 unlocked: unlocked,
                 progress: progress,
-                unlocked_at: unlocked ? unlockedAchievement.unlocked_at : null, // 🔧 添加解锁时间
-                // 🔧 确保图标信息正确传递
+                unlocked_at: unlocked ? unlockedAchievement.unlocked_at : null,
                 icon: achievement.icon,
                 name: achievement.name,
                 description: achievement.description,
@@ -512,5 +649,29 @@ class CloudAchievementSystem {
         });
         
         return grouped;
+    }
+    
+    /**
+     * 强制刷新用户数据
+     */
+    async refreshUserData(familyId, userId) {
+        try {
+            console.log('🔄 强制刷新用户数据...');
+            
+            const [achievements, stats] = await Promise.all([
+                this.loadUserAchievements(familyId, userId),
+                this.loadUserStats(familyId, userId)
+            ]);
+            
+            this.userAchievements = achievements;
+            this.userStats = stats;
+            
+            console.log('✅ 用户数据刷新完成');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ 刷新用户数据失败:', error);
+            return false;
+        }
     }
 }

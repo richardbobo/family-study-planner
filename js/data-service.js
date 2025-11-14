@@ -530,6 +530,47 @@ async getTasks(date = null) {
         }, '批量删除任务');
     }
 
+        // 获取任务的完成记录
+    async getCompletionRecord(taskId) {
+        try {
+            const { data, error } = await this.supabaseClient
+                .from('completion_records')
+                .select('*')
+                .eq('task_id', taskId)
+                .single();
+
+            if (error) {
+                console.error('查询完成记录失败:', error);
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('获取完成记录异常:', error);
+            return null;
+        }
+    }
+
+    // 或者获取所有完成记录（如果可能有多个）
+    async getCompletionRecords(taskId) {
+        try {
+            const { data, error } = await this.supabaseClient
+                .from('completion_records')
+                .select('*')
+                .eq('task_id', taskId)
+                .order('completed_at', { ascending: false });
+
+            if (error) {
+                console.error('查询完成记录失败:', error);
+                return [];
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error('获取完成记录异常:', error);
+            return [];
+        }
+    }
     /**
      * 获取家庭任务统计
      */
